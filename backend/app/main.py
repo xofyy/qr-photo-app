@@ -2,6 +2,7 @@
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, StreamingResponse
 import os
+from os import getenv
 import io
 import cloudinary
 import cloudinary.uploader
@@ -12,6 +13,18 @@ import traceback
 from starlette.requests import Request
 
 from app import crud, schemas, utils
+
+app = FastAPI()
+
+# CORS ayarları
+origins = os.getenv("CORS_ORIGINS", "").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 from app.database import get_database
 from app.utils.user_identifier import generate_user_identifier, get_user_ip, get_user_agent
 from app.utils.zip_generator import create_photos_zip, create_empty_session_zip
