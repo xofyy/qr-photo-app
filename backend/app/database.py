@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb+srv://dumanmurat9:L4G3fx2CYd3Una36@cluster0.xzbrgw5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+MONGODB_URL = os.getenv("MONGODB_URL")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "qr_photo_app")
 
 client = AsyncIOMotorClient(MONGODB_URL)

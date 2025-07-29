@@ -4,6 +4,7 @@ import base64
 from PIL import Image
 
 def generate_qr_code(data: str) -> str:
+    """Generate a QR code as base64 encoded PNG image."""
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,

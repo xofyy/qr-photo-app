@@ -10,6 +10,7 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [photoLimitModal, setPhotoLimitModal] = useState({ show: false, session: null, newLimit: 10 });
+  const [qrModal, setQrModal] = useState({ show: false, session: null, qrCode: null, sessionUrl: null, loading: false });
   const [sessionStats, setSessionStats] = useState({});
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
@@ -137,6 +138,64 @@ const UserDashboard = () => {
         alert('You can only download photos from your own sessions.');
       } else {
         alert('Failed to download photos. Please try again.');
+      }
+    }
+  };
+
+  const openQrModal = async (session) => {
+    setQrModal({
+      show: true,
+      session: session,
+      qrCode: null,
+      sessionUrl: null,
+      loading: true
+    });
+
+    try {
+      const response = await getQRCode(session.session_id);
+      setQrModal(prev => ({
+        ...prev,
+        qrCode: response.data.qr_code,
+        sessionUrl: response.data.session_url,
+        loading: false
+      }));
+    } catch (error) {
+      console.error('Error loading QR code:', error);
+      setQrModal(prev => ({
+        ...prev,
+        loading: false
+      }));
+      alert('Failed to load QR code. Please try again.');
+    }
+  };
+
+  const closeQrModal = () => {
+    setQrModal({ show: false, session: null, qrCode: null, sessionUrl: null, loading: false });
+  };
+
+  const downloadQR = () => {
+    if (qrModal.qrCode && qrModal.session) {
+      const link = document.createElement('a');
+      link.download = `qr-session-${qrModal.session.session_id.slice(0, 8)}.png`;
+      link.href = `data:image/png;base64,${qrModal.qrCode}`;
+      link.click();
+    }
+  };
+
+  const copySessionLink = async () => {
+    if (qrModal.sessionUrl) {
+      try {
+        await navigator.clipboard.writeText(qrModal.sessionUrl);
+        alert('Session link copied to clipboard!');
+      } catch (err) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = qrModal.sessionUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Session link copied to clipboard!');
       }
     }
   };
@@ -281,33 +340,47 @@ const UserDashboard = () => {
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                    <button
-                      onClick={() => navigate(`/session/${session.session_id}`)}
-                      className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105"
-                    >
-                      View Session
-                    </button>
+                  <div className="flex flex-col space-y-2">
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                      <button
+                        onClick={() => navigate(`/session/${session.session_id}`)}
+                        className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105"
+                      >
+                        View Session
+                      </button>
+                      
+                      <button
+                        onClick={() => openQrModal(session)}
+                        className="flex-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-1"
+                      >
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1z" />
+                        </svg>
+                        <span>QR Code</span>
+                      </button>
+                    </div>
                     
-                    <button
-                      onClick={() => openPhotoLimitModal(session)}
-                      className="flex-1 bg-green-100 hover:bg-green-200 text-green-800 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105"
-                    >
-                      Settings
-                    </button>
-                    
-                    <button
-                      onClick={() => handleDownloadPhotos(session)}
-                      disabled={session.photo_count === 0}
-                      className={`flex-1 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105 ${
-                        session.photo_count === 0
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-purple-100 hover:bg-purple-200 text-purple-800'
-                      }`}
-                      title={session.photo_count === 0 ? 'No photos to download' : `Download ${session.photo_count} photos`}
-                    >
-                      Download
-                    </button>
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                      <button
+                        onClick={() => openPhotoLimitModal(session)}
+                        className="flex-1 bg-green-100 hover:bg-green-200 text-green-800 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105"
+                      >
+                        Settings
+                      </button>
+                      
+                      <button
+                        onClick={() => handleDownloadPhotos(session)}
+                        disabled={session.photo_count === 0}
+                        className={`flex-1 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105 ${
+                          session.photo_count === 0
+                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : 'bg-purple-100 hover:bg-purple-200 text-purple-800'
+                        }`}
+                        title={session.photo_count === 0 ? 'No photos to download' : `Download ${session.photo_count} photos`}
+                      >
+                        Download
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -365,6 +438,90 @@ const UserDashboard = () => {
                 className="flex-1 px-4 py-2.5 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
               >
                 Update Limit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QR Code Modal */}
+      {qrModal.show && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md shadow-2xl">
+            <div className="mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
+                Session QR Code
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Share this QR code for guests to upload photos to your session.
+              </p>
+              <p className="text-xs sm:text-sm text-gray-500 mt-2">
+                Session: {qrModal.session?.session_id?.substring(0, 8)}...
+              </p>
+            </div>
+
+            {qrModal.loading ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : qrModal.qrCode ? (
+              <div className="flex flex-col items-center">
+                {/* QR Code */}
+                <div className="bg-white p-4 rounded-xl shadow-lg mb-4 transform hover:scale-105 transition-transform duration-300">
+                  <img 
+                    src={`data:image/png;base64,${qrModal.qrCode}`}
+                    alt="QR Code" 
+                    className="w-48 h-48 sm:w-56 sm:h-56"
+                  />
+                </div>
+                
+                {/* Session URL */}
+                {qrModal.sessionUrl && (
+                  <div className="w-full mb-4">
+                    <p className="text-sm text-gray-500 mb-2">Session Link:</p>
+                    <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                      <p className="text-xs text-gray-800 break-all font-mono">
+                        {qrModal.sessionUrl}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                  <button
+                    onClick={copySessionLink}
+                    className="flex-1 flex items-center justify-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 transform hover:scale-105"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span>Copy Link</span>
+                  </button>
+                  
+                  <button
+                    onClick={downloadQR}
+                    className="flex-1 flex items-center justify-center space-x-2 bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 transform hover:scale-105"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>Download QR</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-red-600">Failed to load QR code</p>
+              </div>
+            )}
+
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={closeQrModal}
+                className="px-6 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>

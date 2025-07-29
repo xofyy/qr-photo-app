@@ -265,6 +265,7 @@ frontend/dist/
 .env.test
 .env.production
 .env.staging
+.env.example
 backend/.env
 frontend/.env
 
@@ -456,6 +457,7 @@ build/
 *.crt
 *.cer
 *.der
+*.claude
 private_key*
 public_key*
 secret_key*
