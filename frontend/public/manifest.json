@@ -1,0 +1,15 @@
+﻿{
+    "theme_color":  "#000000",
+    "name":  "QR Photo Session App",
+    "background_color":  "#ffffff",
+    "display":  "standalone",
+    "short_name":  "QR Photo App",
+    "icons":  [
+                  {
+                      "type":  "image/x-icon",
+                      "sizes":  "64x64 32x32 24x24 16x16",
+                      "src":  "favicon.ico"
+                  }
+              ],
+    "start_url":  "."
+}
