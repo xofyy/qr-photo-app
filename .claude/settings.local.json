@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)"
+    ],
+    "deny": []
+  }
+}
