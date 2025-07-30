@@ -32,6 +32,14 @@ const cameraStyles = `
     border: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
+  
+  .camera-safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .camera-safe-area-bottom {
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  }
 `;
 
 const MobileCamera = ({ 
@@ -418,34 +426,33 @@ const MobileCamera = ({
 
   if (error) {
     return (
-      <div className="relative w-full">
-        <div className="relative aspect-video bg-red-100 rounded-xl flex items-center justify-center">
-          <div className="text-center p-4">
-            <div className="w-12 h-12 bg-red-200 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h3 className="text-base font-semibold text-red-800 mb-2">Camera Error</h3>
-            <p className="text-red-700 text-xs mb-3">{error}</p>
-            <button
-              onClick={startCamera}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition-colors text-sm"
-            >
-              Try Again
-            </button>
+      <div className="fixed inset-0 bg-red-900 flex items-center justify-center z-50">
+        <div className="text-center p-6 max-w-sm">
+          <div className="w-20 h-20 bg-red-200 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
           </div>
+          <h3 className="text-xl font-semibold text-white mb-4">Camera Error</h3>
+          <p className="text-red-200 text-sm mb-6">{error}</p>
+          <button
+            onClick={startCamera}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full">
+    <div className="fixed inset-0 bg-black">
       {/* Inject custom styles */}
       <style>{cameraStyles}</style>
-      {/* Camera Viewport */}
-      <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden w-full rounded-xl">
+      
+      {/* Camera Viewport - Full screen for mobile vertical */}
+      <div className="relative w-full h-full overflow-hidden">
         <video 
           ref={videoRef} 
           autoPlay 
@@ -459,7 +466,7 @@ const MobileCamera = ({
         
         {/* Grid Lines Overlay */}
         {cameraReady && !capturedPhoto && gridLines && (
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none z-10">
             {/* Rule of thirds grid */}
             <div className="w-full h-full">
               {/* Vertical lines */}
@@ -474,7 +481,7 @@ const MobileCamera = ({
 
         {/* Photo Preview */}
         {capturedPhoto && (
-          <div className="absolute inset-0 transition-all duration-500 ease-in-out">
+          <div className="absolute inset-0 transition-all duration-500 ease-in-out z-20">
             <img 
               src={URL.createObjectURL(capturedPhoto)} 
               alt="Captured" 
@@ -489,328 +496,288 @@ const MobileCamera = ({
         
         <canvas ref={canvasRef} className="hidden" />
         
-        {/* Camera Status */}
+        {/* Camera Status - Top area */}
         {cameraReady && !capturedPhoto && (
           <>
-            <div className="absolute top-3 left-3 flex items-center space-x-2 bg-black/60 backdrop-blur-sm text-white px-2 py-1.5 rounded-full text-xs font-medium">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>Mobile Ready</span>
-            </div>
-            
-            <div className="absolute top-3 right-3 flex flex-col items-end space-y-1">
-              <div className="bg-black/60 backdrop-blur-sm text-white px-2 py-1.5 rounded-full text-xs">
-                {videoRef.current?.videoWidth || 0}×{videoRef.current?.videoHeight || 0}
+            <div className="absolute top-0 left-4 right-4 flex items-center justify-between camera-safe-area-top z-20">
+              <div className="flex items-center space-x-2 bg-black/60 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-medium">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Live</span>
               </div>
-              {fps && (
-                <div className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
-                  {fps} FPS
+              
+              <div className="flex flex-col items-end space-y-2">
+                <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm">
+                  {videoRef.current?.videoWidth || 0}×{videoRef.current?.videoHeight || 0}
                 </div>
-              )}
-              {zoom > 1 && (
-                <div className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
-                  {zoom.toFixed(1)}x
-                </div>
-              )}
-              {isZooming && (
-                <div className="bg-blue-500/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs animate-pulse">
-                  Zooming...
-                </div>
-              )}
+                {fps && (
+                  <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
+                    {fps} FPS
+                  </div>
+                )}
+                {zoom > 1 && (
+                  <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
+                    {zoom.toFixed(1)}x
+                  </div>
+                )}
+                {isZooming && (
+                  <div className="bg-blue-500/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs animate-pulse">
+                    Zooming...
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
         
         {/* Loading State */}
         {!cameraReady && !capturedPhoto && (
-          <div className="absolute inset-0 flex items-center justify-center text-white">
+          <div className="absolute inset-0 flex items-center justify-center text-white z-30">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-3"></div>
-              <p className="text-sm font-medium">Starting Mobile Camera...</p>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-lg font-medium">Starting Camera...</p>
               {cameraCapabilities?.zoom && (
-                <p className="text-xs text-white/70 mt-2">Pinch to zoom when ready</p>
+                <p className="text-sm text-white/70 mt-2">Pinch to zoom when ready</p>
               )}
             </div>
           </div>
         )}
         
-        {/* Mobile Camera Controls */}
+        {/* Mobile Camera Controls - Bottom area */}
         {cameraReady && !capturedPhoto && (
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-            {/* Settings Button */}
-            <button
-              onClick={() => {
-                addHapticFeedback('light');
-                setShowSettings(!showSettings);
-              }}
-              className="bg-black/60 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
-
-            {/* Capture Button - Large for mobile */}
-            <button
-              onClick={() => {
-                addHapticFeedback('medium');
-                capturePhoto();
-              }}
-              className="bg-white text-gray-900 w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 touch-manipulation relative"
-            >
-              <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+          <div className="absolute bottom-0 left-0 right-0 camera-safe-area-bottom z-30">
+            {/* Main control row */}
+            <div className="flex items-end justify-between px-6 pb-4">
+              {/* Left side controls */}
+              <div className="flex flex-col items-center space-y-4">
+                <button
+                  onClick={() => {
+                    addHapticFeedback('light');
+                    const nextFlash = flashModes[(flashModes.findIndex(m => m.value === flashMode) + 1) % flashModes.length];
+                    setFlashMode(nextFlash.value);
+                  }}
+                  className="bg-black/60 backdrop-blur-sm text-white p-4 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
+                  title={`Flash: ${flashModes.find(m => m.value === flashMode)?.label}`}
+                >
+                  <span className="text-2xl">{flashModes.find(m => m.value === flashMode)?.icon}</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    addHapticFeedback('light');
+                    setShowSettings(!showSettings);
+                  }}
+                  className="bg-black/60 backdrop-blur-sm text-white p-4 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </button>
               </div>
-            </button>
 
-            {/* Switch Camera Button */}
-            {cameraDevices.length > 1 && (
+              {/* Center capture button */}
               <button
                 onClick={() => {
                   addHapticFeedback('medium');
-                  switchCamera();
+                  capturePhoto();
                 }}
-                className="bg-black/60 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
-                title="Switch Camera"
+                className="bg-white text-gray-900 w-20 h-20 rounded-full flex items-center justify-center shadow-xl transition-all duration-200 transform hover:scale-105 active:scale-95 touch-manipulation"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
+                <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
               </button>
-            )}
 
-            {/* Flash Button */}
-            <button
-              onClick={() => {
-                addHapticFeedback('light');
-                const nextFlash = flashModes[(flashModes.findIndex(m => m.value === flashMode) + 1) % flashModes.length];
-                setFlashMode(nextFlash.value);
-              }}
-              className="bg-black/60 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
-              title={`Flash: ${flashModes.find(m => m.value === flashMode)?.label}`}
-            >
-              <span className="text-lg">{flashModes.find(m => m.value === flashMode)?.icon}</span>
-            </button>
+              {/* Right side controls */}
+              <div className="flex flex-col items-center space-y-4">
+                {cameraDevices.length > 1 && (
+                  <button
+                    onClick={() => {
+                      addHapticFeedback('medium');
+                      switchCamera();
+                    }}
+                    className="bg-black/60 backdrop-blur-sm text-white p-4 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
+                    title="Switch Camera"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                  </button>
+                )}
+                
+                {cameraCapabilities?.zoom && zoom !== 1 && (
+                  <button
+                    onClick={() => applyZoom(1)}
+                    className="bg-black/60 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
+                    title="Reset Zoom"
+                  >
+                    <span className="text-sm font-medium">1×</span>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Settings Panel */}
+        {/* Settings Panel - Slide up from bottom */}
         {showSettings && cameraReady && !capturedPhoto && (
-          <div className="absolute bottom-24 left-3 right-3 bg-black/90 backdrop-blur-md text-white rounded-xl p-4 space-y-4 max-h-80 overflow-y-auto">
-            <h3 className="font-semibold text-base mb-3 flex items-center">
-              ⚙️ Camera Settings
-            </h3>
-            
-            {/* Resolution Selector */}
-            <div>
-              <label className="block text-xs font-medium mb-2">Resolution</label>
-              <select
-                value={resolution}
-                onChange={(e) => setResolution(e.target.value)}
-                className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-sm text-white touch-manipulation"
-              >
-                {resolutionOptions.map(option => (
-                  <option key={option.value} value={option.value} className="bg-black text-white">
-                    {option.label} ({option.width}×{option.height})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* FPS Selector */}
-            <div>
-              <label className="block text-xs font-medium mb-2">Frame Rate</label>
-              <select
-                value={fps}
-                onChange={(e) => setFps(parseInt(e.target.value))}
-                className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-sm text-white touch-manipulation"
-              >
-                {fpsOptions.map(option => (
-                  <option key={option} value={option} className="bg-black text-white">
-                    {option} FPS
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Camera Direction */}
-            <div>
-              <label className="block text-xs font-medium mb-2">Camera Direction</label>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setFacingMode('environment')}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all touch-manipulation ${
-                    facingMode === 'environment'
-                      ? 'bg-white text-black'
-                      : 'bg-white/20 hover:bg-white/30'
-                  }`}
-                >
-                  📷 Back
-                </button>
-                <button
-                  onClick={() => setFacingMode('user')}
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all touch-manipulation ${
-                    facingMode === 'user'
-                      ? 'bg-white text-black'
-                      : 'bg-white/20 hover:bg-white/30'
-                  }`}
-                >
-                  🤳 Front
-                </button>
-              </div>
-            </div>
-
-            {/* Flash Mode */}
-            <div>
-              <label className="block text-xs font-medium mb-2">Flash</label>
-              <div className="flex space-x-2">
-                {flashModes.map(mode => (
-                  <button
-                    key={mode.value}
-                    onClick={() => setFlashMode(mode.value)}
-                    className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all touch-manipulation ${
-                      flashMode === mode.value
-                        ? 'bg-white text-black'
-                        : 'bg-white/20 hover:bg-white/30'
-                    }`}
-                  >
-                    {mode.icon} {mode.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Zoom Control */}
-            {cameraCapabilities?.zoom && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black/95 backdrop-blur-md text-white camera-safe-area-bottom z-40 transform transition-transform duration-300">
+            <div className="p-6 space-y-6 max-h-96 overflow-y-auto">
+              <h3 className="font-semibold text-xl mb-4 flex items-center">
+                ⚙️ Camera Settings
+              </h3>
+              
+              {/* Resolution Selector */}
               <div>
-                <label className="block text-xs font-medium mb-2">
-                  Zoom: {zoom.toFixed(1)}x
-                </label>
-                <input
-                  type="range"
-                  min={cameraCapabilities.zoom.min || 1}
-                  max={Math.min(cameraCapabilities.zoom.max || 3, 5)}
-                  step="0.1"
-                  value={zoom}
-                  onChange={(e) => applyZoom(parseFloat(e.target.value))}
-                  className="w-full mobile-camera-slider touch-manipulation"
-                />
+                <label className="block text-sm font-medium mb-3">Resolution</label>
+                <select
+                  value={resolution}
+                  onChange={(e) => setResolution(e.target.value)}
+                  className="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white touch-manipulation text-base"
+                >
+                  {resolutionOptions.map(option => (
+                    <option key={option.value} value={option.value} className="bg-black text-white">
+                      {option.label} ({option.width}×{option.height})
+                    </option>
+                  ))}
+                </select>
               </div>
-            )}
 
-            {/* Grid Lines Toggle */}
-            <div>
-              <label className="flex items-center space-x-2 text-xs">
+              {/* FPS Selector */}
+              <div>
+                <label className="block text-sm font-medium mb-3">Frame Rate</label>
+                <select
+                  value={fps}
+                  onChange={(e) => setFps(parseInt(e.target.value))}
+                  className="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white touch-manipulation text-base"
+                >
+                  {fpsOptions.map(option => (
+                    <option key={option} value={option} className="bg-black text-white">
+                      {option} FPS
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Zoom Control */}
+              {cameraCapabilities?.zoom && (
+                <div>
+                  <label className="block text-sm font-medium mb-3">
+                    Zoom: {zoom.toFixed(1)}×
+                  </label>
+                  <input
+                    type="range"
+                    min={cameraCapabilities.zoom.min || 1}
+                    max={Math.min(cameraCapabilities.zoom.max || 3, 5)}
+                    step="0.1"
+                    value={zoom}
+                    onChange={(e) => applyZoom(parseFloat(e.target.value))}
+                    className="w-full mobile-camera-slider touch-manipulation"
+                  />
+                </div>
+              )}
+
+              {/* Grid Lines Toggle */}
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Grid Lines</label>
                 <input
                   type="checkbox"
                   checked={gridLines}
                   onChange={(e) => setGridLines(e.target.checked)}
-                  className="w-4 h-4 text-white bg-white/20 border border-white/30 rounded"
+                  className="w-6 h-6 text-white bg-white/20 border border-white/30 rounded"
                 />
-                <span>Show grid lines</span>
-              </label>
-            </div>
+              </div>
 
-            {/* Quick Actions */}
-            <div>
-              <label className="block text-xs font-medium mb-2">Quick Actions</label>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => {
-                    addHapticFeedback('light');
-                    setResolution('1920x1080');
-                    setFps(30);
-                    setFlashMode('auto');
-                    setGridLines(true);
-                  }}
-                  className="flex-1 bg-white/20 hover:bg-white/30 active:bg-white/40 py-2 px-3 rounded-lg text-xs transition-all touch-manipulation"
-                >
-                  📸 Pro Mode
-                </button>
-                <button
-                  onClick={() => {
-                    addHapticFeedback('light');
-                    setResolution('1280x720');
-                    setFps(24);
-                    setFlashMode('off');
-                    setGridLines(false);
-                  }}
-                  className="flex-1 bg-white/20 hover:bg-white/30 active:bg-white/40 py-2 px-3 rounded-lg text-xs transition-all touch-manipulation"
-                >
-                  ⚡ Quick Mode
-                </button>
+              {/* Close Settings */}
+              <button
+                onClick={() => setShowSettings(false)}
+                className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 py-4 rounded-lg text-base font-medium transition-all touch-manipulation"
+              >
+                ✓ Done
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Photo Preview - Full screen overlay */}
+        {capturedPhoto && (
+          <div className="absolute inset-0 bg-black z-50 flex flex-col">
+            {/* Photo Preview */}
+            <div className="flex-1 flex items-center justify-center p-4">
+              <img 
+                src={URL.createObjectURL(capturedPhoto)} 
+                alt="Captured" 
+                className="max-w-full max-h-full object-contain rounded-lg"
+                onLoad={(e) => {
+                  URL.revokeObjectURL(e.target.src);
+                }}
+              />
+            </div>
+            
+            {/* Photo Info */}
+            <div className="px-6 py-4 text-center">
+              <h3 className="text-xl font-bold text-white mb-2">📸 Photo Preview</h3>
+              <div className="flex items-center justify-center space-x-4 mb-4">
+                <div className="inline-flex items-center px-3 py-2 bg-white/20 text-white rounded-full text-sm">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  {(capturedPhoto.size / 1024).toFixed(1)} KB
+                </div>
+                {resolution && (
+                  <div className="inline-flex items-center px-3 py-2 bg-blue-500/20 text-blue-300 rounded-full text-sm">
+                    📐 {resolution}
+                  </div>
+                )}
               </div>
             </div>
-
-            {/* Close Settings */}
-            <button
-              onClick={() => setShowSettings(false)}
-              className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 py-3 rounded-lg text-sm font-medium transition-all touch-manipulation"
-            >
-              ✓ Done
-            </button>
+            
+            {/* Action Buttons */}
+            <div className="px-6 camera-safe-area-bottom space-y-4">
+              <button
+                onClick={() => {
+                  addHapticFeedback('medium');
+                  onRetakePhoto();
+                }}
+                className="w-full flex items-center justify-center space-x-3 bg-white/20 hover:bg-white/30 active:bg-white/40 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 transform active:scale-95 touch-manipulation"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Retake Photo</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (!uploading) {
+                    addHapticFeedback('medium');
+                    onConfirmUpload();
+                  }
+                }}
+                disabled={uploading}
+                className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 active:from-green-800 active:to-emerald-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 disabled:active:scale-100 touch-manipulation"
+              >
+                {uploading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span>Upload Photo</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Photo Preview Controls */}
-      {capturedPhoto && (
-        <div className="mt-4 space-y-3">
-          <div className="text-center">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Photo Preview</h3>
-            <p className="text-sm text-gray-600 mb-2">Review your photo before uploading</p>
-            <div className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              {(capturedPhoto.size / 1024).toFixed(1)} KB
-            </div>
-          </div>
-          
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => {
-                addHapticFeedback('medium');
-                onRetakePhoto();
-              }}
-              className="flex items-center justify-center space-x-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform active:scale-95 touch-manipulation"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span>Retake Photo</span>
-            </button>
-            
-            <button
-              onClick={() => {
-                if (!uploading) {
-                  addHapticFeedback('medium');
-                  onConfirmUpload();
-                }
-              }}
-              disabled={uploading}
-              className="flex items-center justify-center space-x-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 active:from-green-800 active:to-emerald-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 disabled:active:scale-100 touch-manipulation"
-            >
-              {uploading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Uploading...</span>
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
-                  <span>Upload Photo</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
