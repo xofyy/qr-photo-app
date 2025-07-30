@@ -69,31 +69,71 @@ const Home = () => {
     link.click();
   };
 
-  const handleQRScanSuccess = (scannedUrl) => {
-    console.log('QR Scan Success:', scannedUrl);
+  const handleQRScanSuccess = (scannedResult) => {
+    console.log('QR Scan Success:', scannedResult);
+    
+    // Extract the actual data from the scan result
+    const scannedUrl = typeof scannedResult === 'string' ? scannedResult : scannedResult.data;
+    console.log('Extracted URL:', scannedUrl);
     
     try {
-      // Extract session ID from the scanned URL
+      // First check if it's a valid URL
       const url = new URL(scannedUrl);
-      const pathSegments = url.pathname.split('/');
-      const sessionIndex = pathSegments.indexOf('session');
       
-      if (sessionIndex !== -1 && pathSegments[sessionIndex + 1]) {
-        const scannedSessionId = pathSegments[sessionIndex + 1];
-        console.log('Navigating to session:', scannedSessionId);
+      // Check if it's a session URL
+      if (url.pathname.includes('/session/')) {
+        const pathSegments = url.pathname.split('/');
+        const sessionIndex = pathSegments.indexOf('session');
         
-        // Close scanner
-        setQrScannerActive(false);
-        
-        // Navigate to the session
-        navigate(`/session/${scannedSessionId}`);
-      } else {
-        throw new Error('Invalid session URL format');
+        if (sessionIndex !== -1 && pathSegments[sessionIndex + 1]) {
+          const scannedSessionId = pathSegments[sessionIndex + 1];
+          console.log('Navigating to session:', scannedSessionId);
+          
+          // Close scanner
+          setQrScannerActive(false);
+          
+          // Navigate to the session
+          navigate(`/session/${scannedSessionId}`);
+          return;
+        }
       }
+      
+      // If we get here, it's not a session URL - ask user what to do
+      const userChoice = window.confirm(
+        `This QR code contains: "${scannedUrl}"\n\nThis doesn't appear to be a photo session QR code. Would you like to:\nOK - Open this URL anyway\nCancel - Continue scanning`
+      );
+      
+      if (userChoice) {
+        // User wants to open the URL anyway
+        window.open(scannedUrl, '_blank');
+        setQrScannerActive(false);
+      } else {
+        // User wants to continue scanning - restart the scanner
+        setTimeout(() => {
+          if (document.querySelector('video')) {
+            // Scanner is still active, just continue
+            console.log('Continuing to scan...');
+          }
+        }, 100);
+      }
+      
     } catch (error) {
-      console.error('Error processing scanned URL:', error);
-      alert('Invalid QR code. Please scan a valid session QR code.');
-      setQrScannerActive(false);
+      console.error('Error processing scanned content:', error);
+      
+      // Not a valid URL - show the raw content and ask user
+      const userChoice = window.confirm(
+        `QR code content: "${scannedUrl}"\n\nThis is not a valid URL. Would you like to:\nOK - Copy to clipboard\nCancel - Continue scanning`
+      );
+      
+      if (userChoice) {
+        // Copy to clipboard
+        navigator.clipboard.writeText(scannedUrl).then(() => {
+          alert('QR code content copied to clipboard!');
+        }).catch(() => {
+          alert(`QR code content: ${scannedUrl}`);
+        });
+        setQrScannerActive(false);
+      }
     }
   };
 

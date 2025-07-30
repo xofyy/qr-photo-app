@@ -57,12 +57,23 @@ const QRScannerComponent = ({
         {
           onDecodeError: (error) => {
             // Don't log every decode error as it's normal when no QR code is visible
-            devLog('QR Scanner: Decode attempt (normal)');
+            // devLog('QR Scanner: Decode attempt (normal)'); // Commented out to reduce noise
           },
           preferredCamera: 'environment', // Use back camera on mobile
           highlightScanRegion: true,
           highlightCodeOutline: true,
           maxScansPerSecond: 5,
+          calculateScanRegion: (video) => {
+            // Optimize scanning region for better performance
+            const smallerDimension = Math.min(video.videoWidth, video.videoHeight);
+            const scanRegionSize = Math.round(0.7 * smallerDimension);
+            return {
+              x: Math.round((video.videoWidth - scanRegionSize) / 2),
+              y: Math.round((video.videoHeight - scanRegionSize) / 2),
+              width: scanRegionSize,
+              height: scanRegionSize,
+            };
+          },
         }
       );
 
@@ -92,16 +103,8 @@ const QRScannerComponent = ({
       }
       setIsScanning(false);
       
-      // Validate URL and navigate
-      if (isValidURL(result)) {
-        onScanSuccess(result);
-      } else {
-        setError('Invalid QR code. Please scan a valid session QR code.');
-        // Restart scanning after error
-        setTimeout(() => {
-          restartScanning();
-        }, 2000);
-      }
+      // Always try to navigate with the result - let the parent handle validation
+      onScanSuccess(result);
       
     } catch (err) {
       devError('QR Scanner: Error processing result:', err);
@@ -111,15 +114,23 @@ const QRScannerComponent = ({
 
   const restartScanning = async () => {
     try {
+      setError('');
+      setScanResult('');
+      
       if (scannerRef.current) {
-        setError('');
-        setScanResult('');
+        // Stop current scanner first
+        await scannerRef.current.stop();
         setIsScanning(true);
         await scannerRef.current.start();
+        devLog('QR Scanner: Restarted successfully');
+      } else {
+        // Reinitialize scanner if it doesn't exist
+        await initializeScanner();
       }
     } catch (err) {
       devError('QR Scanner: Error restarting:', err);
-      setError('Error restarting scanner');
+      setError('Error restarting scanner. Please close and reopen.');
+      setIsScanning(false);
     }
   };
 
@@ -268,13 +279,21 @@ const QRScannerComponent = ({
                   </svg>
                 </div>
                 <div className="text-sm">
-                  <p className="text-blue-800 font-medium mb-1">How to scan:</p>
-                  <ol className="text-blue-700 space-y-1 text-xs">
-                    <li>• Position the QR code within the frame</li>
-                    <li>• Keep your device steady</li>
-                    <li>• Ensure good lighting</li>
-                    <li>• Wait for automatic detection</li>
-                  </ol>
+                  <p className="text-blue-800 font-medium mb-1">
+                    {isScanning ? 'Scanning for QR codes...' : 'How to scan:'}
+                  </p>
+                  {isScanning ? (
+                    <p className="text-blue-700 text-xs">
+                      Point your camera at any QR code. The scanner works with all QR codes, not just photo session codes.
+                    </p>
+                  ) : (
+                    <ol className="text-blue-700 space-y-1 text-xs">
+                      <li>• Position the QR code within the frame</li>
+                      <li>• Keep your device steady</li>
+                      <li>• Ensure good lighting</li>
+                      <li>• Wait for automatic detection</li>
+                    </ol>
+                  )}
                 </div>
               </div>
             </div>
