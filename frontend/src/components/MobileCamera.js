@@ -109,6 +109,8 @@ const MobileCamera = ({
   const [flashMode, setFlashMode] = useState('off');
   const [gridLines, setGridLines] = useState(false);
   const [cameraCapabilities, setCameraCapabilities] = useState(null);
+  const [supportedResolutions, setSupportedResolutions] = useState([]);
+  const [supportedFpsRanges, setSupportedFpsRanges] = useState([]);
   const [lastTouchDistance, setLastTouchDistance] = useState(0);
   const [isZooming, setIsZooming] = useState(false);
   
@@ -117,17 +119,94 @@ const MobileCamera = ({
   const streamRef = useRef(null);
   const portalRoot = useRef(null);
 
-  // Available resolution options for mobile
-  const resolutionOptions = [
+  // All possible resolution options - will be filtered by capabilities
+  const allResolutionOptions = [
+    { label: 'Standard', value: '640x480', width: 640, height: 480 },
     { label: 'HD', value: '1280x720', width: 1280, height: 720 },
     { label: 'Full HD', value: '1920x1080', width: 1920, height: 1080 },
     { label: 'QHD', value: '2560x1440', width: 2560, height: 1440 },
-    { label: '4K', value: '3840x2160', width: 3840, height: 2160 },
-    { label: 'Standard', value: '640x480', width: 640, height: 480 }
+    { label: '4K UHD', value: '3840x2160', width: 3840, height: 2160 },
+    { label: '5K', value: '5120x2880', width: 5120, height: 2880 },
+    { label: '8K', value: '7680x4320', width: 7680, height: 4320 }
   ];
 
-  // Available FPS options
-  const fpsOptions = [15, 24, 30, 60];
+  // All possible FPS options - will be filtered by capabilities
+  const allFpsOptions = [15, 24, 30, 60, 120, 240];
+
+  // Get filtered resolution options based on camera capabilities
+  const getAvailableResolutions = () => {
+    if (!cameraCapabilities?.width || !cameraCapabilities?.height) {
+      return allResolutionOptions.slice(0, 3); // Default to basic options
+    }
+
+    return allResolutionOptions.filter(option => {
+      const maxWidth = cameraCapabilities.width?.max || 1920;
+      const maxHeight = cameraCapabilities.height?.max || 1080;
+      return option.width <= maxWidth && option.height <= maxHeight;
+    });
+  };
+
+  // Get filtered FPS options based on camera capabilities
+  const getAvailableFps = () => {
+    if (!cameraCapabilities?.frameRate) {
+      return [15, 24, 30]; // Default options
+    }
+
+    const maxFps = cameraCapabilities.frameRate?.max || 30;
+    return allFpsOptions.filter(fps => fps <= maxFps);
+  };
+
+  // Test if a specific resolution is actually supported
+  const testResolutionSupport = async (width, height) => {
+    try {
+      const testConstraints = {
+        video: {
+          width: { exact: width },
+          height: { exact: height },
+          deviceId: selectedDevice ? { exact: selectedDevice } : undefined,
+          facingMode: { ideal: facingMode }
+        }
+      };
+      
+      const testStream = await navigator.mediaDevices.getUserMedia(testConstraints);
+      const videoTrack = testStream.getVideoTracks()[0];
+      const settings = videoTrack.getSettings();
+      
+      // Clean up test stream
+      testStream.getTracks().forEach(track => track.stop());
+      
+      // Check if we got the exact resolution we requested
+      return settings.width === width && settings.height === height;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Get actually supported resolutions by testing them
+  const getTestedResolutions = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) return [];
+    
+    const testedResolutions = [];
+    const capabilityBasedOptions = getAvailableResolutions();
+    
+    for (const option of capabilityBasedOptions) {
+      try {
+        const isSupported = await testResolutionSupport(option.width, option.height);
+        if (isSupported) {
+          testedResolutions.push(option);
+        }
+      } catch (error) {
+        devWarn(`Mobile Camera: Failed to test resolution ${option.label}:`, error);
+      }
+    }
+    
+    // Ensure we always have at least one option
+    if (testedResolutions.length === 0) {
+      testedResolutions.push({ label: 'Auto', value: 'auto', width: 'auto', height: 'auto' });
+    }
+    
+    return testedResolutions;
+  };
 
   // Flash modes
   const flashModes = [
@@ -235,18 +314,35 @@ const MobileCamera = ({
       }
 
       // Get resolution settings
-      const selectedResolution = resolutionOptions.find(r => r.value === resolution) || resolutionOptions[0];
+      let selectedResolution = allResolutionOptions.find(r => r.value === resolution);
+      
+      // If no specific resolution selected or 'auto', use best available from supported resolutions
+      if (!selectedResolution || resolution === 'auto') {
+        if (supportedResolutions.length > 0) {
+          selectedResolution = supportedResolutions[supportedResolutions.length - 1]; // Highest quality
+        } else {
+          selectedResolution = allResolutionOptions[1]; // Default to HD
+        }
+      }
       
       // Build constraints with user settings
       const constraints = {
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: selectedResolution.width, min: 640 },
-          height: { ideal: selectedResolution.height, min: 480 },
-          frameRate: { ideal: fps, min: 15 },
-          aspectRatio: { ideal: selectedResolution.width / selectedResolution.height }
+          frameRate: { ideal: fps, min: 15 }
         }
       };
+      
+      // Add resolution constraints if not auto
+      if (selectedResolution.width !== 'auto' && selectedResolution.height !== 'auto') {
+        constraints.video.width = { ideal: selectedResolution.width, min: 640 };
+        constraints.video.height = { ideal: selectedResolution.height, min: 480 };
+        constraints.video.aspectRatio = { ideal: selectedResolution.width / selectedResolution.height };
+      } else {
+        // For auto resolution, let the camera choose the best
+        constraints.video.width = { min: 640 };
+        constraints.video.height = { min: 480 };
+      }
       
       // Add device ID constraint if specific device is selected
       if (selectedDevice) {
@@ -262,6 +358,30 @@ const MobileCamera = ({
         const capabilities = videoTrack.getCapabilities();
         setCameraCapabilities(capabilities);
         devLog('Mobile Camera: Camera capabilities:', capabilities);
+        
+        // Test and set supported resolutions in background
+        getTestedResolutions().then(tested => {
+          setSupportedResolutions(tested);
+          devLog('Mobile Camera: Tested resolutions:', tested);
+          
+          // If current resolution is not supported, switch to first available
+          const currentRes = allResolutionOptions.find(r => r.value === resolution);
+          if (currentRes && !tested.some(t => t.value === resolution)) {
+            if (tested.length > 0 && tested[0].value !== 'auto') {
+              setResolution(tested[0].value);
+            }
+          }
+        });
+        
+        // Set supported FPS ranges
+        const availableFps = getAvailableFps();
+        setSupportedFpsRanges(availableFps);
+        devLog('Mobile Camera: Available FPS:', availableFps);
+        
+        // If current FPS is not supported, switch to highest available
+        if (!availableFps.includes(fps)) {
+          setFps(Math.max(...availableFps));
+        }
         
         // Apply zoom if supported
         if (capabilities.zoom && zoom !== 1) {
@@ -615,6 +735,11 @@ const MobileCamera = ({
                       {zoom.toFixed(1)}x
                     </div>
                   )}
+                  {supportedResolutions.length === 0 && cameraCapabilities && (
+                    <div className="bg-blue-500/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs animate-pulse">
+                      Testing 4K/HD...
+                    </div>
+                  )}
                   {isZooming && (
                     <div className="bg-blue-500/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs animate-pulse">
                       Zooming...
@@ -743,35 +868,105 @@ const MobileCamera = ({
                 ⚙️ Camera Settings
               </h3>
               
+              {/* Camera Capabilities Summary */}
+              {cameraCapabilities && (
+                <div className="mb-6 p-4 bg-white/10 rounded-lg">
+                  <h4 className="text-sm font-medium text-green-300 mb-2 flex items-center">
+                    📊 Camera Capabilities
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-white/70">Max Resolution:</span>
+                      <div className="text-white font-medium">
+                        {cameraCapabilities.width?.max || 'Unknown'} × {cameraCapabilities.height?.max || 'Unknown'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-white/70">Max FPS:</span>
+                      <div className="text-white font-medium">
+                        {cameraCapabilities.frameRate?.max || 'Unknown'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-white/70">Zoom:</span>
+                      <div className="text-white font-medium">
+                        {cameraCapabilities.zoom ? `${cameraCapabilities.zoom.min || 1}× - ${cameraCapabilities.zoom.max || 3}×` : 'Not supported'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-white/70">Tested Options:</span>
+                      <div className="text-white font-medium">
+                        {supportedResolutions.length > 0 ? `${supportedResolutions.length} resolutions` : 'Testing...'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* Resolution Selector */}
               <div>
-                <label className="block text-sm font-medium mb-3">Resolution</label>
+                <label className="block text-sm font-medium mb-3">
+                  Resolution 
+                  {cameraCapabilities && (
+                    <span className="ml-2 text-xs text-green-300">
+                      (Max: {cameraCapabilities.width?.max || 'Unknown'}×{cameraCapabilities.height?.max || 'Unknown'})
+                    </span>
+                  )}
+                </label>
                 <select
                   value={resolution}
                   onChange={(e) => setResolution(e.target.value)}
                   className="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white touch-manipulation text-base"
                 >
-                  {resolutionOptions.map(option => (
-                    <option key={option.value} value={option.value} className="bg-black text-white">
-                      {option.label} ({option.width}×{option.height})
-                    </option>
-                  ))}
+                  {supportedResolutions.length > 0 ? (
+                    supportedResolutions.map(option => (
+                      <option key={option.value} value={option.value} className="bg-black text-white">
+                        {option.label} {option.width !== 'auto' ? `(${option.width}×${option.height})` : '(Best Available)'}
+                      </option>
+                    ))
+                  ) : (
+                    getAvailableResolutions().map(option => (
+                      <option key={option.value} value={option.value} className="bg-black text-white">
+                        {option.label} ({option.width}×{option.height})
+                      </option>
+                    ))
+                  )}
                 </select>
+                {supportedResolutions.length === 0 && cameraCapabilities && (
+                  <p className="text-xs text-yellow-300 mt-1">
+                    🔍 Testing resolutions... Options will update when complete.
+                  </p>
+                )}
               </div>
 
               {/* FPS Selector */}
               <div>
-                <label className="block text-sm font-medium mb-3">Frame Rate</label>
+                <label className="block text-sm font-medium mb-3">
+                  Frame Rate
+                  {cameraCapabilities?.frameRate && (
+                    <span className="ml-2 text-xs text-green-300">
+                      (Max: {cameraCapabilities.frameRate.max || 30} FPS)
+                    </span>
+                  )}
+                </label>
                 <select
                   value={fps}
                   onChange={(e) => setFps(parseInt(e.target.value))}
                   className="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-3 text-white touch-manipulation text-base"
                 >
-                  {fpsOptions.map(option => (
-                    <option key={option} value={option} className="bg-black text-white">
-                      {option} FPS
-                    </option>
-                  ))}
+                  {supportedFpsRanges.length > 0 ? (
+                    supportedFpsRanges.map(option => (
+                      <option key={option} value={option} className="bg-black text-white">
+                        {option} FPS
+                      </option>
+                    ))
+                  ) : (
+                    getAvailableFps().map(option => (
+                      <option key={option} value={option} className="bg-black text-white">
+                        {option} FPS
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 
