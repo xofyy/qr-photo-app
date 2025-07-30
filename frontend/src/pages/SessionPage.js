@@ -175,6 +175,25 @@ const SessionPage = () => {
 
   return (
     <Layout>
+      {/* Mobile Camera - render outside constrained container for full screen */}
+      {isMobile && (
+        <MobileCamera
+          isActive={cameraActive}
+          capturedPhoto={capturedPhoto}
+          uploading={uploading}
+          onPhotoCapture={(photo) => {
+            setCapturedPhoto(photo);
+            setError('');
+          }}
+          onRetakePhoto={() => {
+            setCapturedPhoto(null);
+            setError('');
+          }}
+          onConfirmUpload={confirmUpload}
+          onClose={() => setCameraActive(false)}
+        />
+      )}
+      
       <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
       {/* Session Header */}
       <div className="text-center mb-6 sm:mb-8">
@@ -287,23 +306,7 @@ const SessionPage = () => {
               </div>
             ) : (
               <>
-                {isMobile ? (
-                  <MobileCamera
-                    isActive={cameraActive}
-                    capturedPhoto={capturedPhoto}
-                    uploading={uploading}
-                    onPhotoCapture={(photo) => {
-                      setCapturedPhoto(photo);
-                      setError('');
-                    }}
-                    onRetakePhoto={() => {
-                      setCapturedPhoto(null);
-                      setError('');
-                    }}
-                    onConfirmUpload={confirmUpload}
-                    onClose={() => setCameraActive(false)}
-                  />
-                ) : (
+                {!isMobile && (
                   <PCCamera
                     isActive={cameraActive}
                     capturedPhoto={capturedPhoto}
