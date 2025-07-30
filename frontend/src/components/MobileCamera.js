@@ -60,8 +60,9 @@ const MobileCamera = ({
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+      <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 overflow-y-auto">
+        <div className="min-h-full flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl my-4">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -86,12 +87,14 @@ const MobileCamera = ({
             )}
           </div>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 z-50 overflow-y-auto">
+      <div className="min-h-full flex items-center justify-center p-4">
       {/* Hidden file inputs */}
       <input
         ref={fileInputRef}
@@ -113,7 +116,7 @@ const MobileCamera = ({
       {!capturedPhoto ? (
         showWaiting ? (
           /* Waiting for Camera/Gallery */
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl my-4">
             <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <svg className="w-10 h-10 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -160,7 +163,7 @@ const MobileCamera = ({
           </div>
         ) : (
           /* Camera Interface */
-          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl my-4">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -236,7 +239,7 @@ const MobileCamera = ({
         )
       ) : (
         /* Photo Preview */
-        <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl">
+        <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl my-4">
           <div className="text-center mb-4">
             <h3 className="text-xl font-bold text-gray-900 mb-2">📸 Photo Preview</h3>
           </div>
@@ -312,6 +315,7 @@ const MobileCamera = ({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
