@@ -12,6 +12,7 @@ const MobileCamera = ({
 }) => {
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -37,6 +38,12 @@ const MobileCamera = ({
   const openNativeCamera = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+  const openGallery = () => {
+    if (galleryInputRef.current) {
+      galleryInputRef.current.click();
     }
   };
 
@@ -78,7 +85,7 @@ const MobileCamera = ({
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center z-50 p-4">
-      {/* Hidden file input */}
+      {/* Hidden file inputs */}
       <input
         ref={fileInputRef}
         type="file"
@@ -86,6 +93,14 @@ const MobileCamera = ({
         capture="environment"
         onChange={handleFileSelect}
         className="hidden"
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileSelect}
+        className="hidden"
+        id="gallery-input"
       />
 
       {!capturedPhoto ? (
@@ -98,10 +113,30 @@ const MobileCamera = ({
             </svg>
           </div>
           
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">📱 Native Camera</h2>
-          <p className="text-gray-600 mb-8 leading-relaxed">
-            Use your phone's built-in camera app for the best photo quality and experience.
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">📱 Take Photo</h2>
+          <p className="text-gray-600 mb-6 leading-relaxed">
+            Tap the button below to open your phone's camera app and take a high-quality photo.
           </p>
+          
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start space-x-3">
+              <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="text-sm">
+                <p className="text-blue-800 font-medium mb-1">How it works:</p>
+                <ol className="text-blue-700 space-y-1 text-xs">
+                  <li>1. Tap "Open Camera" below</li>
+                  <li>2. Your phone's camera app will open</li>
+                  <li>3. Take your photo with all camera features</li>
+                  <li>4. Confirm/save the photo in your camera app</li>
+                  <li>5. You'll return here to upload it</li>
+                </ol>
+              </div>
+            </div>
+          </div>
           
           <div className="space-y-4">
             <button
@@ -112,13 +147,25 @@ const MobileCamera = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span>Open Camera</span>
+              <span>Take New Photo</span>
+            </button>
+            
+            <div className="text-sm text-gray-500 text-center my-3">or</div>
+            
+            <button
+              onClick={openGallery}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Choose from Gallery</span>
             </button>
             
             <div className="text-xs text-gray-500 space-y-1">
-              <p>✨ Full access to camera features</p>
-              <p>📐 All resolutions & settings</p>
-              <p>🔍 Auto-focus & image stabilization</p>
+              <p>✨ Use all your phone's camera features</p>
+              <p>📐 Portrait, Night mode, HDR available</p>
+              <p>🔍 Professional quality photos</p>
             </div>
             
             {onClose && (
@@ -171,9 +218,12 @@ const MobileCamera = ({
             <button
               onClick={() => {
                 onRetakePhoto();
-                // Reset file input
+                // Reset file inputs
                 if (fileInputRef.current) {
                   fileInputRef.current.value = '';
+                }
+                if (galleryInputRef.current) {
+                  galleryInputRef.current.value = '';
                 }
               }}
               className="w-full flex items-center justify-center space-x-3 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-all duration-200"
