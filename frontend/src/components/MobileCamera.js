@@ -1,8 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { devLog, devWarn, devError } from '../utils/helpers';
 
 // Add custom styles for mobile camera
 const cameraStyles = `
+  #mobile-camera-portal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 99999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: auto !important;
+  }
+  
   .mobile-camera-container {
     position: fixed !important;
     top: 0 !important;
@@ -11,13 +26,14 @@ const cameraStyles = `
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    z-index: 9999 !important;
+    z-index: 99999 !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     overflow: hidden !important;
+    transform: none !important;
   }
   
   .mobile-camera-slider {
@@ -99,6 +115,7 @@ const MobileCamera = ({
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+  const portalRoot = useRef(null);
 
   // Available resolution options for mobile
   const resolutionOptions = [
@@ -121,13 +138,42 @@ const MobileCamera = ({
 
   useEffect(() => {
     enumerateCameraDevices();
+    
+    // Create portal root element if it doesn't exist
+    if (!portalRoot.current) {
+      portalRoot.current = document.createElement('div');
+      portalRoot.current.id = 'mobile-camera-portal';
+      document.body.appendChild(portalRoot.current);
+    }
+    
+    return () => {
+      // Clean up portal root on unmount
+      if (portalRoot.current && document.body.contains(portalRoot.current)) {
+        document.body.removeChild(portalRoot.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
     if (isActive) {
       // Add body class to prevent scrolling and ensure full screen
       document.body.classList.add('mobile-camera-active');
+      
+      // Force viewport meta tag for mobile
+      const existingViewport = document.querySelector('meta[name="viewport"]');
+      const originalViewport = existingViewport ? existingViewport.content : '';
+      if (existingViewport) {
+        existingViewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+      }
+      
       startCamera();
+      
+      return () => {
+        // Restore original viewport
+        if (existingViewport && originalViewport) {
+          existingViewport.content = originalViewport;
+        }
+      };
     } else {
       // Remove body class
       document.body.classList.remove('mobile-camera-active');
@@ -460,41 +506,42 @@ const MobileCamera = ({
     }
   };
 
-  if (error) {
-    return (
-      <div className="mobile-camera-container fixed inset-0 bg-red-900 flex items-center justify-center z-[9999]">
-        {/* Inject custom styles */}
-        <style>{cameraStyles}</style>
-        <div className="text-center p-6 max-w-sm mx-4">
-          <div className="w-20 h-20 bg-red-200 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
-          </div>
-          <h3 className="text-xl font-semibold text-white mb-4">Camera Error</h3>
-          <p className="text-red-200 text-sm mb-6">{error}</p>
-          <div className="space-y-3">
-            <button
-              onClick={startCamera}
-              className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
-            >
-              Try Again
-            </button>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="w-full bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg transition-colors font-medium"
-              >
-                Close Camera
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
+  // Don't render anything if not active or portal root is not ready
+  if (!isActive || !portalRoot.current) {
+    return null;
   }
 
-  return (
+  const cameraContent = error ? (
+    <div className="mobile-camera-container fixed inset-0 bg-red-900 flex items-center justify-center z-[99999]">
+      {/* Inject custom styles */}
+      <style>{cameraStyles}</style>
+      <div className="text-center p-6 max-w-sm mx-4">
+        <div className="w-20 h-20 bg-red-200 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 className="text-xl font-semibold text-white mb-4">Camera Error</h3>
+        <p className="text-red-200 text-sm mb-6">{error}</p>
+        <div className="space-y-3">
+          <button
+            onClick={startCamera}
+            className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+          >
+            Try Again
+          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="w-full bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+            >
+              Close Camera
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : (
     <div className="mobile-camera-container fixed inset-0 bg-black z-[9999]">
       {/* Inject custom styles */}
       <style>{cameraStyles}</style>
@@ -846,6 +893,9 @@ const MobileCamera = ({
       </div>
     </div>
   );
+
+  // Use createPortal to render the camera outside of the parent DOM hierarchy
+  return createPortal(cameraContent, portalRoot.current);
 };
 
 export default MobileCamera;
