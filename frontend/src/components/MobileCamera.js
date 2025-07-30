@@ -11,11 +11,14 @@ const MobileCamera = ({
   onClose
 }) => {
   const [error, setError] = useState('');
+  const [showWaiting, setShowWaiting] = useState(false);
   const fileInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
+    setShowWaiting(false); // Hide waiting state when file is selected
+    
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
@@ -36,12 +39,16 @@ const MobileCamera = ({
   };
 
   const openNativeCamera = () => {
+    setShowWaiting(true);
+    setError('');
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
   const openGallery = () => {
+    setShowWaiting(true);
+    setError('');
     if (galleryInputRef.current) {
       galleryInputRef.current.click();
     }
@@ -104,14 +111,62 @@ const MobileCamera = ({
       />
 
       {!capturedPhoto ? (
-        /* Camera Interface */
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+        showWaiting ? (
+          /* Waiting for Camera/Gallery */
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">📱 Camera Opening...</h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Your camera app should open now. Take your photo and it will automatically return here.
+            </p>
+            
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="text-sm">
+                  <p className="text-green-800 font-medium">Camera interface is now active!</p>
+                  <p className="text-green-700 text-xs mt-1">Look for the camera controls at the bottom of your screen</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => setShowWaiting(false)}
+                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-3 px-6 rounded-xl transition-colors"
+              >
+                ← Go Back
+              </button>
+              
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="w-full bg-red-100 hover:bg-red-200 text-red-800 font-medium py-2 px-6 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
+        ) : (
+          /* Camera Interface */
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
           
           <h2 className="text-2xl font-bold text-gray-900 mb-3">📱 Take Photo</h2>
           <p className="text-gray-600 mb-6 leading-relaxed">
@@ -178,6 +233,7 @@ const MobileCamera = ({
             )}
           </div>
         </div>
+        )
       ) : (
         /* Photo Preview */
         <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl">
