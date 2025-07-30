@@ -301,6 +301,7 @@ const SessionPage = () => {
                       setError('');
                     }}
                     onConfirmUpload={confirmUpload}
+                    onClose={() => setCameraActive(false)}
                   />
                 ) : (
                   <PCCamera

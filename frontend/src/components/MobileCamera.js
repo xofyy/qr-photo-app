@@ -3,6 +3,23 @@ import { devLog, devWarn, devError } from '../utils/helpers';
 
 // Add custom styles for mobile camera
 const cameraStyles = `
+  .mobile-camera-container {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 9999 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: hidden !important;
+  }
+  
   .mobile-camera-slider {
     -webkit-appearance: none;
     appearance: none;
@@ -40,6 +57,19 @@ const cameraStyles = `
   .camera-safe-area-bottom {
     padding-bottom: max(2rem, env(safe-area-inset-bottom));
   }
+  
+  /* Prevent any parent container from constraining the mobile camera */
+  body.mobile-camera-active {
+    overflow: hidden !important;
+  }
+  
+  /* Ensure video fills completely */
+  .mobile-camera-video {
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
 `;
 
 const MobileCamera = ({ 
@@ -48,7 +78,8 @@ const MobileCamera = ({
   onRetakePhoto,
   uploading,
   onConfirmUpload,
-  isActive 
+  isActive,
+  onClose
 }) => {
   const [cameraReady, setCameraReady] = useState(false);
   const [error, setError] = useState('');
@@ -94,13 +125,18 @@ const MobileCamera = ({
 
   useEffect(() => {
     if (isActive) {
+      // Add body class to prevent scrolling and ensure full screen
+      document.body.classList.add('mobile-camera-active');
       startCamera();
     } else {
+      // Remove body class
+      document.body.classList.remove('mobile-camera-active');
       stopCamera();
     }
     
     // Cleanup on unmount
     return () => {
+      document.body.classList.remove('mobile-camera-active');
       stopCamera();
     };
   }, [isActive, facingMode, selectedDevice, resolution, fps, zoom]);
@@ -426,8 +462,10 @@ const MobileCamera = ({
 
   if (error) {
     return (
-      <div className="fixed inset-0 bg-red-900 flex items-center justify-center z-50">
-        <div className="text-center p-6 max-w-sm">
+      <div className="mobile-camera-container fixed inset-0 bg-red-900 flex items-center justify-center z-[9999]">
+        {/* Inject custom styles */}
+        <style>{cameraStyles}</style>
+        <div className="text-center p-6 max-w-sm mx-4">
           <div className="w-20 h-20 bg-red-200 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -435,19 +473,29 @@ const MobileCamera = ({
           </div>
           <h3 className="text-xl font-semibold text-white mb-4">Camera Error</h3>
           <p className="text-red-200 text-sm mb-6">{error}</p>
-          <button
-            onClick={startCamera}
-            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
-          >
-            Try Again
-          </button>
+          <div className="space-y-3">
+            <button
+              onClick={startCamera}
+              className="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+            >
+              Try Again
+            </button>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="w-full bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+              >
+                Close Camera
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="mobile-camera-container fixed inset-0 bg-black z-[9999]">
       {/* Inject custom styles */}
       <style>{cameraStyles}</style>
       
@@ -458,7 +506,7 @@ const MobileCamera = ({
           autoPlay 
           playsInline 
           muted
-          className="w-full h-full object-cover"
+          className="mobile-camera-video w-full h-full object-cover"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -505,24 +553,42 @@ const MobileCamera = ({
                 <span>Live</span>
               </div>
               
-              <div className="flex flex-col items-end space-y-2">
-                <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm">
-                  {videoRef.current?.videoWidth || 0}×{videoRef.current?.videoHeight || 0}
+              <div className="flex items-center space-x-3">
+                <div className="flex flex-col items-end space-y-2">
+                  <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm">
+                    {videoRef.current?.videoWidth || 0}×{videoRef.current?.videoHeight || 0}
+                  </div>
+                  {fps && (
+                    <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
+                      {fps} FPS
+                    </div>
+                  )}
+                  {zoom > 1 && (
+                    <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
+                      {zoom.toFixed(1)}x
+                    </div>
+                  )}
+                  {isZooming && (
+                    <div className="bg-blue-500/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs animate-pulse">
+                      Zooming...
+                    </div>
+                  )}
                 </div>
-                {fps && (
-                  <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
-                    {fps} FPS
-                  </div>
-                )}
-                {zoom > 1 && (
-                  <div className="bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
-                    {zoom.toFixed(1)}x
-                  </div>
-                )}
-                {isZooming && (
-                  <div className="bg-blue-500/80 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs animate-pulse">
-                    Zooming...
-                  </div>
+                
+                {/* Close Button */}
+                {onClose && (
+                  <button
+                    onClick={() => {
+                      addHapticFeedback('light');
+                      onClose();
+                    }}
+                    className="bg-black/60 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
+                    title="Close Camera"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 )}
               </div>
             </div>
