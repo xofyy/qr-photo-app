@@ -1,6 +1,39 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { devLog, devWarn, devError } from '../utils/helpers';
 
+// Add custom styles for mobile camera
+const cameraStyles = `
+  .mobile-camera-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .mobile-camera-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+  
+  .mobile-camera-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+`;
+
 const MobileCamera = ({ 
   onPhotoCapture, 
   capturedPhoto,
@@ -14,10 +47,38 @@ const MobileCamera = ({
   const [facingMode, setFacingMode] = useState('environment');
   const [showSettings, setShowSettings] = useState(false);
   const [cameraDevices, setCameraDevices] = useState([]);
+  const [selectedDevice, setSelectedDevice] = useState(null);
+  const [resolution, setResolution] = useState('1280x720');
+  const [fps, setFps] = useState(24);
+  const [zoom, setZoom] = useState(1);
+  const [flashMode, setFlashMode] = useState('off');
+  const [gridLines, setGridLines] = useState(false);
+  const [cameraCapabilities, setCameraCapabilities] = useState(null);
+  const [lastTouchDistance, setLastTouchDistance] = useState(0);
+  const [isZooming, setIsZooming] = useState(false);
   
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
+
+  // Available resolution options for mobile
+  const resolutionOptions = [
+    { label: 'HD', value: '1280x720', width: 1280, height: 720 },
+    { label: 'Full HD', value: '1920x1080', width: 1920, height: 1080 },
+    { label: 'QHD', value: '2560x1440', width: 2560, height: 1440 },
+    { label: '4K', value: '3840x2160', width: 3840, height: 2160 },
+    { label: 'Standard', value: '640x480', width: 640, height: 480 }
+  ];
+
+  // Available FPS options
+  const fpsOptions = [15, 24, 30, 60];
+
+  // Flash modes
+  const flashModes = [
+    { value: 'off', label: 'Off', icon: '🔦' },
+    { value: 'on', label: 'On', icon: '💡' },
+    { value: 'auto', label: 'Auto', icon: '⚡' }
+  ];
 
   useEffect(() => {
     enumerateCameraDevices();
@@ -34,7 +95,7 @@ const MobileCamera = ({
     return () => {
       stopCamera();
     };
-  }, [isActive, facingMode]);
+  }, [isActive, facingMode, selectedDevice, resolution, fps, zoom]);
 
   const enumerateCameraDevices = async () => {
     try {
@@ -42,6 +103,27 @@ const MobileCamera = ({
       const videoDevices = devices.filter(device => device.kind === 'videoinput');
       setCameraDevices(videoDevices);
       devLog('Mobile Camera: Available cameras:', videoDevices.length);
+      
+      // Auto-select appropriate camera based on facing mode
+      const backCamera = videoDevices.find(device => 
+        device.label.toLowerCase().includes('back') || 
+        device.label.toLowerCase().includes('rear') ||
+        device.label.toLowerCase().includes('environment')
+      );
+      
+      const frontCamera = videoDevices.find(device => 
+        device.label.toLowerCase().includes('front') || 
+        device.label.toLowerCase().includes('user') ||
+        device.label.toLowerCase().includes('selfie')
+      );
+      
+      if (facingMode === 'environment' && backCamera) {
+        setSelectedDevice(backCamera.deviceId);
+      } else if (facingMode === 'user' && frontCamera) {
+        setSelectedDevice(frontCamera.deviceId);
+      } else if (videoDevices.length > 0) {
+        setSelectedDevice(videoDevices[0].deviceId);
+      }
     } catch (error) {
       devError('Mobile Camera: Error enumerating devices:', error);
     }
@@ -62,19 +144,46 @@ const MobileCamera = ({
         streamRef.current.getTracks().forEach(track => track.stop());
       }
 
-      // Mobile-optimized constraints
+      // Get resolution settings
+      const selectedResolution = resolutionOptions.find(r => r.value === resolution) || resolutionOptions[0];
+      
+      // Build constraints with user settings
       const constraints = {
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 },
-          frameRate: { ideal: 24, min: 15 },
-          aspectRatio: { ideal: 16/9 }
+          width: { ideal: selectedResolution.width, min: 640 },
+          height: { ideal: selectedResolution.height, min: 480 },
+          frameRate: { ideal: fps, min: 15 },
+          aspectRatio: { ideal: selectedResolution.width / selectedResolution.height }
         }
       };
+      
+      // Add device ID constraint if specific device is selected
+      if (selectedDevice) {
+        constraints.video.deviceId = { exact: selectedDevice };
+      }
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
+      
+      // Get camera capabilities for advanced features
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack && videoTrack.getCapabilities) {
+        const capabilities = videoTrack.getCapabilities();
+        setCameraCapabilities(capabilities);
+        devLog('Mobile Camera: Camera capabilities:', capabilities);
+        
+        // Apply zoom if supported
+        if (capabilities.zoom && zoom !== 1) {
+          try {
+            await videoTrack.applyConstraints({
+              advanced: [{ zoom: zoom }]
+            });
+          } catch (zoomError) {
+            devWarn('Mobile Camera: Zoom not supported or failed:', zoomError);
+          }
+        }
+      }
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -137,6 +246,117 @@ const MobileCamera = ({
     setFacingMode(newFacingMode);
   };
 
+  const applyZoom = async (newZoom) => {
+    if (!streamRef.current || !cameraCapabilities?.zoom) return;
+    
+    try {
+      const videoTrack = streamRef.current.getVideoTracks()[0];
+      await videoTrack.applyConstraints({
+        advanced: [{ zoom: newZoom }]
+      });
+      setZoom(newZoom);
+    } catch (error) {
+      devWarn('Mobile Camera: Failed to apply zoom:', error);
+    }
+  };
+
+  const simulateFlash = () => {
+    if (flashMode === 'off') return;
+    
+    // Create flash overlay
+    const flashOverlay = document.createElement('div');
+    flashOverlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.8;
+    `;
+    
+    document.body.appendChild(flashOverlay);
+    
+    // Animate flash
+    requestAnimationFrame(() => {
+      flashOverlay.style.transition = 'opacity 0.1s ease-out';
+      flashOverlay.style.opacity = '0';
+      
+      setTimeout(() => {
+        document.body.removeChild(flashOverlay);
+      }, 100);
+    });
+  };
+
+  const addHapticFeedback = (intensity = 'medium') => {
+    if ('vibrate' in navigator) {
+      switch (intensity) {
+        case 'light':
+          navigator.vibrate(10);
+          break;
+        case 'medium':
+          navigator.vibrate(25);
+          break;
+        case 'strong':
+          navigator.vibrate([50, 50, 50]);
+          break;
+        default:
+          navigator.vibrate(25);
+      }
+    }
+  };
+
+  const getTouchDistance = (touches) => {
+    if (touches.length < 2) return 0;
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return Math.sqrt(
+      Math.pow(touch2.clientX - touch1.clientX, 2) + 
+      Math.pow(touch2.clientY - touch1.clientY, 2)
+    );
+  };
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2 && cameraCapabilities?.zoom) {
+      setIsZooming(true);
+      setLastTouchDistance(getTouchDistance(e.touches));
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2 && isZooming && cameraCapabilities?.zoom) {
+      e.preventDefault();
+      const currentDistance = getTouchDistance(e.touches);
+      const scale = currentDistance / lastTouchDistance;
+      
+      if (scale > 1.05 || scale < 0.95) { // Threshold to prevent jittery zooming
+        const newZoom = Math.max(
+          cameraCapabilities.zoom.min || 1,
+          Math.min(
+            Math.min(cameraCapabilities.zoom.max || 3, 5),
+            zoom * scale
+          )
+        );
+        
+        if (Math.abs(newZoom - zoom) > 0.1) {
+          applyZoom(newZoom);
+          setLastTouchDistance(currentDistance);
+          addHapticFeedback('light');
+        }
+      }
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (isZooming) {
+      setIsZooming(false);
+      setLastTouchDistance(0);
+    }
+  };
+
   const capturePhoto = () => {
     try {
       devLog('Mobile Camera: Capturing photo...');
@@ -145,6 +365,12 @@ const MobileCamera = ({
         setError('Camera not ready. Please wait.');
         return;
       }
+
+      // Add haptic feedback for photo capture
+      addHapticFeedback('strong');
+      
+      // Simulate flash effect
+      simulateFlash();
 
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -163,6 +389,14 @@ const MobileCamera = ({
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      
+      // Apply flash brightness if flash is on
+      if (flashMode === 'on') {
+        ctx.globalCompositeOperation = 'screen';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'source-over';
+      }
       
       // Convert to blob with mobile-optimized quality
       canvas.toBlob((blob) => {
@@ -208,6 +442,8 @@ const MobileCamera = ({
 
   return (
     <div className="relative w-full">
+      {/* Inject custom styles */}
+      <style>{cameraStyles}</style>
       {/* Camera Viewport */}
       <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden w-full rounded-xl">
         <video 
@@ -216,8 +452,26 @@ const MobileCamera = ({
           playsInline 
           muted
           className="w-full h-full object-cover"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         />
         
+        {/* Grid Lines Overlay */}
+        {cameraReady && !capturedPhoto && gridLines && (
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Rule of thirds grid */}
+            <div className="w-full h-full">
+              {/* Vertical lines */}
+              <div className="absolute left-1/3 top-0 w-px h-full bg-white/30"></div>
+              <div className="absolute left-2/3 top-0 w-px h-full bg-white/30"></div>
+              {/* Horizontal lines */}
+              <div className="absolute top-1/3 left-0 w-full h-px bg-white/30"></div>
+              <div className="absolute top-2/3 left-0 w-full h-px bg-white/30"></div>
+            </div>
+          </div>
+        )}
+
         {/* Photo Preview */}
         {capturedPhoto && (
           <div className="absolute inset-0 transition-all duration-500 ease-in-out">
@@ -243,8 +497,25 @@ const MobileCamera = ({
               <span>Mobile Ready</span>
             </div>
             
-            <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-sm text-white px-2 py-1.5 rounded-full text-xs">
-              {videoRef.current?.videoWidth || 0}×{videoRef.current?.videoHeight || 0}
+            <div className="absolute top-3 right-3 flex flex-col items-end space-y-1">
+              <div className="bg-black/60 backdrop-blur-sm text-white px-2 py-1.5 rounded-full text-xs">
+                {videoRef.current?.videoWidth || 0}×{videoRef.current?.videoHeight || 0}
+              </div>
+              {fps && (
+                <div className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
+                  {fps} FPS
+                </div>
+              )}
+              {zoom > 1 && (
+                <div className="bg-black/60 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs">
+                  {zoom.toFixed(1)}x
+                </div>
+              )}
+              {isZooming && (
+                <div className="bg-blue-500/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs animate-pulse">
+                  Zooming...
+                </div>
+              )}
             </div>
           </>
         )}
@@ -255,6 +526,9 @@ const MobileCamera = ({
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-3"></div>
               <p className="text-sm font-medium">Starting Mobile Camera...</p>
+              {cameraCapabilities?.zoom && (
+                <p className="text-xs text-white/70 mt-2">Pinch to zoom when ready</p>
+              )}
             </div>
           </div>
         )}
@@ -264,7 +538,10 @@ const MobileCamera = ({
           <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
             {/* Settings Button */}
             <button
-              onClick={() => setShowSettings(!showSettings)}
+              onClick={() => {
+                addHapticFeedback('light');
+                setShowSettings(!showSettings);
+              }}
               className="bg-black/60 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -275,8 +552,11 @@ const MobileCamera = ({
 
             {/* Capture Button - Large for mobile */}
             <button
-              onClick={capturePhoto}
-              className="bg-white text-gray-900 w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 touch-manipulation"
+              onClick={() => {
+                addHapticFeedback('medium');
+                capturePhoto();
+              }}
+              className="bg-white text-gray-900 w-20 h-20 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95 touch-manipulation relative"
             >
               <div className="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +569,10 @@ const MobileCamera = ({
             {/* Switch Camera Button */}
             {cameraDevices.length > 1 && (
               <button
-                onClick={switchCamera}
+                onClick={() => {
+                  addHapticFeedback('medium');
+                  switchCamera();
+                }}
                 className="bg-black/60 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
                 title="Switch Camera"
               >
@@ -298,37 +581,166 @@ const MobileCamera = ({
                 </svg>
               </button>
             )}
+
+            {/* Flash Button */}
+            <button
+              onClick={() => {
+                addHapticFeedback('light');
+                const nextFlash = flashModes[(flashModes.findIndex(m => m.value === flashMode) + 1) % flashModes.length];
+                setFlashMode(nextFlash.value);
+              }}
+              className="bg-black/60 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-200 hover:bg-black/80 active:scale-95 touch-manipulation"
+              title={`Flash: ${flashModes.find(m => m.value === flashMode)?.label}`}
+            >
+              <span className="text-lg">{flashModes.find(m => m.value === flashMode)?.icon}</span>
+            </button>
           </div>
         )}
 
         {/* Settings Panel */}
         {showSettings && cameraReady && !capturedPhoto && (
-          <div className="absolute bottom-24 left-3 right-3 bg-black/80 backdrop-blur-md text-white rounded-xl p-4 space-y-3">
-            <h3 className="font-semibold text-sm mb-2">Camera Settings</h3>
+          <div className="absolute bottom-24 left-3 right-3 bg-black/90 backdrop-blur-md text-white rounded-xl p-4 space-y-4 max-h-80 overflow-y-auto">
+            <h3 className="font-semibold text-base mb-3 flex items-center">
+              ⚙️ Camera Settings
+            </h3>
             
-            {/* Facing Mode */}
+            {/* Resolution Selector */}
+            <div>
+              <label className="block text-xs font-medium mb-2">Resolution</label>
+              <select
+                value={resolution}
+                onChange={(e) => setResolution(e.target.value)}
+                className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-sm text-white touch-manipulation"
+              >
+                {resolutionOptions.map(option => (
+                  <option key={option.value} value={option.value} className="bg-black text-white">
+                    {option.label} ({option.width}×{option.height})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* FPS Selector */}
+            <div>
+              <label className="block text-xs font-medium mb-2">Frame Rate</label>
+              <select
+                value={fps}
+                onChange={(e) => setFps(parseInt(e.target.value))}
+                className="w-full bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-sm text-white touch-manipulation"
+              >
+                {fpsOptions.map(option => (
+                  <option key={option} value={option} className="bg-black text-white">
+                    {option} FPS
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Camera Direction */}
             <div>
               <label className="block text-xs font-medium mb-2">Camera Direction</label>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setFacingMode('environment')}
-                  className={`px-3 py-2 rounded-lg text-sm transition-all touch-manipulation ${
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all touch-manipulation ${
                     facingMode === 'environment'
                       ? 'bg-white text-black'
                       : 'bg-white/20 hover:bg-white/30'
                   }`}
                 >
-                  Back Camera
+                  📷 Back
                 </button>
                 <button
                   onClick={() => setFacingMode('user')}
-                  className={`px-3 py-2 rounded-lg text-sm transition-all touch-manipulation ${
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all touch-manipulation ${
                     facingMode === 'user'
                       ? 'bg-white text-black'
                       : 'bg-white/20 hover:bg-white/30'
                   }`}
                 >
-                  Front Camera
+                  🤳 Front
+                </button>
+              </div>
+            </div>
+
+            {/* Flash Mode */}
+            <div>
+              <label className="block text-xs font-medium mb-2">Flash</label>
+              <div className="flex space-x-2">
+                {flashModes.map(mode => (
+                  <button
+                    key={mode.value}
+                    onClick={() => setFlashMode(mode.value)}
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all touch-manipulation ${
+                      flashMode === mode.value
+                        ? 'bg-white text-black'
+                        : 'bg-white/20 hover:bg-white/30'
+                    }`}
+                  >
+                    {mode.icon} {mode.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Zoom Control */}
+            {cameraCapabilities?.zoom && (
+              <div>
+                <label className="block text-xs font-medium mb-2">
+                  Zoom: {zoom.toFixed(1)}x
+                </label>
+                <input
+                  type="range"
+                  min={cameraCapabilities.zoom.min || 1}
+                  max={Math.min(cameraCapabilities.zoom.max || 3, 5)}
+                  step="0.1"
+                  value={zoom}
+                  onChange={(e) => applyZoom(parseFloat(e.target.value))}
+                  className="w-full mobile-camera-slider touch-manipulation"
+                />
+              </div>
+            )}
+
+            {/* Grid Lines Toggle */}
+            <div>
+              <label className="flex items-center space-x-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={gridLines}
+                  onChange={(e) => setGridLines(e.target.checked)}
+                  className="w-4 h-4 text-white bg-white/20 border border-white/30 rounded"
+                />
+                <span>Show grid lines</span>
+              </label>
+            </div>
+
+            {/* Quick Actions */}
+            <div>
+              <label className="block text-xs font-medium mb-2">Quick Actions</label>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    addHapticFeedback('light');
+                    setResolution('1920x1080');
+                    setFps(30);
+                    setFlashMode('auto');
+                    setGridLines(true);
+                  }}
+                  className="flex-1 bg-white/20 hover:bg-white/30 active:bg-white/40 py-2 px-3 rounded-lg text-xs transition-all touch-manipulation"
+                >
+                  📸 Pro Mode
+                </button>
+                <button
+                  onClick={() => {
+                    addHapticFeedback('light');
+                    setResolution('1280x720');
+                    setFps(24);
+                    setFlashMode('off');
+                    setGridLines(false);
+                  }}
+                  className="flex-1 bg-white/20 hover:bg-white/30 active:bg-white/40 py-2 px-3 rounded-lg text-xs transition-all touch-manipulation"
+                >
+                  ⚡ Quick Mode
                 </button>
               </div>
             </div>
@@ -336,9 +748,9 @@ const MobileCamera = ({
             {/* Close Settings */}
             <button
               onClick={() => setShowSettings(false)}
-              className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 py-2 rounded-lg text-sm transition-all touch-manipulation"
+              className="w-full bg-white/20 hover:bg-white/30 active:bg-white/40 py-3 rounded-lg text-sm font-medium transition-all touch-manipulation"
             >
-              Close Settings
+              ✓ Done
             </button>
           </div>
         )}
@@ -360,7 +772,10 @@ const MobileCamera = ({
           
           <div className="flex flex-col gap-3">
             <button
-              onClick={onRetakePhoto}
+              onClick={() => {
+                addHapticFeedback('medium');
+                onRetakePhoto();
+              }}
               className="flex items-center justify-center space-x-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform active:scale-95 touch-manipulation"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -370,7 +785,12 @@ const MobileCamera = ({
             </button>
             
             <button
-              onClick={onConfirmUpload}
+              onClick={() => {
+                if (!uploading) {
+                  addHapticFeedback('medium');
+                  onConfirmUpload();
+                }
+              }}
               disabled={uploading}
               className="flex items-center justify-center space-x-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 active:from-green-800 active:to-emerald-800 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-95 disabled:active:scale-100 touch-manipulation"
             >
