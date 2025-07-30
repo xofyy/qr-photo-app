@@ -23,11 +23,18 @@ const Home = () => {
     try {
       const sessionResponse = await createSession();
       const newSessionId = sessionResponse.data.session_id;
-      setSessionId(newSessionId);
       
-      const qrResponse = await getQRCode(newSessionId);
-      setQrCode(qrResponse.data.qr_code);
-      setSessionUrl(qrResponse.data.session_url);
+      if (isAuthenticated) {
+        // For authenticated users, redirect to the detailed session info page
+        navigate(`/session-info/${newSessionId}`);
+      } else {
+        // For anonymous users, show QR code inline (keep existing behavior)
+        setSessionId(newSessionId);
+        
+        const qrResponse = await getQRCode(newSessionId);
+        setQrCode(qrResponse.data.qr_code);
+        setSessionUrl(qrResponse.data.session_url);
+      }
     } catch (error) {
       console.error('Error creating session:', error);
     } finally {

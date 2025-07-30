@@ -45,8 +45,8 @@ const UserDashboard = () => {
       // Refresh the sessions list
       await loadUserSessions();
       
-      // Navigate to session management or show QR code
-      navigate(`/session/${newSession.session_id}`);
+      // Navigate to session info page to show QR code and details
+      navigate(`/session-info/${newSession.session_id}`);
     } catch (error) {
       console.error('Error creating session:', error);
       alert('Failed to create session. Please try again.');

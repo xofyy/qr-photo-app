@@ -13,18 +13,6 @@ import traceback
 from starlette.requests import Request
 
 from app import crud, schemas, utils
-
-app = FastAPI()
-
-# CORS ayarları
-origins = os.getenv("CORS_ORIGINS", "").split(",")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 from app.database import get_database
 from app.utils.user_identifier import generate_user_identifier, get_user_ip, get_user_agent
 from app.utils.zip_generator import create_photos_zip, create_empty_session_zip
@@ -41,13 +29,16 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_API_SECRET")
 )
 
-app = FastAPI(title="QR Photo Session App")
+# Initialize FastAPI
+app = FastAPI(title="QR Photo Session App", version="1.0.0")
 
+# CORS configuration
+origins = os.getenv("CORS_ORIGINS", "").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins if origins != [''] else ["http://localhost:3000"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=["*"],
 )
 
@@ -232,10 +223,16 @@ async def get_qr_code(session_id: str):
 @app.post("/sessions/{session_id}/photos")
 async def upload_photo(
     session_id: str,
-    file: UploadFile = File(...),
+    file: UploadFile = File(..., description="Image file (max 10MB)"),
     request: Request = None
 ):
     try:
+        # Validate session ID format (UUID)
+        try:
+            uuid.UUID(session_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid session ID format")
+            
         print(f"Attempting to upload photo for session: {session_id}")
         print(f"File details: {file.filename}, {file.content_type}")
         
@@ -278,13 +275,22 @@ async def upload_photo(
         
         # Read file content properly
         contents = await file.read()
-        print(f"File size: {len(contents)} bytes")
+        file_size = len(contents)
+        print(f"File size: {file_size} bytes")
         
-        if len(contents) == 0:
+        # File size validation (10MB limit)
+        MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+        if file_size == 0:
             raise HTTPException(status_code=400, detail="Empty file provided")
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail=f"File too large. Maximum size is {MAX_FILE_SIZE//1024//1024}MB")
+        
+        # Validate filename
+        if not file.filename or len(file.filename) > 255:
+            raise HTTPException(status_code=400, detail="Invalid filename")
         
         # Validate that it's an image file
-        allowed_content_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+        allowed_content_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
         if file.content_type not in allowed_content_types:
             raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed types: {allowed_content_types}")
         
@@ -580,11 +586,15 @@ async def download_session_photos(
 
 
 @app.delete("/admin/sessions/{session_id}")
-async def delete_session(session_id: str):
+async def delete_session(session_id: str, current_user: UserResponse = Depends(require_authentication)):
     try:
         db_session = await crud.get_session(session_id=session_id)
         if not db_session:
             raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Check if current user is the owner of this session
+        if db_session.get("owner_id") != current_user.user_id:
+            raise HTTPException(status_code=403, detail="You can only delete your own sessions")
         
         # Delete photos from Cloudinary
         photos = await crud.get_photos_by_session(session_id=session_id)

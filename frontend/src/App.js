@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import SessionPage from './pages/SessionPage';
+import SessionInfo from './pages/SessionInfo';
 import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import AuthCallback from './pages/AuthCallback';
@@ -15,6 +16,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/session/:sessionId" element={<SessionPage />} />
+          <Route path="/session-info/:sessionId" element={
+            <ProtectedRoute>
+              <SessionInfo />
+            </ProtectedRoute>
+          } />
           <Route path="/admin" element={
             <ProtectedRoute>
               <AdminDashboard />

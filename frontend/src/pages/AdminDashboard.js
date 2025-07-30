@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getAllSessions, deleteSession, getSessionPhotos } from '../services/api';
+import { getUserSessions, deleteSession, getSessionPhotos } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 
@@ -19,7 +19,7 @@ const AdminDashboard = () => {
   const loadSessions = async () => {
     setLoading(true);
     try {
-      const response = await getAllSessions();
+      const response = await getUserSessions();
       setSessions(response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
     } catch (error) {
       console.error('Error loading sessions:', error);

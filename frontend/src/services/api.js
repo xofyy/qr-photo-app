@@ -4,6 +4,8 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000, // 30 second timeout
+  maxContentLength: 10 * 1024 * 1024, // 10MB max file size
 });
 
 // Add auth token to requests
@@ -16,6 +18,19 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid
+      localStorage.removeItem('auth_token');
+      window.location.href = '/';
+    }
     return Promise.reject(error);
   }
 );
