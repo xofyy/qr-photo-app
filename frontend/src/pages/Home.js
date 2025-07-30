@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createSession, getQRCode } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
+import QRScannerComponent from '../components/QRScanner';
 
 const Home = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,6 +11,7 @@ const Home = () => {
   const [sessionUrl, setSessionUrl] = useState('');
   const [sessionId, setSessionId] = useState('');
   const [copied, setCopied] = useState(false);
+  const [qrScannerActive, setQrScannerActive] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { initiateGoogleLogin, isAuthenticated, user } = useAuth();
@@ -65,6 +67,42 @@ const Home = () => {
     link.download = `qr-session-${sessionId.slice(0, 8)}.png`;
     link.href = `data:image/png;base64,${qrCode}`;
     link.click();
+  };
+
+  const handleQRScanSuccess = (scannedUrl) => {
+    console.log('QR Scan Success:', scannedUrl);
+    
+    try {
+      // Extract session ID from the scanned URL
+      const url = new URL(scannedUrl);
+      const pathSegments = url.pathname.split('/');
+      const sessionIndex = pathSegments.indexOf('session');
+      
+      if (sessionIndex !== -1 && pathSegments[sessionIndex + 1]) {
+        const scannedSessionId = pathSegments[sessionIndex + 1];
+        console.log('Navigating to session:', scannedSessionId);
+        
+        // Close scanner
+        setQrScannerActive(false);
+        
+        // Navigate to the session
+        navigate(`/session/${scannedSessionId}`);
+      } else {
+        throw new Error('Invalid session URL format');
+      }
+    } catch (error) {
+      console.error('Error processing scanned URL:', error);
+      alert('Invalid QR code. Please scan a valid session QR code.');
+      setQrScannerActive(false);
+    }
+  };
+
+  const openQRScanner = () => {
+    setQrScannerActive(true);
+  };
+
+  const closeQRScanner = () => {
+    setQrScannerActive(false);
   };
 
   return (
@@ -241,15 +279,7 @@ const Home = () => {
 
               <div className="space-y-4">
                 <button
-                  onClick={() => {
-                    // Use device camera to scan QR code (if supported)
-                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                      // For now, just show instructions
-                      alert('Use your phone\'s camera app to scan the QR code, or enter the session link directly.');
-                    } else {
-                      alert('Use your phone\'s camera app to scan the QR code.');
-                    }
-                  }}
+                  onClick={openQRScanner}
                   className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-3"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,6 +377,13 @@ const Home = () => {
             </div>
           </div>
         )}
+
+        {/* QR Scanner Component */}
+        <QRScannerComponent
+          isActive={qrScannerActive}
+          onClose={closeQRScanner}
+          onScanSuccess={handleQRScanSuccess}
+        />
 
       </div>
     </Layout>
