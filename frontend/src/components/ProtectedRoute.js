@@ -8,7 +8,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:bg-dark-gradient flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" text="Checking authentication..." />
         </div>

@@ -48,10 +48,10 @@ const AuthCallback = () => {
   }, [searchParams, login, navigate]);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center px-3 sm:px-4">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:bg-dark-gradient flex items-center justify-center px-3 sm:px-4">
       <div className="text-center max-w-sm mx-auto">
         <LoadingSpinner size="lg" text="Completing sign in..." />
-        <p className="mt-4 text-gray-600 text-sm sm:text-base">Please wait while we sign you in...</p>
+        <p className="mt-4 text-gray-600 dark:text-dark-300 text-sm sm:text-base">Please wait while we sign you in...</p>
       </div>
     </div>
   );

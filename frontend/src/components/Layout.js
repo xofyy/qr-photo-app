@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import DarkModeToggle from './DarkModeToggle';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
@@ -13,9 +14,9 @@ const Layout = ({ children }) => {
   const isSessionPage = location.pathname.startsWith('/session/');
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:bg-dark-gradient">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50">
+      <header className="bg-white/80 dark:bg-dark-800/90 backdrop-blur-md border-b border-gray-200/50 dark:border-dark-700/30 sticky top-0 z-50">
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex justify-between items-center min-h-16 sm:min-h-20 lg:min-h-16 py-3 sm:py-4 lg:py-3">
             {/* Logo */}
@@ -30,10 +31,10 @@ const Layout = ({ children }) => {
                 </svg>
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-blue-400 dark:to-indigo-300 bg-clip-text text-transparent">
                   QR PhotoShare
                 </h1>
-                <p className="text-xs text-gray-500 -mt-0.5 sm:-mt-1 hidden sm:block">Instant Photo Sessions</p>
+                <p className="text-xs text-gray-500 dark:text-dark-300 -mt-0.5 sm:-mt-1 hidden sm:block">Instant Photo Sessions</p>
               </div>
             </div>
 
@@ -42,7 +43,7 @@ const Layout = ({ children }) => {
               {!isHomePage && (
                 <button
                   onClick={() => navigate('/')}
-                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-600 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-700/50 rounded-lg transition-all duration-200"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -51,11 +52,14 @@ const Layout = ({ children }) => {
                 </button>
               )}
 
+              {/* Dark Mode Toggle */}
+              <DarkModeToggle />
+
               {/* Show Dashboard link if authenticated */}
               {isAuthenticated && !isDashboardPage && (
                 <button
                   onClick={() => navigate('/dashboard')}
-                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-600 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-700/50 rounded-lg transition-all duration-200"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -68,7 +72,7 @@ const Layout = ({ children }) => {
               {isAuthenticated && !isAdminPage && (
                 <button
                   onClick={() => navigate('/admin')}
-                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                  className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-600 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-700/50 rounded-lg transition-all duration-200"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -85,16 +89,16 @@ const Layout = ({ children }) => {
                       <img 
                         src={user.avatar_url} 
                         alt={user.name}
-                        className="w-8 h-8 sm:w-9 sm:h-9 lg:w-8 lg:h-8 rounded-full border-2 border-gray-200 flex-shrink-0"
+                        className="w-8 h-8 sm:w-9 sm:h-9 lg:w-8 lg:h-8 rounded-full border-2 border-gray-200 dark:border-dark-600 flex-shrink-0"
                       />
                     )}
-                    <span className="text-sm font-medium text-gray-700 hidden sm:block truncate max-w-24 lg:max-w-32">
+                    <span className="text-sm font-medium text-gray-700 dark:text-dark-200 hidden sm:block truncate max-w-24 lg:max-w-32">
                       {user.name}
                     </span>
                   </div>
                   <button
                     onClick={logout}
-                    className="flex items-center space-x-1 px-2 sm:px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                    className="flex items-center space-x-1 px-2 sm:px-3 py-2 text-gray-600 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-700/50 rounded-lg transition-all duration-200"
                     title="Logout"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,8 +110,8 @@ const Layout = ({ children }) => {
               )}
 
               {isSessionPage && (
-                <div className="flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-3 py-1.5 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm font-medium">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="flex items-center space-x-1.5 sm:space-x-2 px-2 sm:px-3 py-1.5 bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-300 rounded-full text-xs sm:text-sm font-medium">
+                  <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></div>
                   <span className="hidden sm:inline">Active Session</span>
                   <span className="sm:hidden">Live</span>
                 </div>
@@ -123,10 +127,10 @@ const Layout = ({ children }) => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white/50 backdrop-blur-md border-t border-gray-200/50 mt-auto">
+      <footer className="bg-white/50 dark:bg-dark-800/60 backdrop-blur-md border-t border-gray-200/50 dark:border-dark-700/30 mt-auto">
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-dark-300">
               <span>© 2024 QR PhotoShare</span>
               <span className="hidden sm:block">•</span>
               <span className="flex items-center space-x-1">
@@ -137,7 +141,7 @@ const Layout = ({ children }) => {
               </span>
             </div>
             
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
+            <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-dark-400">
               <span className="flex items-center space-x-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />

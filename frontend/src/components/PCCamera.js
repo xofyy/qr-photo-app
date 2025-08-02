@@ -209,18 +209,18 @@ const PCCamera = ({
   if (error) {
     return (
       <div className="relative w-full">
-        <div className="relative aspect-video bg-red-100 rounded-xl flex items-center justify-center">
+        <div className="relative aspect-video bg-red-100 dark:bg-red-500/20 rounded-xl flex items-center justify-center">
           <div className="text-center p-6">
-            <div className="w-16 h-16 bg-red-200 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-red-200 dark:bg-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-red-800 mb-2">Camera Error</h3>
-            <p className="text-red-700 text-sm mb-4">{error}</p>
+            <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">Camera Error</h3>
+            <p className="text-red-700 dark:text-red-400 text-sm mb-4">{error}</p>
             <button
               onClick={startCamera}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+              className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
               Try Again
             </button>
@@ -233,7 +233,7 @@ const PCCamera = ({
   return (
     <div className="relative w-full">
       {/* Camera Viewport */}
-      <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden w-full rounded-lg sm:rounded-xl md:rounded-2xl">
+      <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 dark:from-dark-900 dark:to-dark-800 overflow-hidden w-full rounded-lg sm:rounded-xl md:rounded-2xl">
         <video 
           ref={videoRef} 
           autoPlay 
@@ -262,12 +262,12 @@ const PCCamera = ({
         {/* Camera Status */}
         {cameraReady && !capturedPhoto && (
           <>
-            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex items-center space-x-2 bg-black/60 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex items-center space-x-2 bg-black/60 dark:bg-dark-900/80 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
+              <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></div>
               <span>PC Camera Ready</span>
             </div>
             
-            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-black/60 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs">
+            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-black/60 dark:bg-dark-900/80 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs">
               {videoRef.current?.videoWidth || 0}×{videoRef.current?.videoHeight || 0}
             </div>
           </>
@@ -288,9 +288,9 @@ const PCCamera = ({
           <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 flex justify-center">
             <button
               onClick={capturePhoto}
-              className="bg-white text-gray-900 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
+              className="bg-white dark:bg-dark-100 text-gray-900 dark:text-dark-900 w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 transform hover:scale-105 active:scale-95"
             >
-              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-900 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gray-900 dark:bg-dark-800 rounded-full flex items-center justify-center">
                 <svg className="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -305,9 +305,9 @@ const PCCamera = ({
       {capturedPhoto && (
         <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
           <div className="text-center">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2">Photo Preview</h3>
-            <p className="text-xs sm:text-sm text-gray-600 mb-2">Review your photo before uploading</p>
-            <div className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-dark-100 mb-2">Photo Preview</h3>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-300 mb-2">Review your photo before uploading</p>
+            <div className="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-dark-200 rounded-full text-xs">
               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
@@ -318,7 +318,7 @@ const PCCamera = ({
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
             <button
               onClick={onRetakePhoto}
-              className="flex items-center justify-center space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-200 transform hover:scale-105 text-sm sm:text-base"
+              className="flex items-center justify-center space-x-2 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 text-gray-800 dark:text-dark-100 font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-200 transform hover:scale-105 text-sm sm:text-base"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -329,7 +329,7 @@ const PCCamera = ({
             <button
               onClick={onConfirmUpload}
               disabled={uploading}
-              className="flex items-center justify-center space-x-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 disabled:hover:scale-100 text-sm sm:text-base"
+              className="flex items-center justify-center space-x-2 bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-500 dark:to-emerald-500 hover:from-green-700 hover:to-emerald-700 dark:hover:from-green-600 dark:hover:to-emerald-600 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 disabled:hover:scale-100 text-sm sm:text-base"
             >
               {uploading ? (
                 <>
