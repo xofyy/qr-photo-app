@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import Home from './pages/Home';
 import SessionPage from './pages/SessionPage';
 import SessionInfo from './pages/SessionInfo';
@@ -36,6 +37,7 @@ function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/error" element={<AuthCallback />} />
           </Routes>
+          <PWAInstallPrompt />
         </Router>
       </AuthProvider>
     </ThemeProvider>

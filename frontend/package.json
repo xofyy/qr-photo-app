@@ -681,6 +681,7 @@
     "set-function-name": "^2.0.2",
     "set-proto": "^1.0.0",
     "setprototypeof": "^1.2.0",
+    "sharp": "^0.34.3",
     "shebang-command": "^2.0.0",
     "shebang-regex": "^3.0.0",
     "shell-quote": "^1.8.3",
