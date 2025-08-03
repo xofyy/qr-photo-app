@@ -81,6 +81,17 @@ export const getSessionPhotos = async (sessionId) => {
   return response;
 };
 
+export const getAllSessionPhotos = async (sessionId) => {
+  const response = await api.get(`/sessions/${sessionId}/photos/all`);
+  response.data = convertMongoResponse(response.data);
+  return response;
+};
+
+export const deletePhoto = async (sessionId, photoId) => {
+  const response = await api.delete(`/sessions/${sessionId}/photos/${photoId}`);
+  return response;
+};
+
 // Admin endpoints
 export const getAllSessions = async () => {
   const response = await api.get('/admin/sessions/');

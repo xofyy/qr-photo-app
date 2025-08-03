@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createSession, getQRCode, getUserSessions, updateSessionPhotoLimit, getSessionUserStats, downloadSessionPhotos } from '../services/api';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
+import useDashboardWebSocket from '../hooks/useDashboardWebSocket';
 
 const UserDashboard = () => {
   const [userSessions, setUserSessions] = useState([]);
@@ -14,6 +15,9 @@ const UserDashboard = () => {
   const [sessionStats, setSessionStats] = useState({});
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // WebSocket connections for real-time notifications
+  const { connectedSessions } = useDashboardWebSocket(userSessions);
 
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
@@ -228,6 +232,11 @@ const UserDashboard = () => {
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-dark-50 dark:to-dark-300 bg-clip-text text-transparent truncate">
                   Welcome back, {user?.name}!
                 </h1>
+                {connectedSessions.size > 0 && (
+                  <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 mt-1">
+                    🔔 Live notifications active for {connectedSessions.size} session{connectedSessions.size !== 1 ? 's' : ''}
+                  </p>
+                )}
                 <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300 mt-1">Manage your photo sessions and QR codes</p>
               </div>
             </div>

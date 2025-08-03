@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getSession, getSessionPhotos, uploadPhoto, getMyUploadStats, downloadSessionPhotos } from '../services/api';
+import { getSession, getSessionPhotos, getAllSessionPhotos, uploadPhoto, getMyUploadStats, downloadSessionPhotos, deletePhoto } from '../services/api';
 import { devLog, devWarn, devError } from '../utils/helpers';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import PCCamera from '../components/PCCamera';
 import MobileCamera from '../components/MobileCamera';
+import NotificationToast from '../components/NotificationToast';
+import useWebSocket from '../hooks/useWebSocket';
 
 const SessionPage = () => {
   const { sessionId } = useParams();
@@ -18,6 +20,9 @@ const SessionPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [userStats, setUserStats] = useState(null);
+  
+  // WebSocket for real-time notifications (only for session owners)
+  const { isConnected } = useWebSocket(sessionId);
   
   // Device detection
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -43,10 +48,17 @@ const SessionPage = () => {
     try {
       devLog('Loading session data for:', sessionId);
       const sessionResponse = await getSession(sessionId);
-      const photosResponse = await getSessionPhotos(sessionId);
       
-      devLog('Session ', sessionResponse.data);
-      devLog('Photos ', photosResponse.data);
+      // Check if current user is the session owner
+      const isOwner = user && sessionResponse.data.owner_id === user.user_id;
+      
+      // For now, load regular photos for everyone until we fix owner authentication
+      // TODO: Fix owner authentication and enable getAllSessionPhotos
+      const photosResponse = await getSessionPhotos(sessionId);
+      devLog('Loaded photos:', photosResponse.data);
+      
+      devLog('Session:', sessionResponse.data);
+      devLog('Photos:', photosResponse.data);
       
       setSession(sessionResponse.data);
       setPhotos(photosResponse.data);
@@ -54,7 +66,7 @@ const SessionPage = () => {
       // Load user stats
       await loadUserStats();
     } catch (err) {
-      devError('Error loading session ', err);
+      devError('Error loading session:', err);
       setError('Failed to load session: ' + (err.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
@@ -90,7 +102,7 @@ const SessionPage = () => {
       const response = await uploadPhoto(sessionId, capturedPhoto);
       devLog('Upload response:', response);
       setCapturedPhoto(null);
-      await loadSessionData(); // Refresh photos
+      await loadSessionData(); // Refresh photos with proper owner/user logic
       await loadUserStats(); // Refresh user stats
     } catch (err) {
       devError('Upload error:', err);
@@ -131,6 +143,29 @@ const SessionPage = () => {
       } else {
         setError('Failed to download photos. Please try again.');
       }
+    }
+  };
+
+  const handleDeletePhoto = async (photoId, photoIndex) => {
+    if (!window.confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      devLog('Deleting photo:', photoId);
+      await deletePhoto(sessionId, photoId);
+      
+      // Remove photo from local state
+      setPhotos(prevPhotos => prevPhotos.filter(photo => photo.id !== photoId));
+      
+      // Refresh session data to update photo count
+      await loadSessionData();
+      
+      devLog('Photo deleted successfully');
+    } catch (error) {
+      devError('Error deleting photo:', error);
+      const errorMessage = error.response?.data?.detail || error.message || 'Failed to delete photo';
+      alert('Delete failed: ' + errorMessage);
     }
   };
 
@@ -392,7 +427,10 @@ const SessionPage = () => {
                 Captured Memories
               </h2>
               <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-dark-300">
-                {photos.length} photo{photos.length !== 1 ? 's' : ''} uploaded to this session
+                {user && session?.owner_id === user.user_id 
+                  ? `${photos.length} photo${photos.length !== 1 ? 's' : ''} from all users in this session`
+                  : `${photos.length} photo${photos.length !== 1 ? 's' : ''} you uploaded to this session`
+                }
               </p>
             </div>
             
@@ -412,17 +450,38 @@ const SessionPage = () => {
                       <p className="text-xs opacity-90 hidden sm:block">
                         {new Date(photo.uploaded_at || Date.now()).toLocaleDateString()}
                       </p>
+                      {/* Show uploader info for session owners */}
+                      {user && session?.owner_id === user.user_id && photo.user_identifier && (
+                        <p className="text-xs opacity-80 text-blue-200 hidden sm:block">
+                          By: {photo.user_identifier}
+                        </p>
+                      )}
                     </div>
                     
-                    <button
-                      onClick={() => window.open(photo.url, '_blank')}
-                      className="bg-white/20 dark:bg-dark-900/40 backdrop-blur-sm text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-white/30 dark:hover:bg-dark-900/60 transition-all duration-200 transform hover:scale-110"
-                      title="View full size"
-                    >
-                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => window.open(photo.url, '_blank')}
+                        className="bg-white/20 dark:bg-dark-900/40 backdrop-blur-sm text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-white/30 dark:hover:bg-dark-900/60 transition-all duration-200 transform hover:scale-110"
+                        title="View full size"
+                      >
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </button>
+                      
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeletePhoto(photo.id, index);
+                        }}
+                        className="bg-red-500/20 dark:bg-red-500/30 backdrop-blur-sm text-red-200 p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-red-500/40 dark:hover:bg-red-500/50 transition-all duration-200 transform hover:scale-110"
+                        title="Delete photo"
+                      >
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   
                   {/* Loading shimmer effect for images that haven't loaded yet */}

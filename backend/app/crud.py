@@ -48,6 +48,15 @@ async def increment_photo_count(session_id: str):
     )
     return await get_session(session_id)
 
+async def decrement_photo_count(session_id: str):
+    sessions_collection = get_sessions_collection()
+    # Use $inc operator to decrement photo_count by 1
+    await sessions_collection.update_one(
+        {"session_id": session_id},
+        {"$inc": {"photo_count": -1}}
+    )
+    return await get_session(session_id)
+
 async def create_photo(photo: schemas.PhotoCreate):
     photos_collection = get_photos_collection()
     
@@ -62,6 +71,16 @@ async def create_photo(photo: schemas.PhotoCreate):
 async def get_photos_by_session(session_id: str):
     photos_collection = get_photos_collection()
     cursor = photos_collection.find({"session_id": session_id})
+    photos = await cursor.to_list(length=100)
+    return photos
+
+async def get_photos_by_session_and_user(session_id: str, user_identifier: str):
+    """Get photos uploaded by a specific user in a session"""
+    photos_collection = get_photos_collection()
+    cursor = photos_collection.find({
+        "session_id": session_id,
+        "user_identifier": user_identifier
+    })
     photos = await cursor.to_list(length=100)
     return photos
 

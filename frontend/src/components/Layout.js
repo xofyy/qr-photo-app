@@ -1,12 +1,23 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import DarkModeToggle from './DarkModeToggle';
+import NotificationPanel from './NotificationPanel';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
+  const { 
+    notifications, 
+    unreadCount, 
+    isNotificationPanelOpen, 
+    openNotificationPanel, 
+    closeNotificationPanel,
+    markAsRead,
+    clearAllNotifications
+  } = useNotifications();
 
   const isHomePage = location.pathname === '/';
   const isAdminPage = location.pathname === '/admin';
@@ -49,6 +60,25 @@ const Layout = ({ children }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                   </svg>
                   <span className="hidden sm:block">Home</span>
+                </button>
+              )}
+
+              {/* Notification Bell - Only for authenticated users */}
+              {isAuthenticated && (
+                <button
+                  onClick={() => isNotificationPanelOpen ? closeNotificationPanel() : openNotificationPanel()}
+                  className="relative flex items-center justify-center w-10 h-10 text-gray-600 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-700/50 rounded-lg transition-all duration-200"
+                  title="Notifications"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.73 21a2 2 0 01-3.46 0" />
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </button>
               )}
 
@@ -120,6 +150,15 @@ const Layout = ({ children }) => {
           </div>
         </div>
       </header>
+
+      {/* Notification Panel */}
+      <NotificationPanel
+        notifications={notifications}
+        onMarkAsRead={markAsRead}
+        onClearAll={clearAllNotifications}
+        isOpen={isNotificationPanelOpen}
+        onClose={closeNotificationPanel}
+      />
 
       {/* Main Content */}
       <main className="flex-1 w-full overflow-x-hidden">

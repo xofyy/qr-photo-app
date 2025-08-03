@@ -13,3 +13,4 @@ python-jose[cryptography]==3.3.0
 authlib==1.2.1
 httpx==0.25.2
 requests==2.31.0
+websockets==11.0.3

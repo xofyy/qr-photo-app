@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI, HTTPException, UploadFile, File, Depends
+﻿from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, StreamingResponse
 import os
@@ -13,7 +13,7 @@ import traceback
 from starlette.requests import Request
 
 from app import crud, schemas, utils
-from app.database import get_database
+from app.database import get_database, get_photos_collection
 from app.utils.user_identifier import generate_user_identifier, get_user_ip, get_user_agent
 from app.utils.zip_generator import create_photos_zip, create_empty_session_zip
 from app.auth import (
@@ -21,6 +21,7 @@ from app.auth import (
     get_google_user_info, generate_user_id, GOOGLE_CLIENT_ID, exchange_code_for_token
 )
 from app.schemas.user import UserCreate, UserResponse, Token
+from app.websocket_manager import websocket_manager
 
 # Initialize Cloudinary
 cloudinary.config(
@@ -42,6 +43,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def root():
+    return {"message": "QR Photo Session App API"}
+
 @app.on_event("startup")
 async def startup_db_client():
     pass
@@ -49,6 +54,48 @@ async def startup_db_client():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     pass
+
+# WebSocket endpoints
+@app.websocket("/ws/{session_id}")
+async def websocket_endpoint(websocket: WebSocket, session_id: str):
+    """WebSocket endpoint for real-time notifications (owners only)"""
+    try:
+        # Get user_id from query parameters
+        query_params = dict(websocket.query_params)
+        user_id = query_params.get('user_id')
+        
+        # Validate session exists
+        db_session = await crud.get_session(session_id=session_id)
+        if not db_session:
+            await websocket.close(code=1008, reason="Session not found")
+            return
+        
+        # Connect with user_id if provided (for owners)
+        await websocket_manager.connect(websocket, session_id, user_id)
+        
+        # Send welcome message
+        message_type = "owner_connected" if user_id else "connected"
+        await websocket_manager.send_personal_message(
+            f'{{"type": "{message_type}", "session_id": "{session_id}", "message": "Connected to session notifications"}}',
+            websocket
+        )
+        
+        try:
+            while True:
+                # Keep connection alive and handle any incoming messages
+                data = await websocket.receive_text()
+                # Echo back any received messages (for testing/debugging)
+                await websocket_manager.send_personal_message(
+                    f'{{"type": "echo", "message": "Received: {data}"}}',
+                    websocket
+                )
+        except WebSocketDisconnect:
+            websocket_manager.disconnect(websocket)
+            
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        print(traceback.format_exc())
+        websocket_manager.disconnect(websocket)
 
 # Authentication endpoints
 @app.get("/auth/google")
@@ -317,7 +364,8 @@ async def upload_photo(
             photo_data = schemas.PhotoCreate(
                 filename=result["public_id"], 
                 session_id=session_id,
-                url=result["secure_url"]
+                url=result["secure_url"],
+                user_identifier=user_identifier
             )
             db_photo = await crud.create_photo(photo=photo_data)
             print(f"Photo record created: {db_photo}")
@@ -352,6 +400,27 @@ async def upload_photo(
         if "_id" in db_photo:
             db_photo["_id"] = str(db_photo["_id"])
         
+        # Send real-time notification to session owner only
+        try:
+            # Get session owner
+            if db_session.get("owner_id"):
+                # Get updated session photo count
+                photos = await crud.get_photos_by_session(session_id=session_id)
+                photo_count = len(photos)
+                
+                await websocket_manager.notify_photo_uploaded(session_id, db_session["owner_id"], {
+                    "filename": result["public_id"],
+                    "url": result["secure_url"],
+                    "upload_count": photo_count,
+                    "uploaded_by": user_identifier[:8] + "..."  # Show partial identifier
+                })
+                print(f"WebSocket notification sent to owner {db_session['owner_id']} for session {session_id}")
+            else:
+                print(f"No owner found for session {session_id}, skipping notification")
+        except Exception as ws_error:
+            print(f"WebSocket notification error: {ws_error}")
+            print(traceback.format_exc())
+        
         return {
             "filename": result["public_id"], 
             "url": result["secure_url"], 
@@ -365,14 +434,67 @@ async def upload_photo(
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-@app.get("/sessions/{session_id}/photos")
-async def get_session_photos(session_id: str):
+@app.get("/sessions/{session_id}/photos")  
+async def get_session_photos(session_id: str, request: Request):
     try:
+        print(f"Getting photos for session: {session_id}")
         db_session = await crud.get_session(session_id=session_id)
         if not db_session:
             raise HTTPException(status_code=404, detail="Session not found")
         
-        photos = await crud.get_photos_by_session(session_id=session_id)
+        print(f"Session found")
+        
+        # Try to get current user from token (optional)
+        current_user = None
+        try:
+            auth_header = request.headers.get("authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                from jose import jwt, JWTError
+                token = auth_header.split(" ")[1]
+                payload = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
+                user_id = payload.get("sub")
+                if user_id:
+                    user = await crud.get_user_by_id(user_id)
+                    if user:
+                        current_user = user
+        except Exception as e:
+            print(f"Token verification failed: {e}")
+            pass
+        
+        # Check if current user is the session owner
+        is_owner = current_user and db_session.get("owner_id") == current_user.get("user_id")
+        print(f"User is owner: {is_owner}")
+        
+        if is_owner:
+            # Owner sees all photos
+            photos = await crud.get_photos_by_session(session_id=session_id)
+            print(f"Owner: returning all {len(photos)} photos")
+        else:
+            # Regular user sees only their photos
+            # Generate user identifier from request
+            try:
+                user_identifier = generate_user_identifier(request, session_id)
+                print(f"Generated user_identifier: {user_identifier[:16]}...")
+            except Exception as e:
+                print(f"Error generating user identifier: {e}")
+                traceback.print_exc()
+                user_identifier = "unknown"
+            
+            # Get all photos first
+            all_photos = await crud.get_photos_by_session(session_id=session_id)
+            print(f"Found {len(all_photos)} total photos")
+            
+            # Filter photos for this specific user
+            user_photos = []
+            for photo in all_photos:
+                photo_user_id = photo.get("user_identifier")
+                # Include photo if it belongs to this user OR if it has no user_identifier (legacy photos)
+                if photo_user_id == user_identifier or not photo_user_id:
+                    user_photos.append(photo)
+                    print(f"Including photo: {photo.get('filename', 'unknown')} (user: {photo_user_id or 'legacy'})")
+            
+            print(f"Regular user: filtered to {len(user_photos)} photos")
+            photos = user_photos
         
         # Prepare photo data with URLs
         photo_data = []
@@ -391,6 +513,122 @@ async def get_session_photos(session_id: str):
         print(f"Error getting session photos: {e}")
         print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to get session photos: {str(e)}")
+
+@app.get("/sessions/{session_id}/photos/all")
+async def get_all_session_photos(session_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all photos in a session - only for session owners"""
+    try:
+        db_session = await crud.get_session(session_id=session_id)
+        if not db_session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Check if current user is the owner of this session
+        if db_session.get("owner_id") != current_user.get("user_id"):
+            raise HTTPException(status_code=403, detail="Only session owners can view all photos")
+        
+        photos = await crud.get_photos_by_session(session_id=session_id)
+        
+        # Prepare photo data with URLs and user info
+        photo_data = []
+        for photo in photos:
+            photo_data.append({
+                "id": str(photo["_id"]) if "_id" in photo else str(photo.get("id", "")),
+                "filename": photo["filename"],
+                "url": photo.get("url", f"https://res.cloudinary.com/{os.getenv('CLOUDINARY_CLOUD_NAME')}/{photo['filename']}"),
+                "uploaded_at": photo["uploaded_at"],
+                "user_identifier": photo.get("user_identifier", "unknown")[:12] + "..." if photo.get("user_identifier") else "legacy"
+            })
+        
+        return photo_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error getting all session photos: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to get all session photos: {str(e)}")
+
+@app.delete("/sessions/{session_id}/photos/{photo_id}")
+async def delete_photo(session_id: str, photo_id: str, request: Request):
+    """Delete a photo - only the uploader or session owner can delete"""
+    try:
+        print(f"Deleting photo {photo_id} from session {session_id}")
+        
+        # Get session
+        db_session = await crud.get_session(session_id=session_id) 
+        if not db_session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        # Get photo
+        photos_collection = get_photos_collection()
+        photo = await photos_collection.find_one({"_id": ObjectId(photo_id)})
+        if not photo:
+            raise HTTPException(status_code=404, detail="Photo not found")
+        
+        # Check if photo belongs to this session
+        if photo.get("session_id") != session_id:
+            raise HTTPException(status_code=400, detail="Photo does not belong to this session")
+        
+        # Try to get current user from token (optional)
+        current_user = None
+        try:
+            auth_header = request.headers.get("authorization")
+            if auth_header and auth_header.startswith("Bearer "):
+                from jose import jwt, JWTError
+                token = auth_header.split(" ")[1]
+                payload = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
+                user_id = payload.get("sub")
+                if user_id:
+                    user = await crud.get_user_by_id(user_id)
+                    if user:
+                        current_user = user
+        except Exception as e:
+            print(f"Token verification failed: {e}")
+            pass
+        
+        # Check permissions
+        is_owner = current_user and db_session.get("owner_id") == current_user.get("user_id")
+        
+        if not is_owner:
+            # If not owner, check if user uploaded this photo
+            user_identifier = generate_user_identifier(request, session_id)
+            photo_user_id = photo.get("user_identifier")
+            
+            print(f"Delete permission check:")
+            print(f"  Current user identifier: {user_identifier}")
+            print(f"  Photo user identifier: {photo_user_id}")
+            print(f"  Match: {photo_user_id == user_identifier}")
+            
+            # Allow deletion if photo has no user_identifier (legacy) or if it matches
+            if photo_user_id and photo_user_id != user_identifier:
+                raise HTTPException(status_code=403, detail="You can only delete your own photos")
+        
+        print(f"Permission granted - Owner: {is_owner}")
+        
+        # Delete from Cloudinary
+        try:
+            cloudinary.uploader.destroy(photo["filename"])
+            print(f"Deleted from Cloudinary: {photo['filename']}")
+        except Exception as e:
+            print(f"Failed to delete from Cloudinary: {e}")
+            # Continue anyway, delete from database
+        
+        # Delete from database
+        result = await photos_collection.delete_one({"_id": ObjectId(photo_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Photo not found")
+        
+        # Update session photo count
+        await crud.decrement_photo_count(session_id)
+        
+        print(f"Photo {photo_id} deleted successfully")
+        return {"message": "Photo deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting photo: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to delete photo: {str(e)}")
 
 # Admin endpoints
 @app.get("/admin/sessions/")
