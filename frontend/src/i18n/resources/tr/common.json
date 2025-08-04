@@ -3,12 +3,16 @@
   "tagline": "Anında Fotoğraf Paylaşımı",
   
   "navigation": {
+    "title": "Navigasyon",
     "home": "Ana Sayfa",
     "dashboard": "Panel",
     "admin": "Admin",
     "sessions": "Oturumlar",
     "signOut": "Çıkış Yap"
   },
+  
+  "preferences": "Tercihler",
+  "language": "Dil",
   
   "buttons": {
     "create": "Oluştur",

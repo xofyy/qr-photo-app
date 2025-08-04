@@ -3,12 +3,16 @@
   "tagline": "Instant Photo Sharing",
   
   "navigation": {
+    "title": "Navigation",
     "home": "Home",
     "dashboard": "Dashboard",
     "admin": "Admin",
     "sessions": "Sessions",
     "signOut": "Sign Out"
   },
+  
+  "preferences": "Preferences",
+  "language": "Language",
   
   "buttons": {
     "create": "Create",
