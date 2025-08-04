@@ -1,10 +1,10 @@
-const CACHE_NAME = 'qr-photo-app-v1';
+const CACHE_NAME = 'qr-photo-app-v2';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/manifest.json',
-  '/offline.html'
+  '/offline.html',
+  '/icon-192x192.png',
+  '/icon-512x512.png'
 ];
 
 // Service Worker kurulum
@@ -13,9 +13,23 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('Cache opened');
-        return cache.addAll(urlsToCache);
+        // Dosyaları tek tek ekleyerek hata toleransı sağla
+        return Promise.allSettled(
+          urlsToCache.map(url => {
+            return cache.add(url).catch(err => {
+              console.warn('Failed to cache:', url, err);
+              return null;
+            });
+          })
+        );
+      })
+      .catch(err => {
+        console.error('Service worker install failed:', err);
       })
   );
+  
+  // Yeni service worker'ı hemen aktif hale getir
+  self.skipWaiting();
 });
 
 // Service Worker aktifleştirme
@@ -30,6 +44,9 @@ self.addEventListener('activate', event => {
           }
         })
       );
+    }).then(() => {
+      // Service worker'ı hemen kontrol altına al
+      return self.clients.claim();
     })
   );
 });

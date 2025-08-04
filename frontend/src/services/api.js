@@ -26,11 +26,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle different error types
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('auth_token');
       window.location.href = '/';
+    } else if (error.response?.status === 502) {
+      // Bad Gateway - backend is down
+      console.error('Backend service unavailable (502)');
+      // Don't redirect, let the component handle it
+    } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+      // Network error or no response
+      console.error('Network error or backend unreachable');
     }
+    
     return Promise.reject(error);
   }
 );
@@ -130,6 +139,16 @@ export const downloadSessionPhotos = async (sessionId) => {
     responseType: 'blob'
   });
   return response;
+};
+
+// Health check endpoint
+export const checkBackendHealth = async () => {
+  try {
+    const response = await api.get('/health', { timeout: 5000 });
+    return response;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export default api;

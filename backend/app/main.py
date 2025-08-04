@@ -45,11 +45,42 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {"message": "QR Photo Session App API"}
+    return {"message": "QR Photo Session App API", "status": "healthy"}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring"""
+    try:
+        # Test database connection
+        from app.database import get_database
+        db = get_database()
+        await db.admin.command('ping')
+        
+        return {
+            "status": "healthy",
+            "database": "connected",
+            "version": "1.0.0",
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return {
+            "status": "unhealthy", 
+            "database": "disconnected",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat()
+        }
 
 @app.on_event("startup")
 async def startup_db_client():
-    pass
+    print("🚀 FastAPI starting up...")
+    print(f"📍 Environment: {os.getenv('NODE_ENV', 'development')}")
+    print(f"🌐 CORS Origins: {os.getenv('CORS_ORIGINS', 'Not set')}")
+    print(f"🔗 Frontend URL: {os.getenv('FRONTEND_URL', 'Not set')}")
+    print(f"🔗 Backend URL: {os.getenv('BACKEND_URL', 'Not set')}")
+    print(f"📊 MongoDB: {'✅ Configured' if os.getenv('MONGODB_URL') else '❌ Not configured'}")
+    print(f"☁️ Cloudinary: {'✅ Configured' if os.getenv('CLOUDINARY_CLOUD_NAME') else '❌ Not configured'}")
+    print(f"🔐 Google OAuth: {'✅ Configured' if os.getenv('GOOGLE_CLIENT_ID') else '❌ Not configured'}")
+    print("✅ FastAPI startup complete!")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
