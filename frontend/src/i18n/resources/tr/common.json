@@ -1,0 +1,126 @@
+{
+  "appName": "QR PhotoShare",
+  "tagline": "Anında Fotoğraf Paylaşımı",
+  
+  "navigation": {
+    "home": "Ana Sayfa",
+    "dashboard": "Panel",
+    "admin": "Admin",
+    "sessions": "Oturumlar",
+    "signOut": "Çıkış Yap"
+  },
+  
+  "buttons": {
+    "create": "Oluştur",
+    "upload": "Yükle",
+    "download": "İndir",
+    "copy": "Kopyala", 
+    "share": "Paylaş",
+    "scan": "Tara",
+    "cancel": "İptal",
+    "confirm": "Onayla",
+    "save": "Kaydet",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "close": "Kapat",
+    "tryAgain": "Tekrar Dene",
+    "goBack": "Geri Dön",
+    "viewMore": "Daha Fazla",
+    "install": "Yükle",
+    "later": "Daha Sonra",
+    "logout": "Çıkış"
+  },
+  
+  "status": {
+    "loading": "Yükleniyor...",
+    "uploading": "Fotoğraf yükleniyor...",
+    "processing": "İşleniyor...",
+    "saving": "Kaydediliyor...",
+    "deleting": "Siliniyor...",
+    "connecting": "Bağlanıyor...",
+    "connected": "Bağlandı",
+    "disconnected": "Bağlantı kesildi",
+    "online": "Çevrimiçi",
+    "offline": "Çevrimdışı",
+    "liveSession": "Canlı Oturum"
+  },
+  
+  "common": {
+    "photo": "Fotoğraf",
+    "photo_plural": "Fotoğraf",
+    "session": "Oturum",
+    "session_plural": "Oturum",
+    "user": "Kullanıcı",
+    "user_plural": "Kullanıcı",
+    "file": "Dosya",
+    "file_plural": "Dosya",
+    "image": "Görsel",
+    "image_plural": "Görsel"
+  },
+  
+  "time": {
+    "now": "Şimdi",
+    "today": "Bugün",
+    "yesterday": "Dün",
+    "minute": "dakika",
+    "minute_plural": "dakika",
+    "hour": "saat",
+    "hour_plural": "saat",
+    "day": "gün",
+    "day_plural": "gün",
+    "ago": "önce"
+  },
+  
+  "connectionStatus": {
+    "realTime": "Gerçek Zamanlı",
+    "polling": "Sorgulama",
+    "offline": "Çevrimdışı",
+    "websocketTitle": "WebSocket bağlantısı aktif - gerçek zamanlı bildirimler",
+    "pollingTitle": "Sorgulama modu aktif - her 10 saniyede güncellemeleri kontrol ediyor",
+    "offlineTitle": "Bağlantı yok - bildirimler kullanılamıyor"
+  },
+  
+  "footer": {
+    "copyright": "© 2025 QR PhotoShare",
+    "encrypted": "Uçtan Uca Şifrelenmiş",
+    "builtWith": "React ve FastAPI ile yapıldı"
+  },
+  
+  "pwa": {
+    "installTitle": "Uygulamayı Yükle",
+    "installDescription": "Ana ekranınıza ekleyerek daha hızlı erişim sağlayın"
+  },
+  
+  "notifications": {
+    "title": "Bildirimler"
+  },
+  
+  "theme": {
+    "switchToLight": "Açık temaya geç",
+    "switchToDark": "Koyu temaya geç",
+    "lightMode": "Açık",
+    "darkMode": "Koyu"
+  },
+  
+  "fileSize": {
+    "bytes": "Bayt",
+    "kb": "KB",
+    "mb": "MB",
+    "gb": "GB",
+    "zero": "0 Bayt"
+  },
+  
+  "errors": {
+    "notFound": "Kaynak bulunamadı",
+    "unauthorized": "Yetkisiz erişim",
+    "forbidden": "Erişim yasak",
+    "serverError": "Sunucu hatası. Lütfen tekrar deneyin.",
+    "networkError": "Ağ hatası. Lütfen bağlantınızı kontrol edin.",
+    "unexpected": "Beklenmeyen bir hata oluştu",
+    "unknown": "Bilinmeyen"
+  },
+  
+  "dateTime": {
+    "created": "Oluşturuldu"
+  }
+}

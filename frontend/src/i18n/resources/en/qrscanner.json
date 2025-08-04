@@ -1,0 +1,39 @@
+{
+  "title": "QR Code Scanner",
+  "description": "Point your camera at a QR code to scan it",
+  
+  "status": {
+    "scanning": "Scanning...",
+    "scanned": "QR Code Scanned!",
+    "redirecting": "Redirecting to photo session..."
+  },
+  
+  "errors": {
+    "title": "Scanner Error",
+    "cameraAccessDenied": "Camera access denied. Please allow camera permissions and try again.",
+    "noCameraFound": "No camera found. Please check your device camera.",
+    "cameraNotSupported": "Camera not supported in this browser.",
+    "cameraError": "Camera error: {{message}}",
+    "processingError": "Error processing scan result",
+    "restartError": "Error restarting scanner. Please close and reopen."
+  },
+  
+  "instructions": {
+    "scanning": "Scanning for QR codes...",
+    "howToScan": "How to scan:",
+    "scanDescription": "Point your camera at any QR code. The scanner works with all QR codes, not just photo session codes.",
+    "steps": {
+      "position": "• Position the QR code within the frame",
+      "steady": "• Keep your device steady", 
+      "lighting": "• Ensure good lighting",
+      "wait": "• Wait for automatic detection"
+    }
+  },
+  
+  "actions": {
+    "tryAgain": "Try Again",
+    "close": "Close Scanner",
+    "restart": "Restart Scanner",
+    "switchCamera": "Switch Camera"
+  }
+}

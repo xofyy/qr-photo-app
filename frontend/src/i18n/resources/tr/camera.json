@@ -1,0 +1,66 @@
+{
+  "errors": {
+    "title": "Kamera Hatası",
+    "selectImageFile": "Lütfen bir görsel dosyası seçin.",
+    "imageTooLarge": "Görsel çok büyük. Lütfen daha küçük bir görsel seçin.",
+    "notSupported": "Bu tarayıcıda kamera desteklenmiyor",
+    "permissionDenied": "Kamera hatası: {{error}}. Lütfen kamera izinlerini verin.",
+    "notReady": "Kamera hazır değil. Lütfen bekleyin.",
+    "videoNotReady": "Video hazır değil. Lütfen tekrar deneyin.",
+    "captureFailed": "Fotoğraf çekilemedi. Lütfen tekrar deneyin."
+  },
+  
+  "opening": {
+    "title": "Kamera Açılıyor...",
+    "description": "Kamera uygulamanız şimdi açılmalı...",
+    "active": "Kamera arayüzü artık aktif!",
+    "instructions": "Kamera kontrollerini arayın..."
+  },
+  
+  "takePhoto": {
+    "title": "Fotoğraf Çek",
+    "description": "Telefonunuzun kamera uygulamasını açmak ve yüksek kaliteli fotoğraf çekmek için aşağıdaki düğmeye dokunun."
+  },
+  
+  "howItWorks": {
+    "title": "Nasıl çalışır:",
+    "steps": {
+      "step1": "1. Aşağıdaki \"Kamera Aç\" düğmesine dokun",
+      "step2": "2. Telefonunuzun kamera uygulaması açılacak",
+      "step3": "3. Tüm kamera özelliklerini kullanarak fotoğraf çek",
+      "step4": "4. Kamera uygulamanızda fotoğrafı onayla/kaydet",
+      "step5": "5. Yüklemek için buraya geri döneceksiniz"
+    }
+  },
+  
+  "actions": {
+    "takeNewPhoto": "Yeni Fotoğraf Çek",
+    "chooseFromGallery": "Galeriden Seç",
+    "takeAnotherPhoto": "Başka Fotoğraf Çek",
+    "uploadPhoto": "Fotoğrafı Yükle",
+    "retakePhoto": "Tekrar Çek"
+  },
+  
+  "preview": {
+    "title": "Fotoğraf Önizlemesi",
+    "description": "Yüklemeden önce fotoğrafınızı inceleyin",
+    "ready": "Yüklemeye hazır"
+  },
+  
+  "status": {
+    "uploading": "Yükleniyor...",
+    "starting": "PC Kamerası Başlatılıyor...",
+    "pcReady": "PC Kamerası Hazır"
+  },
+  
+  "ui": {
+    "goBack": "← Geri Dön",
+    "cancel": "İptal",
+    "or": "veya",
+    "features": {
+      "cameraFeatures": "✨ Telefonunuzun tüm kamera özelliklerini kullanın",
+      "portraitMode": "📐 Portre, Gece modu, HDR mevcut",
+      "professionalQuality": "🔍 Profesyonel kalitede fotoğraflar"
+    }
+  }
+}

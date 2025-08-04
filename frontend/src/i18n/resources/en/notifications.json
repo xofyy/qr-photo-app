@@ -1,0 +1,41 @@
+{
+  "title": "Notifications",
+  "unread": "{{count}} unread",
+  "unread_plural": "{{count}} unread",
+  
+  "actions": {
+    "clearAll": "Clear All",
+    "markAsRead": "Mark as read"
+  },
+  
+  "empty": {
+    "title": "No notifications yet",
+    "description": "You'll receive notifications here when someone uploads photos to your sessions."
+  },
+  
+  "types": {
+    "photo_uploaded": "New Photo Uploaded!",
+    "connected": "Connected",
+    "notification": "Notification"
+  },
+  
+  "messages": {
+    "photo_uploaded": "A new photo was uploaded{{uploaded_by}}. Total photos: {{upload_count}}",
+    "photo_uploaded_by": " by {{name}}",
+    "default": "You have a new notification"
+  },
+  
+  "footer": {
+    "showing": "Showing {{count}} notification",
+    "showing_plural": "Showing {{count}} notifications"
+  },
+  
+  "session": "Session: {{id}}",
+  
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago", 
+    "daysAgo": "{{count}}d ago"
+  }
+}

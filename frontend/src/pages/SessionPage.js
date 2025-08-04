@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getSession, getSessionPhotos, getAllSessionPhotos, uploadPhoto, getMyUploadStats, downloadSessionPhotos, deletePhoto } from '../services/api';
 import { devLog, devWarn, devError } from '../utils/helpers';
 import { useAuth } from '../contexts/AuthContext';
+import { formatDateOnly } from '../utils/i18nHelpers';
 import Layout from '../components/Layout';
 import PCCamera from '../components/PCCamera';
 import MobileCamera from '../components/MobileCamera';
@@ -11,6 +13,7 @@ import ConnectionStatus from '../components/ConnectionStatus';
 import useWebSocketWithFallback from '../hooks/useWebSocketWithFallback';
 
 const SessionPage = () => {
+  const { t } = useTranslation(['session', 'common']);
   const { sessionId } = useParams();
   const { user } = useAuth();
   const [session, setSession] = useState(null);
@@ -68,7 +71,7 @@ const SessionPage = () => {
       await loadUserStats();
     } catch (err) {
       devError('Error loading session:', err);
-      setError('Failed to load session: ' + (err.response?.data?.detail || err.message));
+      setError(t('session:errors.loadingError') + (err.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
     }
@@ -78,18 +81,18 @@ const SessionPage = () => {
 
   const confirmUpload = async () => {
     if (!capturedPhoto || !session) {
-      setError('No photo or session data available');
+      setError(t('session:errors.noPhotoData'));
       return;
     }
     
     // Validate file size
     if (capturedPhoto.size === 0) {
-      setError('Photo file is empty. Please retake the photo.');
+      setError(t('session:errors.emptyPhoto'));
       return;
     }
     
     if (capturedPhoto.size < 100) { // Less than 100 bytes is likely corrupted
-      setError('Photo file appears to be corrupted. Please retake the photo.');
+      setError(t('session:errors.corruptedPhoto'));
       return;
     }
     
@@ -108,7 +111,7 @@ const SessionPage = () => {
     } catch (err) {
       devError('Upload error:', err);
       const errorMessage = err.response?.data?.detail || err.message || 'Failed to upload photo';
-      setError('Upload failed: ' + errorMessage);
+      setError(t('session:errors.uploadError') + errorMessage);
     } finally {
       setUploading(false);
     }
@@ -140,15 +143,15 @@ const SessionPage = () => {
     } catch (error) {
       devError('Error downloading photos:', error);
       if (error.response?.status === 403) {
-        setError('You can only download photos from your own sessions.');
+        setError(t('session:errors.downloadUnauthorized'));
       } else {
-        setError('Failed to download photos. Please try again.');
+        setError(t('session:errors.downloadFailed'));
       }
     }
   };
 
   const handleDeletePhoto = async (photoId, photoIndex) => {
-    if (!window.confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
+    if (!window.confirm(t('session:actions.confirmDelete'))) {
       return;
     }
 
@@ -166,7 +169,7 @@ const SessionPage = () => {
     } catch (error) {
       devError('Error deleting photo:', error);
       const errorMessage = error.response?.data?.detail || error.message || 'Failed to delete photo';
-      alert('Delete failed: ' + errorMessage);
+      alert(t('session:errors.deleteFailed') + errorMessage);
     }
   };
 
@@ -175,7 +178,7 @@ const SessionPage = () => {
       <div className="flex justify-center items-center min-h-screen px-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 md:h-16 md:w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-dark-300 font-medium">Loading session...</p>
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-dark-300 font-medium">{t('session:status.loadingInfo')}</p>
         </div>
       </div>
     );
@@ -191,7 +194,7 @@ const SessionPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-100 mb-4">Session Error</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-100 mb-4">{t('session:errors.title')}</h3>
             <div className="bg-red-50 dark:bg-red-500/20 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl mb-6 text-sm sm:text-base">
               {error}
             </div>
@@ -202,7 +205,7 @@ const SessionPage = () => {
               <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Try Again
+              {t('common:buttons.tryAgain')}
             </button>
           </div>
         </div>
@@ -220,9 +223,9 @@ const SessionPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-100 mb-4">Session Not Found</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-100 mb-4">{t('session:errors.sessionNotFound')}</h3>
             <div className="bg-yellow-50 dark:bg-yellow-500/20 border border-yellow-200 dark:border-yellow-500/30 text-yellow-700 dark:text-yellow-300 px-4 py-3 rounded-xl mb-6 text-sm sm:text-base">
-              The session you're looking for doesn't exist or has been removed.
+              {t('session:errors.sessionNotFoundDescription')}
             </div>
             <button 
               onClick={() => window.location.href = '/'}
@@ -231,7 +234,7 @@ const SessionPage = () => {
               <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              Go Home
+              {t('common:navigation.home')}
             </button>
           </div>
         </div>
@@ -272,7 +275,7 @@ const SessionPage = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Live Photo Session
+            {t('session:liveSession')}
           </div>
           
           {user && (
@@ -285,7 +288,7 @@ const SessionPage = () => {
         </div>
         
         <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-dark-100 dark:via-blue-300 dark:to-indigo-300 bg-clip-text text-transparent mb-2 sm:mb-3 md:mb-4 px-2">
-          Capture Your Moments
+          {t('session:captureYourMoments')}
         </h1>
         
         <div className="flex flex-col space-y-2 sm:space-y-3 md:flex-row md:items-center md:justify-center md:space-y-0 md:space-x-4 lg:space-x-6 xl:space-x-8 text-gray-600 dark:text-dark-300 px-2">
@@ -297,9 +300,9 @@ const SessionPage = () => {
             </div>
             <span className="text-xs sm:text-sm md:text-base font-medium">
               {userStats ? (
-                <>Your photos: {userStats.upload_count} of {userStats.photos_per_user_limit}</>
+                <>{t('session:userStats.yourPhotos')}{userStats.upload_count}{t('session:userStats.of')}{userStats.photos_per_user_limit}</>
               ) : (
-                <>Loading your progress...</>
+                <>{t('session:status.loadingProgress')}</>
               )}
             </span>
           </div>
@@ -310,7 +313,7 @@ const SessionPage = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <span className="text-xs sm:text-sm md:text-base font-medium">Session {session.session_id.slice(0, 8)}...</span>
+            <span className="text-xs sm:text-sm md:text-base font-medium">{t('session:sessionInfo.session')}{session.session_id.slice(0, 8)}...</span>
           </div>
           
           {userStats && (
@@ -321,7 +324,7 @@ const SessionPage = () => {
                 </svg>
               </div>
               <span className="text-xs sm:text-sm md:text-base font-medium">
-                {userStats.remaining_uploads} remaining
+                {userStats.remaining_uploads}{t('session:userStats.remaining')}
               </span>
             </div>
           )}
@@ -338,19 +341,19 @@ const SessionPage = () => {
               </svg>
             </div>
             <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 dark:text-dark-100 mb-2 sm:mb-3">
-              {!session.is_active ? 'Session Expired' : 'Upload Limit Reached'}
+              {!session.is_active ? t('session:status.expired') : t('session:status.limitReached')}
             </h3>
             <p className="text-xs sm:text-sm md:text-base text-gray-700 dark:text-dark-300">
               {!session.is_active 
-                ? 'This session has expired and is no longer accepting photos.'
+                ? t('session:status.expiredDescription')
                 : userStats 
-                  ? `You have uploaded your maximum of ${userStats.photos_per_user_limit} photos. Thank you for sharing your moments!`
-                  : 'Loading your upload status...'
+                  ? t('session:status.limitDescription', { limit: userStats.photos_per_user_limit })
+                  : t('session:status.loadingUploadStatus')
               }
             </p>
             {userStats && session.is_active && (
               <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-600 dark:text-dark-400">
-                <p>Other users can still upload their photos to this session.</p>
+                <p>{t('session:status.othersCanUpload')}</p>
               </div>
             )}
           </div>
@@ -364,12 +367,12 @@ const SessionPage = () => {
             {!cameraActive ? (
               <div className="text-center py-4 sm:py-6 md:py-8">
                 <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-dark-100 mb-2">
-                  {isMobile ? 'Mobile Camera' : 'PC Camera'}
+                  {isMobile ? t('session:camera.mobile') : t('session:camera.pc')}
                 </h3>
                 <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-dark-300 mb-4 sm:mb-6">
                   {isMobile 
-                    ? 'Touch-optimized camera with front/back switching'
-                    : 'Simple and reliable camera for desktop'
+                    ? t('session:camera.mobileDescription')
+                    : t('session:camera.pcDescription')
                   }
                 </p>
                 
@@ -380,7 +383,7 @@ const SessionPage = () => {
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
-                  <span>Start {isMobile ? 'Mobile' : 'PC'} Camera</span>
+                  <span>{t('session:camera.startCamera', { type: isMobile ? t('session:camera.mobile') : t('session:camera.pc') })}</span>
                 </button>
               </div>
             ) : (
@@ -414,7 +417,7 @@ const SessionPage = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
                   </svg>
-                  <span>Stop Camera</span>
+                  <span>{t('session:camera.stopCamera')}</span>
                 </button>
               </div>
             )}
@@ -432,10 +435,10 @@ const SessionPage = () => {
                 <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Photo Gallery
+                {t('session:photoGallery')}
               </div>
               <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-dark-100 dark:to-dark-300 bg-clip-text text-transparent mb-2">
-                Captured Memories
+                {t('session:capturedMemories')}
               </h2>
               <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-dark-300">
                 {user && session?.owner_id === user.user_id 
@@ -457,14 +460,14 @@ const SessionPage = () => {
                   {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-2 sm:p-4">
                     <div className="text-white">
-                      <p className="text-xs sm:text-sm font-medium">Photo {index + 1}</p>
+                      <p className="text-xs sm:text-sm font-medium">{t('session:gallery.photo')}{index + 1}</p>
                       <p className="text-xs opacity-90 hidden sm:block">
-                        {new Date(photo.uploaded_at || Date.now()).toLocaleDateString()}
+                        {formatDateOnly(photo.uploaded_at || Date.now())}
                       </p>
                       {/* Show uploader info for session owners */}
                       {user && session?.owner_id === user.user_id && photo.user_identifier && (
                         <p className="text-xs opacity-80 text-blue-200 hidden sm:block">
-                          By: {photo.user_identifier}
+                          {t('session:gallery.by')}{photo.user_identifier}
                         </p>
                       )}
                     </div>
@@ -473,7 +476,7 @@ const SessionPage = () => {
                       <button
                         onClick={() => window.open(photo.url, '_blank')}
                         className="bg-white/20 dark:bg-dark-900/40 backdrop-blur-sm text-white p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-white/30 dark:hover:bg-dark-900/60 transition-all duration-200 transform hover:scale-110"
-                        title="View full size"
+                        title={t('session:actions.viewFullSize')}
                       >
                         <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -486,7 +489,7 @@ const SessionPage = () => {
                           handleDeletePhoto(photo.id, index);
                         }}
                         className="bg-red-500/20 dark:bg-red-500/30 backdrop-blur-sm text-red-200 p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-red-500/40 dark:hover:bg-red-500/50 transition-all duration-200 transform hover:scale-110"
-                        title="Delete photo"
+                        title={t('session:actions.deletePhoto')}
                       >
                         <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -509,19 +512,19 @@ const SessionPage = () => {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span>{photos.length} photos stored</span>
+                    <span>{photos.length}{t('session:gallery.photosStored')}</span>
                   </span>
                   
                   <span className="flex items-center space-x-1">
                     <svg className="w-4 h-4 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
-                    <span>Cloud synchronized</span>
+                    <span>{t('session:gallery.cloudSynchronized')}</span>
                   </span>
                 </div>
                 
                 <div className="text-xs opacity-75 dark:opacity-60">
-                  Click any photo to view full size
+                  {t('session:gallery.clickToView')}
                 </div>
               </div>
               
@@ -535,8 +538,8 @@ const SessionPage = () => {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span className="hidden sm:inline">Download All Photos ({photos.length})</span>
-                    <span className="sm:hidden">Download ({photos.length})</span>
+                    <span className="hidden sm:inline">{t('session:actions.downloadAll', { count: photos.length })}</span>
+                    <span className="sm:hidden">{t('session:actions.downloadShort', { count: photos.length })}</span>
                   </button>
                 </div>
               )}

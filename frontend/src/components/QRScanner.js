@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import QrScanner from 'qr-scanner';
 import { devLog, devError } from '../utils/helpers';
 
@@ -7,6 +8,7 @@ const QRScannerComponent = ({
   onClose,
   onScanSuccess
 }) => {
+  const { t } = useTranslation(['qrscanner', 'common']);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState('');
   const [hasPermission, setHasPermission] = useState(null);
@@ -42,7 +44,7 @@ const QRScannerComponent = ({
       
       // Check for camera permissions
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera not supported in this browser');
+        throw new Error(t('qrscanner:errors.cameraNotSupported'));
       }
 
       // Get available cameras
@@ -108,7 +110,7 @@ const QRScannerComponent = ({
       
     } catch (err) {
       devError('QR Scanner: Error processing result:', err);
-      setError('Error processing scan result');
+      setError(t('qrscanner:errors.processingError'));
     }
   };
 
@@ -129,7 +131,7 @@ const QRScannerComponent = ({
       }
     } catch (err) {
       devError('QR Scanner: Error restarting:', err);
-      setError('Error restarting scanner. Please close and reopen.');
+      setError(t('qrscanner:errors.restartError'));
       setIsScanning(false);
     }
   };
@@ -163,13 +165,13 @@ const QRScannerComponent = ({
 
   const getErrorMessage = (error) => {
     if (error.name === 'NotAllowedError') {
-      return 'Camera access denied. Please allow camera permissions and try again.';
+      return t('qrscanner:errors.cameraAccessDenied');
     } else if (error.name === 'NotFoundError') {
-      return 'No camera found. Please check your device camera.';
+      return t('qrscanner:errors.noCameraFound');
     } else if (error.name === 'NotSupportedError') {
-      return 'Camera not supported in this browser.';
+      return t('qrscanner:errors.cameraNotSupported');
     } else {
-      return `Camera error: ${error.message}`;
+      return t('qrscanner:errors.cameraError', { message: error.message });
     }
   };
 
@@ -189,20 +191,20 @@ const QRScannerComponent = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-dark-100 mb-2 sm:mb-3">Scanner Error</h3>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-dark-100 mb-2 sm:mb-3">{t('qrscanner:errors.title')}</h3>
             <p className="text-sm sm:text-base text-red-700 dark:text-red-300 mb-6 leading-relaxed">{error}</p>
             <div className="space-y-3">
               <button
                 onClick={initializeScanner}
                 className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
               >
-                Try Again
+                {t('qrscanner:actions.tryAgain')}
               </button>
               <button
                 onClick={onClose}
                 className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-dark-700 dark:hover:bg-dark-600 text-gray-800 dark:text-dark-100 font-medium py-3 px-6 rounded-xl transition-colors"
               >
-                Close Scanner
+                {t('qrscanner:actions.close')}
               </button>
             </div>
           </div>
@@ -214,8 +216,8 @@ const QRScannerComponent = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-dark-100 mb-2 sm:mb-3">QR Code Scanned!</h3>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300 mb-4">Redirecting to photo session...</p>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-dark-100 mb-2 sm:mb-3">{t('qrscanner:status.scanned')}</h3>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300 mb-4">{t('qrscanner:status.redirecting')}</p>
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/30 rounded-xl p-4 mb-6">
               <p className="text-sm text-green-800 dark:text-green-300 font-mono break-all">{scanResult}</p>
             </div>
@@ -225,9 +227,9 @@ const QRScannerComponent = ({
           /* Scanner Interface */
           <div className="bg-white/90 dark:bg-dark-800/90 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl w-full shadow-2xl my-2 sm:my-4 border border-gray-200/50 dark:border-dark-600/30">
             <div className="text-center mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-dark-100 mb-2">📱 QR Code Scanner</h2>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-dark-100 mb-2">📱 {t('qrscanner:title')}</h2>
               <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300 leading-relaxed">
-                Point your camera at a QR code to scan it
+                {t('qrscanner:description')}
               </p>
             </div>
 
@@ -253,7 +255,7 @@ const QRScannerComponent = ({
               {isScanning && (
                 <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex items-center space-x-2 bg-black/60 dark:bg-dark-900/80 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm">
                   <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></div>
-                  <span>Scanning...</span>
+                  <span>{t('qrscanner:status.scanning')}</span>
                 </div>
               )}
               
@@ -261,7 +263,7 @@ const QRScannerComponent = ({
                 <button
                   onClick={switchCamera}
                   className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-black/60 dark:bg-dark-900/80 backdrop-blur-sm text-white p-2 sm:p-3 rounded-full hover:bg-black/80 dark:hover:bg-dark-900/90 transition-colors"
-                  title="Switch Camera"
+                  title={t('qrscanner:actions.switchCamera')}
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -280,18 +282,18 @@ const QRScannerComponent = ({
                 </div>
                 <div className="text-sm">
                   <p className="text-blue-800 dark:text-blue-300 font-medium mb-1">
-                    {isScanning ? 'Scanning for QR codes...' : 'How to scan:'}
+                    {isScanning ? t('qrscanner:instructions.scanning') : t('qrscanner:instructions.howToScan')}
                   </p>
                   {isScanning ? (
                     <p className="text-blue-700 dark:text-blue-300 text-xs">
-                      Point your camera at any QR code. The scanner works with all QR codes, not just photo session codes.
+                      {t('qrscanner:instructions.scanDescription')}
                     </p>
                   ) : (
                     <ol className="text-blue-700 dark:text-blue-300 space-y-1 text-xs">
-                      <li>• Position the QR code within the frame</li>
-                      <li>• Keep your device steady</li>
-                      <li>• Ensure good lighting</li>
-                      <li>• Wait for automatic detection</li>
+                      <li>{t('qrscanner:instructions.steps.position')}</li>
+                      <li>{t('qrscanner:instructions.steps.steady')}</li>
+                      <li>{t('qrscanner:instructions.steps.lighting')}</li>
+                      <li>{t('qrscanner:instructions.steps.wait')}</li>
                     </ol>
                   )}
                 </div>
@@ -308,14 +310,14 @@ const QRScannerComponent = ({
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Restart Scanner</span>
+                <span>{t('qrscanner:actions.restart')}</span>
               </button>
               
               <button
                 onClick={onClose}
                 className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-dark-700 dark:hover:bg-dark-600 text-gray-800 dark:text-dark-100 font-medium py-3 px-6 rounded-xl transition-colors"
               >
-                Close Scanner
+                {t('qrscanner:actions.close')}
               </button>
             </div>
           </div>

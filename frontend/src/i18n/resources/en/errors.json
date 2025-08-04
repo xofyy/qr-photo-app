@@ -1,0 +1,46 @@
+{
+  "general": {
+    "somethingWentWrong": "Something went wrong",
+    "tryAgainLater": "Please try again later",
+    "networkError": "Network error occurred",
+    "serverError": "Server error occurred",
+    "unknownError": "An unknown error occurred"
+  },
+  
+  "session": {
+    "sessionNotFound": "Session not found",
+    "sessionExpired": "This session has expired",
+    "sessionInactive": "This session is inactive",
+    "invalidSessionId": "Invalid session ID format"
+  },
+  
+  "upload": {
+    "fileTooBig": "File too large. Maximum size is {{maxSize}}MB",
+    "invalidFileType": "Invalid file type. Allowed types: {{allowedTypes}}",
+    "uploadFailed": "Upload failed",
+    "noFileSelected": "No file selected",
+    "emptyFile": "Empty file provided",
+    "quotaExceeded": "You have reached your photo limit ({{limit}} photos per user)"
+  },
+  
+  "camera": {
+    "cameraNotSupported": "Camera is not supported on this device",
+    "cameraPermissionDenied": "Camera permission denied",
+    "cameraNotAvailable": "Camera is not available",
+    "cameraError": "Camera error occurred"
+  },
+  
+  "qr": {
+    "invalidQrCode": "This doesn't appear to be a QR PhotoShare session link",
+    "qrScanError": "Error scanning QR code",
+    "notValidUrl": "This doesn't appear to be a valid URL or QR PhotoShare session"
+  },
+  
+  "offline": {
+    "youAreOffline": "You're Offline",
+    "checkConnection": "Check your internet connection and try again. The app will continue to show cached content while offline.",
+    "cachedPagesWork": "Cached pages remain functional",
+    "autoSyncWhenOnline": "Auto-sync when connection returns",
+    "basicFeaturesOffline": "Basic features available offline"
+  }
+}

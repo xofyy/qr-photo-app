@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 
 const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, onClose }) => {
+  const { t } = useTranslation(['notifications', 'common']);
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -20,10 +22,10 @@ const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, on
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffMins < 1) return t('notifications:time.justNow');
+    if (diffMins < 60) return t('notifications:time.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('notifications:time.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('notifications:time.daysAgo', { count: diffDays });
     return date.toLocaleDateString();
   };
 
@@ -53,18 +55,21 @@ const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, on
   const getNotificationTitle = (notification) => {
     switch (notification.type) {
       case 'photo_uploaded':
-        return 'New Photo Uploaded';
+        return t('notifications:types.photo_uploaded');
       default:
-        return 'Notification';
+        return t('notifications:types.notification');
     }
   };
 
   const getNotificationMessage = (notification) => {
     if (notification.type === 'photo_uploaded') {
       const data = notification.data;
-      return `${data?.uploaded_by || 'Someone'} uploaded a photo to your session. Total: ${data?.upload_count || 0} photos`;
+      return t('notifications:messages.photo_uploaded', {
+        uploaded_by: data?.uploaded_by || 'Someone',
+        upload_count: data?.upload_count || 0
+      });
     }
-    return notification.message || 'You have a new notification';
+    return notification.message || t('notifications:messages.default');
   };
 
   return (
@@ -87,9 +92,9 @@ const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, on
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Notifications</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('notifications:title')}</h2>
               {unreadCount > 0 && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">{unreadCount} unread</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('notifications:unread', { count: unreadCount })}</p>
               )}
             </div>
           </div>
@@ -100,7 +105,7 @@ const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, on
                 onClick={onClearAll}
                 className="text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
               >
-                Clear All
+                {t('notifications:actions.clearAll')}
               </button>
             )}
             <button
@@ -124,9 +129,9 @@ const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, on
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.73 21a2 2 0 01-3.46 0" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No notifications yet</h3>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">{t('notifications:empty.title')}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
-                You'll receive notifications here when someone uploads photos to your sessions.
+                {t('notifications:empty.description')}
               </p>
             </div>
           ) : (
@@ -173,7 +178,7 @@ const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, on
                     {notification.session_id && (
                       <div className="mt-2">
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
-                          Session: {notification.session_id.slice(0, 8)}...
+                          {t('notifications:session', { id: notification.session_id.slice(0, 8) + '...' })}
                         </span>
                       </div>
                     )}
@@ -189,7 +194,7 @@ const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, on
           <div className="border-t border-gray-200 dark:border-gray-700 p-4">
             <div className="text-center">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Showing {notifications.length} notification{notifications.length !== 1 ? 's' : ''}
+                {t('notifications:footer.showing', { count: notifications.length })}
               </p>
             </div>
           </div>

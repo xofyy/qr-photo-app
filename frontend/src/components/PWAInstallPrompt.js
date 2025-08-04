@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const PWAInstallPrompt = () => {
+  const { t } = useTranslation('common');
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
@@ -86,10 +88,10 @@ const PWAInstallPrompt = () => {
         
         <div className="flex-1">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-            Uygulamayı Yükle
+            {t('pwa.installTitle')}
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Ana ekranınıza ekleyerek daha hızlı erişim sağlayın
+            {t('pwa.installDescription')}
           </p>
           
           <div className="flex space-x-2 mt-3">
@@ -97,13 +99,13 @@ const PWAInstallPrompt = () => {
               onClick={handleInstallClick}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-md font-medium transition-colors"
             >
-              Yükle
+              {t('buttons.install')}
             </button>
             <button
               onClick={handleDismiss}
               className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs px-3 py-1.5 rounded-md font-medium transition-colors"
             >
-              Daha Sonra
+              {t('buttons.later')}
             </button>
           </div>
         </div>

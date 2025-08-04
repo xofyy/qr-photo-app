@@ -1,7 +1,7 @@
 {
-  "name": "QR Photo Session App",
-  "short_name": "QR Photo App",
-  "description": "QR kod ile fotoğraf paylaşım uygulaması",
+  "name": "QR PhotoShare",
+  "short_name": "QR PhotoShare",
+  "description": "Instant photo sharing through QR codes. Create photo sessions and share memories easily.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { createSession, getQRCode, getUserSessions, updateSessionPhotoLimit, getSessionUserStats, downloadSessionPhotos } from '../services/api';
+import { formatDateOnly } from '../utils/i18nHelpers';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConnectionStatus from '../components/ConnectionStatus';
 import useDashboardWebSocket from '../hooks/useDashboardWebSocket';
 
 const UserDashboard = () => {
+  const { t } = useTranslation(['dashboard', 'common']);
   const [userSessions, setUserSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
@@ -54,7 +57,7 @@ const UserDashboard = () => {
       navigate(`/session-info/${newSession.session_id}`);
     } catch (error) {
       console.error('Error creating session:', error);
-      alert('Failed to create session. Please try again.');
+      alert(t('dashboard:alerts.createFailed'));
     } finally {
       setIsCreatingSession(false);
     }
@@ -91,10 +94,10 @@ const UserDashboard = () => {
       );
       
       closePhotoLimitModal();
-      alert(`Photo limit updated to ${photoLimitModal.newLimit} photos per user`);
+      alert(t('dashboard:alerts.limitUpdated', { limit: photoLimitModal.newLimit }));
     } catch (error) {
       console.error('Error updating photo limit:', error);
-      alert('Failed to update photo limit. Please try again.');
+      alert(t('dashboard:alerts.limitUpdateFailed'));
     }
   };
 
@@ -136,13 +139,13 @@ const UserDashboard = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
       
-      alert(`Downloaded ${photoCount} photos successfully!`);
+      alert(t('dashboard:alerts.downloadStarted'));
     } catch (error) {
       console.error('Error downloading photos:', error);
       if (error.response?.status === 403) {
-        alert('You can only download photos from your own sessions.');
+        alert(t('dashboard:alerts.downloadUnauthorized'));
       } else {
-        alert('Failed to download photos. Please try again.');
+        alert(t('dashboard:alerts.downloadFailed'));
       }
     }
   };
@@ -170,7 +173,7 @@ const UserDashboard = () => {
         ...prev,
         loading: false
       }));
-      alert('Failed to load QR code. Please try again.');
+      alert(t('dashboard:alerts.qrCodeLoadFailed'));
     }
   };
 
@@ -191,7 +194,7 @@ const UserDashboard = () => {
     if (qrModal.sessionUrl) {
       try {
         await navigator.clipboard.writeText(qrModal.sessionUrl);
-        alert('Session link copied to clipboard!');
+        alert(t('dashboard:alerts.linkCopied'));
       } catch (err) {
         // Fallback for older browsers
         const textArea = document.createElement('textarea');
@@ -200,7 +203,7 @@ const UserDashboard = () => {
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-        alert('Session link copied to clipboard!');
+        alert(t('dashboard:alerts.linkCopied'));
       }
     }
   };
@@ -209,7 +212,7 @@ const UserDashboard = () => {
     return (
       <Layout>
         <div className="flex justify-center items-center h-96">
-          <LoadingSpinner size="lg" text="Loading your dashboard..." />
+          <LoadingSpinner size="lg" text={t('dashboard:sessions.loading')} />
         </div>
       </Layout>
     );
@@ -231,14 +234,14 @@ const UserDashboard = () => {
               )}
               <div className="min-w-0 flex-1">
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-dark-50 dark:to-dark-300 bg-clip-text text-transparent truncate">
-                  Welcome back, {user?.name}!
+                  {t('dashboard:welcome', { name: user?.name })}
                 </h1>
                 {connectedSessions.size > 0 && (
                   <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 mt-1">
-                    🔔 Live notifications active for {connectedSessions.size} session{connectedSessions.size !== 1 ? 's' : ''}
+                    🔔 {t('dashboard:connection.connected', { count: connectedSessions.size })}
                   </p>
                 )}
-                <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300 mt-1">Manage your photo sessions and QR codes</p>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300 mt-1">{t('dashboard:subtitle')}</p>
               </div>
             </div>
             
@@ -251,14 +254,14 @@ const UserDashboard = () => {
                 {isCreatingSession ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Creating...</span>
+                    <span>{t('dashboard:actions.creating')}</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    <span>New Session</span>
+                    <span>{t('dashboard:actions.createSession')}</span>
                   </>
                 )}
               </button>
@@ -270,8 +273,8 @@ const UserDashboard = () => {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
-                <span className="hidden sm:inline">Logout</span>
-                <span className="sm:hidden">Sign Out</span>
+                <span className="hidden sm:inline">{t('common:buttons.logout')}</span>
+                <span className="sm:hidden">{t('common:navigation.signOut')}</span>
               </button>
             </div>
           </div>
@@ -279,7 +282,7 @@ const UserDashboard = () => {
 
         {/* Sessions Grid */}
         <div className="mb-6 sm:mb-8">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-dark-50 mb-4 sm:mb-6">Your Photo Sessions</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-dark-50 mb-4 sm:mb-6">{t('dashboard:sessions.title')}</h2>
           
           {userSessions.length === 0 ? (
             <div className="bg-white/80 dark:bg-dark-800/80 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-xl border border-gray-200/50 dark:border-dark-700/50 p-6 sm:p-8 lg:p-12 text-center">
@@ -289,14 +292,14 @@ const UserDashboard = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 616 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-dark-50 mb-3 sm:mb-4">No sessions yet</h3>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300 mb-6 sm:mb-8 px-2">Create your first photo session to start collecting memories from your events.</p>
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-dark-50 mb-3 sm:mb-4">{t('dashboard:sessions.noSessions')}</h3>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300 mb-6 sm:mb-8 px-2">{t('dashboard:sessions.noSessionsDescription')}</p>
               <button
                 onClick={handleCreateSession}
                 disabled={isCreatingSession}
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl sm:rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
-                {isCreatingSession ? 'Creating...' : 'Create Your First Session'}
+                {isCreatingSession ? t('dashboard:actions.creating') : t('dashboard:sessions.createFirst')}
               </button>
             </div>
           ) : (
@@ -315,10 +318,10 @@ const UserDashboard = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h3 className="font-semibold text-gray-900 dark:text-dark-50 text-sm sm:text-base truncate">
-                          Session {session.session_id.substring(0, 8)}...
+                          {t('dashboard:sessionCard.sessionId', { id: session.session_id.substring(0, 8) + '...' })}
                         </h3>
                         <p className="text-xs sm:text-sm text-gray-500 dark:text-dark-400">
-                          {new Date(session.created_at).toLocaleDateString()}
+                          {formatDateOnly(session.created_at)}
                         </p>
                       </div>
                     </div>
@@ -328,18 +331,18 @@ const UserDashboard = () => {
                         ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' 
                         : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                     }`}>
-                      {session.is_active ? 'Active' : 'Inactive'}
+                      {session.is_active ? t('dashboard:sessionCard.status.active') : t('dashboard:sessionCard.status.inactive')}
                     </span>
                   </div>
                   
                   <div className="space-y-2 mb-4 sm:mb-6">
                     <div className="flex items-center justify-between text-xs sm:text-sm">
-                      <span className="text-gray-600 dark:text-dark-300">Total photos:</span>
+                      <span className="text-gray-600 dark:text-dark-300">{t('dashboard:sessionCard.totalPhotos')}</span>
                       <span className="font-medium text-gray-900 dark:text-dark-50">{session.photo_count}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs sm:text-sm">
-                      <span className="text-gray-600 dark:text-dark-300">Per-user limit:</span>
-                      <span className="font-medium text-gray-900 dark:text-dark-50">{session.photos_per_user_limit || 10} photos</span>
+                      <span className="text-gray-600 dark:text-dark-300">{t('dashboard:sessionCard.perUserLimit')}</span>
+                      <span className="font-medium text-gray-900 dark:text-dark-50">{session.photos_per_user_limit || 10} {t('dashboard:sessionCard.photosUnit')}</span>
                     </div>
                     
                     <div className="w-full bg-gray-200 dark:bg-dark-700 rounded-full h-2">
@@ -356,7 +359,7 @@ const UserDashboard = () => {
                         onClick={() => navigate(`/session/${session.session_id}`)}
                         className="flex-1 bg-blue-100 dark:bg-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/50 text-blue-800 dark:text-blue-300 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105"
                       >
-                        View Session
+                        {t('dashboard:actions.viewSession')}
                       </button>
                       
                       <button
@@ -366,7 +369,7 @@ const UserDashboard = () => {
                         <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1z" />
                         </svg>
-                        <span>QR Code</span>
+                        <span>{t('dashboard:actions.viewQR')}</span>
                       </button>
                     </div>
                     
@@ -375,7 +378,7 @@ const UserDashboard = () => {
                         onClick={() => openPhotoLimitModal(session)}
                         className="flex-1 bg-green-100 dark:bg-green-900/30 hover:bg-green-200 dark:hover:bg-green-900/50 text-green-800 dark:text-green-300 text-xs sm:text-sm font-medium py-2 px-2 sm:px-3 rounded-lg transition-all duration-200 transform hover:scale-105"
                       >
-                        Settings
+                        {t('dashboard:actions.updateLimit')}
                       </button>
                       
                       <button
@@ -386,9 +389,9 @@ const UserDashboard = () => {
                             ? 'bg-gray-100 dark:bg-dark-700 text-gray-400 dark:text-dark-400 cursor-not-allowed'
                             : 'bg-purple-100 dark:bg-purple-900/30 hover:bg-purple-200 dark:hover:bg-purple-900/50 text-purple-800 dark:text-purple-300'
                         }`}
-                        title={session.photo_count === 0 ? 'No photos to download' : `Download ${session.photo_count} photos`}
+                        title={session.photo_count === 0 ? t('dashboard:sessionCard.tooltips.noPhotosDownload') : t('dashboard:sessionCard.tooltips.downloadPhotos', { count: session.photo_count })}
                       >
-                        Download
+                        {t('dashboard:actions.downloadPhotos')}
                       </button>
                     </div>
                   </div>
@@ -405,19 +408,19 @@ const UserDashboard = () => {
           <div className="bg-white dark:bg-dark-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md shadow-2xl">
             <div className="mb-4 sm:mb-6">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-50 mb-2">
-                Update Photo Limit
+                {t('dashboard:modals.photoLimit.title')}
               </h3>
               <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300">
-                Set the maximum number of photos each user can upload to this session.
+                {t('dashboard:modals.photoLimit.description')}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-dark-400 mt-2">
-                Session: {photoLimitModal.session?.session_id?.substring(0, 8)}...
+                {t('dashboard:sessionCard.session')} {photoLimitModal.session?.session_id?.substring(0, 8)}...
               </p>
             </div>
 
             <div className="mb-4 sm:mb-6">
               <label className="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2">
-                Photos per user limit
+                {t('dashboard:modals.photoLimit.newLimit')}
               </label>
               <input
                 type="number"
@@ -429,10 +432,10 @@ const UserDashboard = () => {
                   newLimit: parseInt(e.target.value) || 1
                 }))}
                 className="w-full px-3 py-2.5 sm:py-2 border border-gray-300 dark:border-dark-600 bg-white dark:bg-dark-800 text-gray-900 dark:text-dark-100 rounded-lg focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 text-base sm:text-sm"
-                placeholder="Enter photo limit (1-100)"
+                placeholder={t('dashboard:modals.photoLimit.placeholder')}
               />
               <p className="text-xs text-gray-500 dark:text-dark-400 mt-1">
-                Current limit: {photoLimitModal.session?.photos_per_user_limit || 10} photos per user
+                {t('dashboard:modals.photoLimit.currentLimit', { limit: photoLimitModal.session?.photos_per_user_limit || 10 })}
               </p>
             </div>
 
@@ -441,13 +444,13 @@ const UserDashboard = () => {
                 onClick={closePhotoLimitModal}
                 className="flex-1 px-4 py-2.5 sm:py-2 text-gray-700 dark:text-dark-300 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 rounded-lg font-medium transition-colors text-sm sm:text-base"
               >
-                Cancel
+                {t('common:buttons.cancel')}
               </button>
               <button
                 onClick={handleUpdatePhotoLimit}
                 className="flex-1 px-4 py-2.5 sm:py-2 bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-600 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
               >
-                Update Limit
+                {t('dashboard:modals.photoLimit.update')}
               </button>
             </div>
           </div>
@@ -460,13 +463,13 @@ const UserDashboard = () => {
           <div className="bg-white dark:bg-dark-800 rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md shadow-2xl">
             <div className="mb-4 sm:mb-6">
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-dark-50 mb-2">
-                Session QR Code
+                {t('dashboard:modals.qrCode.title')}
               </h3>
               <p className="text-sm sm:text-base text-gray-600 dark:text-dark-300">
-                Share this QR code for guests to upload photos to your session.
+                {t('dashboard:modals.qrCode.description')}
               </p>
               <p className="text-xs sm:text-sm text-gray-500 dark:text-dark-400 mt-2">
-                Session: {qrModal.session?.session_id?.substring(0, 8)}...
+                {t('dashboard:modals.qrCode.sessionId', { id: qrModal.session?.session_id?.substring(0, 8) + '...' })}
               </p>
             </div>
 
@@ -480,7 +483,7 @@ const UserDashboard = () => {
                 <div className="bg-white dark:bg-dark-50 p-4 rounded-xl shadow-lg mb-4 transform hover:scale-105 transition-transform duration-300">
                   <img 
                     src={`data:image/png;base64,${qrModal.qrCode}`}
-                    alt="QR Code" 
+                    alt={t('dashboard:modals.qrCode.altText')} 
                     className="w-48 h-48 sm:w-56 sm:h-56"
                   />
                 </div>
@@ -488,7 +491,7 @@ const UserDashboard = () => {
                 {/* Session URL */}
                 {qrModal.sessionUrl && (
                   <div className="w-full mb-4">
-                    <p className="text-sm text-gray-500 dark:text-dark-400 mb-2">Session Link:</p>
+                    <p className="text-sm text-gray-500 dark:text-dark-400 mb-2">{t('dashboard:modals.qrCode.sessionLink')}</p>
                     <div className="bg-gray-50 dark:bg-dark-700 p-3 rounded-lg border border-gray-200 dark:border-dark-600">
                       <p className="text-xs text-gray-800 dark:text-dark-100 break-all font-mono">
                         {qrModal.sessionUrl}
@@ -506,7 +509,7 @@ const UserDashboard = () => {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    <span>Copy Link</span>
+                    <span>{t('dashboard:actions.copyLink')}</span>
                   </button>
                   
                   <button
@@ -516,13 +519,13 @@ const UserDashboard = () => {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span>Download QR</span>
+                    <span>{t('dashboard:actions.downloadQR')}</span>
                   </button>
                 </div>
               </div>
             ) : (
               <div className="text-center py-8">
-                <p className="text-red-600 dark:text-red-400">Failed to load QR code</p>
+                <p className="text-red-600 dark:text-red-400">{t('dashboard:modals.qrCode.loadError')}</p>
               </div>
             )}
 
@@ -531,7 +534,7 @@ const UserDashboard = () => {
                 onClick={closeQrModal}
                 className="px-6 py-2.5 text-gray-700 dark:text-dark-300 bg-gray-100 dark:bg-dark-700 hover:bg-gray-200 dark:hover:bg-dark-600 rounded-lg font-medium transition-colors"
               >
-                Close
+                {t('dashboard:modals.qrCode.close')}
               </button>
             </div>
           </div>

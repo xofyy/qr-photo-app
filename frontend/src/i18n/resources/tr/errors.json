@@ -1,0 +1,46 @@
+{
+  "general": {
+    "somethingWentWrong": "Bir şeyler ters gitti",
+    "tryAgainLater": "Lütfen daha sonra tekrar deneyin",
+    "networkError": "Ağ hatası oluştu",
+    "serverError": "Sunucu hatası oluştu",
+    "unknownError": "Bilinmeyen bir hata oluştu"
+  },
+  
+  "session": {
+    "sessionNotFound": "Oturum bulunamadı",
+    "sessionExpired": "Bu oturum süresi dolmuş",
+    "sessionInactive": "Bu oturum aktif değil",
+    "invalidSessionId": "Geçersiz oturum ID formatı"
+  },
+  
+  "upload": {
+    "fileTooBig": "Dosya çok büyük. Maksimum boyut {{maxSize}}MB",
+    "invalidFileType": "Geçersiz dosya türü. İzin verilen türler: {{allowedTypes}}",
+    "uploadFailed": "Yükleme başarısız",
+    "noFileSelected": "Dosya seçilmedi",
+    "emptyFile": "Boş dosya sağlandı",
+    "quotaExceeded": "Fotoğraf limitinize ulaştınız (kullanıcı başına {{limit}} fotoğraf)"
+  },
+  
+  "camera": {
+    "cameraNotSupported": "Kamera bu cihazda desteklenmiyor",
+    "cameraPermissionDenied": "Kamera izni reddedildi",
+    "cameraNotAvailable": "Kamera kullanılamıyor",
+    "cameraError": "Kamera hatası oluştu"
+  },
+  
+  "qr": {
+    "invalidQrCode": "Bu bir QR PhotoShare oturum linki gibi görünmüyor",
+    "qrScanError": "QR kod tarama hatası",
+    "notValidUrl": "Bu geçerli bir URL veya QR PhotoShare oturumu gibi görünmüyor"
+  },
+  
+  "offline": {
+    "youAreOffline": "Çevrimdışısınız",
+    "checkConnection": "İnternet bağlantınızı kontrol edin ve tekrar deneyin. Uygulama çevrimdışıyken önbelleğe alınmış içeriği göstermeye devam edecek.",
+    "cachedPagesWork": "Önbelleğe alınmış sayfalar çalışmaya devam eder",
+    "autoSyncWhenOnline": "Bağlantı geri geldiğinde otomatik senkronizasyon",
+    "basicFeaturesOffline": "Temel özellikler çevrimdışı kullanılabilir"
+  }
+}

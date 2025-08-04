@@ -1,0 +1,108 @@
+{
+  "title": "Photo Session",
+  "liveSession": "Live Photo Session",
+  "captureYourMoments": "Capture Your Moments",
+  "uploadPhotos": "Upload Photos",
+  "photoGallery": "Photo Gallery",
+  "capturedMemories": "Captured Memories",
+  "noPhotosYet": "No photos uploaded yet. Be the first to share a moment!",
+  
+  "errors": {
+    "sessionNotFound": "Session Not Found",
+    "sessionNotFoundDescription": "The session you're looking for doesn't exist or has been removed.",
+    "loadingError": "Failed to load session: ",
+    "uploadError": "Upload failed: ",
+    "noPhotoData": "No photo or session data available",
+    "emptyPhoto": "Photo file is empty. Please retake the photo.",
+    "corruptedPhoto": "Photo file appears to be corrupted. Please retake the photo.",
+    "downloadUnauthorized": "You can only download photos from your own sessions.",
+    "downloadFailed": "Failed to download photos. Please try again.",
+    "deleteFailed": "Delete failed: ",
+    "qrLoadFailed": "Failed to load QR code",
+    "title": "Session Error"
+  },
+  
+  "status": {
+    "loadingInfo": "Loading session...",
+    "loadingProgress": "Loading your progress...",
+    "loadingUploadStatus": "Loading your upload status...",
+    "processing": "Processing...",
+    "uploading": "Uploading...",
+    "expired": "Session Expired",
+    "limitReached": "Upload Limit Reached",
+    "expiredDescription": "This session has expired and is no longer accepting photos.",
+    "limitDescription": "You have uploaded your maximum of {{limit}} photos. Thank you for sharing your moments!",
+    "othersCanUpload": "Other users can still upload their photos to this session."
+  },
+  
+  "camera": {
+    "stopCamera": "Stop Camera",
+    "mobile": "Mobile Camera",
+    "pc": "PC Camera",
+    "mobileDescription": "Touch-optimized camera with front/back switching",
+    "pcDescription": "Simple and reliable camera for desktop",
+    "startCamera": "Start {{type}} Camera",
+    "start": "Start "
+  },
+  
+  "actions": {
+    "viewFullSize": "View full size",
+    "deletePhoto": "Delete photo",
+    "confirmDelete": "Are you sure you want to delete this photo? This action cannot be undone.",
+    "downloadAll": "Download All Photos ({{count}})",
+    "downloadShort": "Download ({{count}})"
+  },
+  
+  "upload": {
+    "selectPhotos": "Select Photos",
+    "dragAndDrop": "Drag and drop photos here, or click to select",
+    "uploading": "Uploading {{current}} of {{total}} photos...",
+    "uploadSuccess": "{{count}} photo uploaded successfully!",
+    "uploadSuccess_plural": "{{count}} photos uploaded successfully!",
+    "uploadError": "Failed to upload some photos. Please try again."
+  },
+  
+  "limits": {
+    "photosRemaining": "{{count}} photo remaining",
+    "photosRemaining_plural": "{{count}} photos remaining",
+    "limitReached": "You have reached your photo limit ({{limit}} photos)",
+    "configurableLimit": "Configurable photo limit",
+    "sessionExpires": "Session expires after 24 hours"
+  },
+  
+  "qr": {
+    "title": "Your QR Code is Ready",
+    "description": "Share this QR code with your guests to start collecting photos",
+    "sessionCreated": "Session Created Successfully!",
+    "sessionLink": "Session Link:",
+    "downloadQr": "Download QR",
+    "copyLink": "Copy Link",
+    "copied": "Copied!",
+    "previewSession": "Preview Session"
+  },
+  
+  "userStats": {
+    "yourPhotos": "Your photos: ",
+    "of": " of ",
+    "remaining": " remaining"
+  },
+  
+  "sessionInfo": {
+    "session": "Session ",
+    "sessionId": "Session {{id}}"
+  },
+  
+  "gallery": {
+    "photo": "Photo ",
+    "by": "By: ",
+    "photosStored": " photos stored",
+    "cloudSynchronized": "Cloud synchronized",
+    "clickToView": "Click any photo to view full size"
+  },
+  
+  "info": {
+    "shareDescription": "Share the QR code or link below with your guests to start collecting photos from your event.",
+    "uploadLimit": "They can upload up to {{limit}} photos each to your session.",
+    "viewDescription": "You can view and download all photos from your dashboard or session page."
+  }
+}

@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const AuthCallback = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
@@ -50,8 +52,8 @@ const AuthCallback = () => {
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:bg-dark-gradient flex items-center justify-center px-3 sm:px-4">
       <div className="text-center max-w-sm mx-auto">
-        <LoadingSpinner size="lg" text="Completing sign in..." />
-        <p className="mt-4 text-gray-600 dark:text-dark-300 text-sm sm:text-base">Please wait while we sign you in...</p>
+        <LoadingSpinner size="lg" text={t('auth:status.signingIn')} />
+        <p className="mt-4 text-gray-600 dark:text-dark-300 text-sm sm:text-base">{t('auth:status.authenticating')}</p>
       </div>
     </div>
   );

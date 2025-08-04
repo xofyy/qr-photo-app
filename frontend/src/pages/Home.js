@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createSession, getQRCode } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import Layout from '../components/Layout';
 import QRScannerComponent from '../components/QRScanner';
 
 const Home = () => {
+  const { t } = useTranslation(['home', 'common']);
   const [isLoading, setIsLoading] = useState(false);
   const [qrCode, setQrCode] = useState(null);
   const [sessionUrl, setSessionUrl] = useState('');
@@ -100,7 +102,7 @@ const Home = () => {
       
       // If we get here, it's not a session URL - ask user what to do
       const userChoice = window.confirm(
-        `This QR code contains: "${scannedUrl}"\n\nThis doesn't appear to be a photo session QR code. Would you like to:\nOK - Open this URL anyway\nCancel - Continue scanning`
+        t('home:scanner.invalidSession', { url: scannedUrl })
       );
       
       if (userChoice) {
@@ -112,7 +114,7 @@ const Home = () => {
         setTimeout(() => {
           if (document.querySelector('video')) {
             // Scanner is still active, just continue
-            console.log('Continuing to scan...');
+            console.log(t('home:scanner.continueScanning'));
           }
         }, 100);
       }
@@ -122,13 +124,13 @@ const Home = () => {
       
       // Not a valid URL - show the raw content and ask user
       const userChoice = window.confirm(
-        `QR code content: "${scannedUrl}"\n\nThis is not a valid URL. Would you like to:\nOK - Copy to clipboard\nCancel - Continue scanning`
+        t('home:scanner.invalidContent', { content: scannedUrl })
       );
       
       if (userChoice) {
         // Copy to clipboard
         navigator.clipboard.writeText(scannedUrl).then(() => {
-          alert('QR code content copied to clipboard!');
+          alert(t('home:scanner.copiedToClipboard'));
         }).catch(() => {
           alert(`QR code content: ${scannedUrl}`);
         });
@@ -154,18 +156,17 @@ const Home = () => {
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
-            Instant Photo Sessions
+            {t('home:hero.badge')}
           </div>
           
           <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-dark-100 dark:via-dark-200 dark:to-dark-300 bg-clip-text text-transparent mb-4 sm:mb-6 px-2">
-            Share Moments
+            {t('home:hero.title')}
             <br />
-            <span className="text-blue-600 dark:text-dark-200">Instantly</span>
+            <span className="text-blue-600 dark:text-dark-200">{t('home:hero.titleHighlight')}</span>
           </h1>
           
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-dark-300 max-w-2xl mx-auto mb-6 sm:mb-8 leading-relaxed px-2">
-            Create QR codes for instant photo sharing. Perfect for events, parties, and gatherings. 
-            Up to 10 photos per session, automatically organized and ready to share.
+            {t('home:hero.description')}
           </p>
 
           {/* Features */}
@@ -176,8 +177,8 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-dark-100 mb-2">QR Code Generation</h3>
-              <p className="text-gray-600 dark:text-dark-300 text-sm text-center">Instant QR codes for easy access</p>
+              <h3 className="font-semibold text-gray-900 dark:text-dark-100 mb-2">{t('home:features.qrGeneration.title')}</h3>
+              <p className="text-gray-600 dark:text-dark-300 text-sm text-center">{t('home:features.qrGeneration.description')}</p>
             </div>
 
             <div className="flex flex-col items-center p-6 bg-white/50 dark:bg-dark-800/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-dark-600/50">
@@ -187,8 +188,8 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-dark-100 mb-2">Camera Access</h3>
-              <p className="text-gray-600 dark:text-dark-300 text-sm text-center">Direct camera access on any device</p>
+              <h3 className="font-semibold text-gray-900 dark:text-dark-100 mb-2">{t('home:features.cameraAccess.title')}</h3>
+              <p className="text-gray-600 dark:text-dark-300 text-sm text-center">{t('home:features.cameraAccess.description')}</p>
             </div>
 
             <div className="flex flex-col items-center p-6 bg-white/50 dark:bg-dark-800/50 rounded-2xl backdrop-blur-sm border border-gray-200/50 dark:border-dark-600/50">
@@ -197,8 +198,8 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-gray-900 dark:text-dark-100 mb-2">Cloud Storage</h3>
-              <p className="text-gray-600 dark:text-dark-300 text-sm text-center">Automatic cloud backup & sharing</p>
+              <h3 className="font-semibold text-gray-900 dark:text-dark-100 mb-2">{t('home:features.cloudStorage.title')}</h3>
+              <p className="text-gray-600 dark:text-dark-300 text-sm text-center">{t('home:features.cloudStorage.description')}</p>
             </div>
           </div>
         </div>
@@ -212,10 +213,10 @@ const Home = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-red-900 dark:text-red-300 mb-2">Authentication Error</h3>
+              <h3 className="text-lg font-semibold text-red-900 dark:text-red-300 mb-2">{t('home:errors.authError')}</h3>
               <p className="text-red-700 dark:text-red-400">
-                {authError === 'auth_failed' && 'Failed to sign in with Google. Please try again.'}
-                {authError === 'no_token' && 'Authentication failed. Please try again.'}
+                {authError === 'auth_failed' && t('home:errors.authFailed')}
+                {authError === 'no_token' && t('home:errors.noToken')}
               </p>
             </div>
           </div>
@@ -224,8 +225,8 @@ const Home = () => {
         {/* Role-Based Action Section */}
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-dark-100 mb-4">How would you like to get started?</h2>
-            <p className="text-xl text-gray-600 dark:text-dark-300">Choose your role to continue</p>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-dark-100 mb-4">{t('home:hero.getStarted')}</h2>
+            <p className="text-xl text-gray-600 dark:text-dark-300">{t('home:hero.chooseRole')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -237,27 +238,27 @@ const Home = () => {
                 </svg>
               </div>
               
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-100 mb-4">Organizing an Event?</h3>
-              <p className="text-gray-600 dark:text-dark-300 mb-8">Create QR codes for your guests to share photos from weddings, parties, corporate events, and more.</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-100 mb-4">{t('home:organizer.title')}</h3>
+              <p className="text-gray-600 dark:text-dark-300 mb-8">{t('home:organizer.description')}</p>
               
               <div className="space-y-4 mb-8">
                 <div className="flex items-center text-left">
                   <svg className="w-5 h-5 text-green-500 dark:text-green-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-gray-700 dark:text-dark-200">Create unlimited photo sessions</span>
+                  <span className="text-gray-700 dark:text-dark-200">{t('home:organizer.feature1')}</span>
                 </div>
                 <div className="flex items-center text-left">
                   <svg className="w-5 h-5 text-green-500 dark:text-green-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-gray-700 dark:text-dark-200">Manage and download all photos</span>
+                  <span className="text-gray-700 dark:text-dark-200">{t('home:organizer.feature2')}</span>
                 </div>
                 <div className="flex items-center text-left">
                   <svg className="w-5 h-5 text-green-500 dark:text-green-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-gray-700 dark:text-dark-200">Generate custom QR codes</span>
+                  <span className="text-gray-700 dark:text-dark-200">{t('home:organizer.feature3')}</span>
                 </div>
               </div>
 
@@ -266,7 +267,7 @@ const Home = () => {
                   onClick={() => navigate('/dashboard')}
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-dark-600 dark:to-dark-700 hover:from-blue-700 hover:to-indigo-700 dark:hover:from-dark-500 dark:hover:to-dark-600 text-white dark:text-dark-100 font-bold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
-                  Go to Dashboard
+                  {t('home:organizer.dashboardButton')}
                 </button>
               ) : (
                 <button
@@ -279,7 +280,7 @@ const Home = () => {
                     <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                     <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
-                  <span>Sign in with Google</span>
+                  <span>{t('home:organizer.signInButton')}</span>
                 </button>
               )}
             </div>
@@ -293,27 +294,27 @@ const Home = () => {
                 </svg>
               </div>
               
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-100 mb-4">Have a QR Code?</h3>
-              <p className="text-gray-600 dark:text-dark-300 mb-8">Already received a QR code from an event organizer? Scan it to start uploading photos instantly - no account needed!</p>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-dark-100 mb-4">{t('home:participant.title')}</h3>
+              <p className="text-gray-600 dark:text-dark-300 mb-8">{t('home:participant.description')}</p>
               
               <div className="space-y-4 mb-8">
                 <div className="flex items-center text-left">
                   <svg className="w-5 h-5 text-green-500 dark:text-green-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-gray-700 dark:text-dark-200">No account required</span>
+                  <span className="text-gray-700 dark:text-dark-200">{t('home:participant.feature1')}</span>
                 </div>
                 <div className="flex items-center text-left">
                   <svg className="w-5 h-5 text-green-500 dark:text-green-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-gray-700 dark:text-dark-200">Upload photos instantly</span>
+                  <span className="text-gray-700 dark:text-dark-200">{t('home:participant.feature2')}</span>
                 </div>
                 <div className="flex items-center text-left">
                   <svg className="w-5 h-5 text-green-500 dark:text-green-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-gray-700 dark:text-dark-200">Share memories with everyone</span>
+                  <span className="text-gray-700 dark:text-dark-200">{t('home:participant.feature3')}</span>
                 </div>
               </div>
 
@@ -325,11 +326,11 @@ const Home = () => {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V6a1 1 0 00-1-1H5a1 1 0 00-1 1v1a1 1 0 001 1z" />
                   </svg>
-                  <span>Scan QR Code</span>
+                  <span>{t('home:participant.scanButton')}</span>
                 </button>
                 
                 <p className="text-sm text-gray-500 dark:text-dark-400">
-                  Or paste the session link directly in your browser
+                  {t('home:participant.navigate')}
                 </p>
               </div>
             </div>
@@ -345,10 +346,10 @@ const Home = () => {
                   <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                  Session Created Successfully!
+                  {t('home:qrDisplay.successBadge')}
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-100 mb-2">Your QR Code is Ready</h2>
-                <p className="text-gray-600 dark:text-dark-300">Share this QR code with your guests to start collecting photos</p>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-dark-100 mb-2">{t('home:qrDisplay.title')}</h2>
+                <p className="text-gray-600 dark:text-dark-300">{t('home:qrDisplay.description')}</p>
               </div>
               
               <div className="flex flex-col items-center">
@@ -364,7 +365,7 @@ const Home = () => {
                 {/* Session Info */}
                 <div className="w-full max-w-md space-y-4">
                   <div className="bg-gray-50 dark:bg-dark-700 p-4 rounded-xl border border-gray-200 dark:border-dark-600">
-                    <p className="text-sm text-gray-500 dark:text-dark-400 mb-2">Session Link:</p>
+                    <p className="text-sm text-gray-500 dark:text-dark-400 mb-2">{t('home:qrDisplay.sessionLink')}</p>
                     <p className="text-sm text-gray-800 dark:text-dark-200 break-all font-mono bg-white dark:bg-dark-800 p-2 rounded border dark:border-dark-600">
                       {sessionUrl}
                     </p>
@@ -372,10 +373,10 @@ const Home = () => {
                   
                   <div className="bg-blue-50 dark:bg-dark-700 p-4 rounded-xl border border-blue-200 dark:border-dark-600">
                     <p className="text-sm text-blue-800 dark:text-dark-200">
-                      <strong>Session ID:</strong> {sessionId.slice(0, 8)}...
+                      <strong>{t('home:qrDisplay.sessionId')}</strong> {sessionId.slice(0, 8)}...
                     </p>
                     <p className="text-sm text-blue-600 dark:text-dark-300 mt-1">
-                      Up to 10 photos • 24-hour session
+                      {t('home:qrDisplay.sessionInfo')}
                     </p>
                   </div>
                 </div>
@@ -389,7 +390,7 @@ const Home = () => {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    <span>{copied ? 'Copied!' : 'Copy Link'}</span>
+                    <span>{copied ? t('home:qrDisplay.copiedButton') : t('home:qrDisplay.copyButton')}</span>
                   </button>
                   
                   <button
@@ -399,7 +400,7 @@ const Home = () => {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span>Download QR</span>
+                    <span>{t('home:qrDisplay.downloadButton')}</span>
                   </button>
                 </div>
 
@@ -408,7 +409,7 @@ const Home = () => {
                   onClick={() => navigate(`/session/${sessionId}`)}
                   className="mt-4 text-blue-600 dark:text-dark-300 hover:text-blue-800 dark:hover:text-dark-200 font-medium flex items-center space-x-1 transition-colors duration-200"
                 >
-                  <span>Preview Session</span>
+                  <span>{t('home:qrDisplay.previewButton')}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>

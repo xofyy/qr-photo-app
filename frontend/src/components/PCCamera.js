@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { devLog, devWarn, devError } from '../utils/helpers';
+import { formatFileSize } from '../utils/i18nHelpers';
 
 const PCCamera = ({ 
   onPhotoCapture, 
@@ -9,6 +11,7 @@ const PCCamera = ({
   onConfirmUpload,
   isActive 
 }) => {
+  const { t } = useTranslation(['camera', 'common']);
   const [cameraReady, setCameraReady] = useState(false);
   const [error, setError] = useState('');
   
@@ -44,7 +47,7 @@ const PCCamera = ({
       setCameraReady(false);
       
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Camera not supported in this browser');
+        throw new Error(t('camera:errors.notSupported'));
       }
 
       // Stop any existing stream first
@@ -134,7 +137,7 @@ const PCCamera = ({
       
     } catch (err) {
       devError('PC Camera: Error starting camera:', err);
-      setError(`Camera error: ${err.message}. Please allow camera permissions.`);
+      setError(t('camera:errors.permissionDenied', { error: err.message }));
       setCameraReady(false);
     } finally {
       startingRef.current = false;
@@ -168,7 +171,7 @@ const PCCamera = ({
       devLog('PC Camera: Capturing photo...');
       
       if (!videoRef.current || !canvasRef.current || !cameraReady) {
-        setError('Camera not ready. Please wait.');
+        setError(t('camera:errors.notReady'));
         return;
       }
 
@@ -176,7 +179,7 @@ const PCCamera = ({
       const canvas = canvasRef.current;
       
       if (video.videoWidth === 0 || video.videoHeight === 0) {
-        setError('Video not ready. Please try again.');
+        setError(t('camera:errors.videoNotReady'));
         return;
       }
       
@@ -196,13 +199,13 @@ const PCCamera = ({
           onPhotoCapture(file);
           setError('');
         } else {
-          setError('Failed to capture photo. Please try again.');
+          setError(t('camera:errors.captureFailed'));
         }
       }, 'image/jpeg', 0.9);
       
     } catch (err) {
       devError('PC Camera: Error capturing photo:', err);
-      setError('Error capturing photo. Please try again.');
+      setError(t('camera:errors.captureFailed'));
     }
   };
 
@@ -216,13 +219,13 @@ const PCCamera = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">Camera Error</h3>
+            <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">{t('camera:errors.title')}</h3>
             <p className="text-red-700 dark:text-red-400 text-sm mb-4">{error}</p>
             <button
               onClick={startCamera}
               className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
             >
-              Try Again
+              {t('common:buttons.tryAgain')}
             </button>
           </div>
         </div>
@@ -264,7 +267,7 @@ const PCCamera = ({
           <>
             <div className="absolute top-2 left-2 sm:top-4 sm:left-4 flex items-center space-x-2 bg-black/60 dark:bg-dark-900/80 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium">
               <div className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full animate-pulse"></div>
-              <span>PC Camera Ready</span>
+              <span>{t('camera:status.pcReady')}</span>
             </div>
             
             <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-black/60 dark:bg-dark-900/80 backdrop-blur-sm text-white px-2 sm:px-3 py-1 sm:py-2 rounded-full text-xs">
@@ -278,7 +281,7 @@ const PCCamera = ({
           <div className="absolute inset-0 flex items-center justify-center text-white">
             <div className="text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-              <p className="text-lg font-medium">Starting PC Camera...</p>
+              <p className="text-lg font-medium">{t('camera:status.starting')}</p>
             </div>
           </div>
         )}
@@ -305,13 +308,13 @@ const PCCamera = ({
       {capturedPhoto && (
         <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
           <div className="text-center">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-dark-100 mb-2">Photo Preview</h3>
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-300 mb-2">Review your photo before uploading</p>
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 dark:text-dark-100 mb-2">{t('camera:preview.title')}</h3>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-dark-300 mb-2">{t('camera:preview.description')}</p>
             <div className="inline-flex items-center px-3 py-1 bg-gray-100 dark:bg-dark-700 text-gray-700 dark:text-dark-200 rounded-full text-xs">
               <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              {(capturedPhoto.size / 1024).toFixed(1)} KB
+              {formatFileSize(capturedPhoto.size, t)}
             </div>
           </div>
           
@@ -323,7 +326,7 @@ const PCCamera = ({
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              <span>Retake Photo</span>
+              <span>{t('camera:actions.retakePhoto')}</span>
             </button>
             
             <button
@@ -334,14 +337,14 @@ const PCCamera = ({
               {uploading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Uploading...</span>
+                  <span>{t('camera:status.uploading')}</span>
                 </>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
-                  <span>Upload Photo</span>
+                  <span>{t('camera:actions.uploadPhoto')}</span>
                 </>
               )}
             </button>

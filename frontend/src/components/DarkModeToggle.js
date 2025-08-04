@@ -1,15 +1,17 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 
 const DarkModeToggle = () => {
+  const { t } = useTranslation('common');
   const { isDarkMode, toggleDarkMode } = useTheme();
 
   return (
     <button
       onClick={toggleDarkMode}
       className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-gray-600 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-700/50 rounded-lg transition-all duration-200"
-      aria-label={isDarkMode ? 'Light mode geç' : 'Dark mode geç'}
-      title={isDarkMode ? 'Light mode geç' : 'Dark mode geç'}
+      aria-label={isDarkMode ? t('theme.switchToLight') : t('theme.switchToDark')}
+      title={isDarkMode ? t('theme.switchToLight') : t('theme.switchToDark')}
     >
       {isDarkMode ? (
         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -25,7 +27,7 @@ const DarkModeToggle = () => {
         </svg>
       )}
       <span className="hidden sm:block text-sm">
-        {isDarkMode ? 'Light' : 'Dark'}
+        {isDarkMode ? t('theme.lightMode') : t('theme.darkMode')}
       </span>
     </button>
   );

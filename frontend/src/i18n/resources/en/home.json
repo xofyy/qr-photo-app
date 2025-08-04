@@ -1,0 +1,71 @@
+{
+  "hero": {
+    "badge": "Instant Photo Sessions",
+    "title": "Share Moments",
+    "titleHighlight": "Instantly",
+    "description": "Create QR codes for instant photo sharing. Perfect for events, parties, and gatherings. Configurable photo limits per session, automatically organized and ready to share.",
+    "getStarted": "How would you like to get started?",
+    "chooseRole": "Choose your role to continue"
+  },
+  
+  "features": {
+    "qrGeneration": {
+      "title": "QR Code Generation",
+      "description": "Instant QR codes for easy access"
+    },
+    "cameraAccess": {
+      "title": "Camera Access", 
+      "description": "Direct camera access on any device"
+    },
+    "cloudStorage": {
+      "title": "Cloud Storage",
+      "description": "Secure cloud hosting & sharing"
+    }
+  },
+  
+  "organizer": {
+    "title": "Organizing an Event?",
+    "description": "Create QR codes for your guests to share photos from weddings, parties, corporate events, and more.",
+    "feature1": "Create multiple photo sessions",
+    "feature2": "Manage and download all photos", 
+    "feature3": "Generate custom QR codes",
+    "signInButton": "Sign in with Google",
+    "dashboardButton": "Go to Dashboard"
+  },
+  
+  "participant": {
+    "title": "Have a QR Code?",
+    "description": "Already received a QR code from an event organizer? Scan it to start uploading photos instantly - no account needed!",
+    "feature1": "No account required",
+    "feature2": "Upload photos instantly",
+    "feature3": "Share memories with everyone",
+    "scanButton": "Scan QR Code",
+    "navigate": "Or navigate directly to a session link you received"
+  },
+  
+  "qrDisplay": {
+    "successBadge": "Session Created Successfully!",
+    "title": "Your QR Code is Ready",
+    "description": "Share this QR code with your guests to start collecting photos",
+    "sessionLink": "Session Link:",
+    "sessionId": "Session ID:",
+    "sessionInfo": "Configurable photo limit • Session expires after 24 hours",
+    "copyButton": "Copy Link",
+    "copiedButton": "Copied!",
+    "downloadButton": "Download QR",
+    "previewButton": "Preview Session"
+  },
+  
+  "errors": {
+    "authError": "Authentication Error",
+    "authFailed": "Failed to sign in with Google. Please try again.",
+    "noToken": "Authentication failed. Please try again."
+  },
+  
+  "scanner": {
+    "invalidSession": "This QR code contains: \"{url}\"\n\nThis doesn't appear to be a QR PhotoShare session link. Would you like to:\nOK - Open this URL anyway\nCancel - Continue scanning for a valid session",
+    "invalidContent": "QR code content: \"{content}\"\n\nThis doesn't appear to be a valid URL or QR PhotoShare session. Would you like to:\nOK - Copy to clipboard\nCancel - Continue scanning for a valid session",
+    "copiedToClipboard": "QR code content copied to clipboard!",
+    "continueScanning": "Continuing to scan..."
+  }
+}

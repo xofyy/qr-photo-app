@@ -31,7 +31,7 @@ cloudinary.config(
 )
 
 # Initialize FastAPI
-app = FastAPI(title="QR Photo Session App", version="1.0.0")
+app = FastAPI(title="QR PhotoShare API", version="1.0.0")
 
 # CORS configuration
 origins = os.getenv("CORS_ORIGINS", "").split(",")
@@ -45,7 +45,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {"message": "QR Photo Session App API", "status": "healthy"}
+    return {"message": "QR PhotoShare API", "status": "healthy"}
 
 @app.get("/health")
 async def health_check():

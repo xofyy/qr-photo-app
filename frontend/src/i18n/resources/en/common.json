@@ -1,0 +1,126 @@
+{
+  "appName": "QR PhotoShare",
+  "tagline": "Instant Photo Sharing",
+  
+  "navigation": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "sessions": "Sessions",
+    "signOut": "Sign Out"
+  },
+  
+  "buttons": {
+    "create": "Create",
+    "upload": "Upload", 
+    "download": "Download",
+    "copy": "Copy",
+    "share": "Share",
+    "scan": "Scan",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "tryAgain": "Try Again",
+    "goBack": "Go Back",
+    "viewMore": "View More",
+    "install": "Install",
+    "later": "Later",
+    "logout": "Logout"
+  },
+  
+  "status": {
+    "loading": "Loading...",
+    "uploading": "Uploading photo...",
+    "processing": "Processing...",
+    "saving": "Saving...",
+    "deleting": "Deleting...",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "online": "Online",
+    "offline": "Offline",
+    "liveSession": "Live Session"
+  },
+  
+  "common": {
+    "photo": "Photo",
+    "photo_plural": "Photos",
+    "session": "Session",
+    "session_plural": "Sessions",
+    "user": "User",
+    "user_plural": "Users",
+    "file": "File",
+    "file_plural": "Files",
+    "image": "Image",
+    "image_plural": "Images"
+  },
+  
+  "time": {
+    "now": "Now",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "minute": "minute",
+    "minute_plural": "minutes",
+    "hour": "hour",
+    "hour_plural": "hours",
+    "day": "day",
+    "day_plural": "days",
+    "ago": "ago"
+  },
+  
+  "connectionStatus": {
+    "realTime": "Real-time",
+    "polling": "Polling",
+    "offline": "Offline",
+    "websocketTitle": "WebSocket connection active - real-time notifications",
+    "pollingTitle": "Polling mode active - checking for updates every 10 seconds",
+    "offlineTitle": "No connection - notifications unavailable"
+  },
+  
+  "footer": {
+    "copyright": "© 2025 QR PhotoShare",
+    "encrypted": "End-to-End Encrypted",
+    "builtWith": "Built with React & FastAPI"
+  },
+  
+  "pwa": {
+    "installTitle": "Install App",
+    "installDescription": "Add to your home screen for faster access"
+  },
+  
+  "notifications": {
+    "title": "Notifications"
+  },
+  
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode", 
+    "lightMode": "Light",
+    "darkMode": "Dark"
+  },
+  
+  "fileSize": {
+    "bytes": "Bytes",
+    "kb": "KB",
+    "mb": "MB",
+    "gb": "GB",
+    "zero": "0 Bytes"
+  },
+  
+  "errors": {
+    "notFound": "Resource not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "serverError": "Server error. Please try again later.",
+    "networkError": "Network error. Please check your connection.",
+    "unexpected": "An unexpected error occurred",
+    "unknown": "Unknown"
+  },
+  
+  "dateTime": {
+    "created": "Created"
+  }
+}

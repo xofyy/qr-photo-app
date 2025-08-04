@@ -1,0 +1,39 @@
+{
+  "title": "QR Kod Tarayıcısı",
+  "description": "QR kodu taramak için kameranızı QR koduna doğrultun",
+  
+  "status": {
+    "scanning": "Taranıyor...",
+    "scanned": "QR Kod Tarandı!",
+    "redirecting": "Fotoğraf oturumuna yönlendiriliyor..."
+  },
+  
+  "errors": {
+    "title": "Tarayıcı Hatası",
+    "cameraAccessDenied": "Kamera erişimi reddedildi. Lütfen kamera izinlerini verin ve tekrar deneyin.",
+    "noCameraFound": "Kamera bulunamadı. Lütfen cihazınızın kamerasını kontrol edin.",
+    "cameraNotSupported": "Bu tarayıcıda kamera desteklenmiyor.",
+    "cameraError": "Kamera hatası: {{message}}",
+    "processingError": "Tarama sonucu işlenirken hata oluştu",
+    "restartError": "Tarayıcı yeniden başlatılırken hata oluştu. Lütfen kapatıp tekrar açın."
+  },
+  
+  "instructions": {
+    "scanning": "QR kodlar taranıyor...",
+    "howToScan": "Nasıl taranır:",
+    "scanDescription": "Kameranızı herhangi bir QR koduna doğrultun. Tarayıcı sadece fotoğraf oturum kodları değil, tüm QR kodlarla çalışır.",
+    "steps": {
+      "position": "• QR kodu çerçevenin içine yerleştirin",
+      "steady": "• Cihazınızı sabit tutun",
+      "lighting": "• İyi aydınlatma sağlayın",
+      "wait": "• Otomatik algılamayı bekleyin"
+    }
+  },
+  
+  "actions": {
+    "tryAgain": "Tekrar Dene",
+    "close": "Tarayıcıyı Kapat",
+    "restart": "Tarayıcıyı Yeniden Başlat",
+    "switchCamera": "Kamera Değiştir"
+  }
+}

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { getSession, getQRCode } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { formatDate } from '../utils/i18nHelpers';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const SessionInfo = () => {
+  const { t } = useTranslation(['session', 'common']);
   const { sessionId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -38,7 +41,7 @@ const SessionInfo = () => {
       setSessionUrl(qrResponse.data.session_url);
     } catch (error) {
       console.error('Error loading session info:', error);
-      setError('Failed to load session information. Please try again.');
+      setError(t('session:errors.loadingError'));
     } finally {
       setLoading(false);
     }
@@ -83,7 +86,7 @@ const SessionInfo = () => {
     return (
       <Layout>
         <div className="flex justify-center items-center min-h-screen">
-          <LoadingSpinner size="lg" text="Loading session information..." />
+          <LoadingSpinner size="lg" text={t('session:status.loadingInfo')} />
         </div>
       </Layout>
     );
@@ -130,7 +133,7 @@ const SessionInfo = () => {
           </h1>
           
           <p className="text-gray-600 dark:text-dark-300 text-base sm:text-lg max-w-2xl mx-auto">
-            Share the QR code or link below with your guests to start collecting photos from your event.
+            {t('session:info.shareDescription')}
           </p>
         </div>
 
@@ -247,9 +250,9 @@ const SessionInfo = () => {
 
               {/* Created Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2">Created</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-dark-300 mb-2">{t('common:dateTime.created')}</label>
                 <p className="text-sm text-gray-600 dark:text-dark-300">
-                  {session?.created_at ? new Date(session.created_at).toLocaleString() : 'Unknown'}
+                  {session?.created_at ? formatDate(session.created_at) : t('common:errors.unknown')}
                 </p>
               </div>
             </div>
@@ -299,11 +302,11 @@ const SessionInfo = () => {
             </p>
             <p className="flex items-start">
               <span className="font-medium mr-2">3.</span>
-              They can upload up to {session?.photos_per_user_limit || 10} photos each to your session
+              {t('session:info.uploadLimit', { limit: session?.photos_per_user_limit || 10 })}
             </p>
             <p className="flex items-start">
               <span className="font-medium mr-2">4.</span>
-              You can view and download all photos from your dashboard or session page
+              {t('session:info.viewDescription')}
             </p>
           </div>
         </div>

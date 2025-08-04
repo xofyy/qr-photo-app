@@ -1,0 +1,126 @@
+{
+  "title": "Panel",
+  "subtitle": "Fotoğraf oturumlarınızı yönetin",
+  "welcome": "Tekrar hoş geldin, {{name}}!",
+  
+  "admin": {
+    "title": "Yönetici Paneli",
+    "subtitle": "Fotoğraf oturumlarını yönetin ve analitikleri görüntüleyin",
+    "welcome": "Hoş geldin, {{name}} - ",
+    "loading": "Panel yükleniyor...",
+    "refresh": "Yenile"
+  },
+  
+  "sessions": {
+    "title": "Oturumlarınız",
+    "adminTitle": "Fotoğraf Oturumları",
+    "noSessions": "Oturum bulunamadı",
+    "noSessionsDescription": "Henüz herhangi bir fotoğraf oturumu oluşturmadınız. Başlamak için ilk oturumunuzu oluşturun!",
+    "adminNoSessionsDescription": "Başlamak için yeni bir oturum oluşturun",
+    "createFirst": "İlk Oturumunuzu Oluşturun",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "expired": "Süresi Dolmuş",
+    "loading": "Oturumlar yükleniyor...",
+    
+    "stats": {
+      "totalSessions": "Toplam Oturum",
+      "activeSessions": "Aktif Oturum",
+      "totalPhotos": "Toplam Fotoğraf",
+      "totalPhotos_plural": "{{count}} fotoğraf",
+      "uniqueUsers": "{{count}} kullanıcı",
+      "uniqueUsers_plural": "{{count}} kullanıcı",
+      "photoLimit": "Limit: Kullanıcı başına {{limit}}",
+      "unlimited": "Sınırsız fotoğraf",
+      "photosUnit": "fotoğraf"
+    }
+  },
+  
+  "actions": {
+    "createSession": "Yeni Oturum Oluştur",
+    "creating": "Oluşturuluyor...",
+    "viewSession": "Oturumu Görüntüle",
+    "view": "Görüntüle",
+    "delete": "Sil",
+    "viewQR": "QR Kodu",
+    "downloadPhotos": "İndir",
+    "updateLimit": "Ayarlar",
+    "sessionDetails": "Oturum Detayları",
+    "copyLink": "Bağlantıyı Kopyala",
+    "copied": "Kopyalandı!",
+    "shareQR": "QR Kodu Paylaş",
+    "downloadQR": "QR İndir"
+  },
+  
+  "modals": {
+    "photoLimit": {
+      "title": "Fotoğraf Limitini Güncelle",
+      "description": "Bu oturuma her kullanıcının yükleyebileceği maksimum fotoğraf sayısını belirleyin.",
+      "currentLimit": "Mevcut limit: Kullanıcı başına {{limit}} fotoğraf",
+      "newLimit": "Kullanıcı başına fotoğraf limiti",
+      "placeholder": "Fotoğraf limitini girin (1-100)",
+      "unlimited": "Sınırsız",
+      "update": "Limiti Güncelle",
+      "cancel": "İptal"
+    },
+    
+    "qrCode": {
+      "title": "Oturum QR Kodu",
+      "description": "Misafirlerin oturumunuza fotoğraf yüklemesi için bu QR kodu paylaşın.",
+      "sessionId": "Oturum: {{id}}",
+      "sessionLink": "Oturum Bağlantısı:",
+      "download": "QR Kodu İndir",
+      "close": "Kapat",
+      "altText": "QR Kodu",
+      "loadError": "QR kodu yüklenemedi"
+    }
+  },
+  
+  "sessionCard": {
+    "createdAt": "{{date}} oluşturuldu",
+    "expiresAt": "{{date}} sona eriyor",
+    "sessionId": "Oturum {{id}}",
+    "session": "Oturum:",
+    "totalPhotos": "Toplam fotoğraf:",
+    "perUserLimit": "Kullanıcı başına limit:",
+    "photosUnit": "fotoğraf",
+    "status": {
+      "active": "Aktif",
+      "inactive": "Pasif",
+      "expired": "Süresi Dolmuş"
+    },
+    "tooltips": {
+      "noPhotosDownload": "İndirilecek fotoğraf yok",
+      "downloadPhotos": "{{count}} fotoğrafı indir"
+    }
+  },
+  
+  "alerts": {
+    "sessionCreated": "Oturum başarıyla oluşturuldu!",
+    "createFailed": "Oturum oluşturulamadı. Lütfen tekrar deneyin.",
+    "limitUpdated": "Fotoğraf limiti kullanıcı başına {{limit}} olarak güncellendi",
+    "limitUpdateFailed": "Fotoğraf limiti güncellenemedi. Lütfen tekrar deneyin.",
+    "downloadStarted": "Fotoğraflar başarıyla indirildi!",
+    "downloadUnauthorized": "Sadece kendi oturumlarınızdan fotoğraf indirebilirsiniz.",
+    "downloadFailed": "Fotoğraflar indirilemedi. Lütfen tekrar deneyin.",
+    "linkCopied": "Oturum linki panoya kopyalandı!",
+    "copyFailed": "Link kopyalanamadı. Lütfen manuel olarak kopyalayın.",
+    "qrCodeLoadFailed": "QR kod yüklenemedi. Lütfen tekrar deneyin.",
+    "confirmDelete": "Bu oturumu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "deleteError": "Oturum silinirken hata oluştu. Lütfen tekrar deneyin."
+  },
+  
+  "connection": {
+    "connected": "{{count}} oturuma bağlandı",
+    "connected_plural": "{{count}} oturuma bağlandı",
+    "disconnected": "Hiçbir oturuma bağlı değil"
+  },
+  
+  "photos": {
+    "title": "Fotoğraflar",
+    "sessionPhotos": "Oturum Fotoğrafları",
+    "noPhotos": "Henüz fotoğraf yüklenmedi",
+    "selectSession": "Fotoğrafları görmek için bir oturum seçin",
+    "photo": "Fotoğraf"
+  }
+}

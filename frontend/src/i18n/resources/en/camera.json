@@ -1,0 +1,66 @@
+{
+  "errors": {
+    "title": "Camera Error",
+    "selectImageFile": "Please select an image file.",
+    "imageTooLarge": "Image is too large. Please select a smaller image.",
+    "notSupported": "Camera not supported in this browser",
+    "permissionDenied": "Camera error: {{error}}. Please allow camera permissions.",
+    "notReady": "Camera not ready. Please wait.",
+    "videoNotReady": "Video not ready. Please try again.",
+    "captureFailed": "Failed to capture photo. Please try again."
+  },
+  
+  "opening": {
+    "title": "Camera Opening...",
+    "description": "Your camera app should open now...",
+    "active": "Camera interface is now active!",
+    "instructions": "Look for the camera controls..."
+  },
+  
+  "takePhoto": {
+    "title": "Take Photo",
+    "description": "Tap the button below to open your phone's camera app and take a high-quality photo."
+  },
+  
+  "howItWorks": {
+    "title": "How it works:",
+    "steps": {
+      "step1": "1. Tap \"Open Camera\" below",
+      "step2": "2. Your phone's camera app will open",
+      "step3": "3. Take your photo with all camera features",
+      "step4": "4. Confirm/save the photo in your camera app",
+      "step5": "5. You'll return here to upload it"
+    }
+  },
+  
+  "actions": {
+    "takeNewPhoto": "Take New Photo",
+    "chooseFromGallery": "Choose from Gallery",
+    "takeAnotherPhoto": "Take Another Photo",
+    "uploadPhoto": "Upload Photo",
+    "retakePhoto": "Retake Photo"
+  },
+  
+  "preview": {
+    "title": "Photo Preview",
+    "description": "Review your photo before uploading",
+    "ready": "Ready to upload"
+  },
+  
+  "status": {
+    "uploading": "Uploading...",
+    "starting": "Starting PC Camera...",
+    "pcReady": "PC Camera Ready"
+  },
+  
+  "ui": {
+    "goBack": "← Go Back",
+    "cancel": "Cancel",
+    "or": "or",
+    "features": {
+      "cameraFeatures": "✨ Use all your phone's camera features",
+      "portraitMode": "📐 Portrait, Night mode, HDR available",
+      "professionalQuality": "🔍 Professional quality photos"
+    }
+  }
+}

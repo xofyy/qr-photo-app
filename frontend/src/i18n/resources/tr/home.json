@@ -1,0 +1,71 @@
+{
+  "hero": {
+    "badge": "Anında Fotoğraf Oturumları",
+    "title": "Anları Paylaş",
+    "titleHighlight": "Anında",
+    "description": "Anında fotoğraf paylaşımı için QR kodları oluşturun. Düğünler, partiler ve toplantılar için mükemmel. Oturum başına yapılandırılabilir fotoğraf limitleri, otomatik olarak düzenlenir ve paylaşıma hazır.",
+    "getStarted": "Nasıl başlamak istiyorsunuz?",
+    "chooseRole": "Devam etmek için rolünüzü seçin"
+  },
+  
+  "features": {
+    "qrGeneration": {
+      "title": "QR Kod Üretimi",
+      "description": "Kolay erişim için anında QR kodları"
+    },
+    "cameraAccess": {
+      "title": "Kamera Erişimi",
+      "description": "Herhangi bir cihazda doğrudan kamera erişimi"
+    },
+    "cloudStorage": {
+      "title": "Bulut Depolama",
+      "description": "Güvenli bulut barındırma ve paylaşım"
+    }
+  },
+  
+  "organizer": {
+    "title": "Etkinlik Mi Düzenliyorsunuz?",
+    "description": "Misafirlerinizin düğün, parti, kurumsal etkinlik ve daha fazlasından fotoğraf paylaşması için QR kodları oluşturun.",
+    "feature1": "Birden fazla fotoğraf oturumu oluşturun",
+    "feature2": "Tüm fotoğrafları yönetin ve indirin",
+    "feature3": "Özel QR kodları üretin",
+    "signInButton": "Google ile Giriş Yap",
+    "dashboardButton": "Panele Git"
+  },
+  
+  "participant": {
+    "title": "QR Kodunuz Var Mı?",
+    "description": "Etkinlik organizatöründen QR kod aldınız mı? Hesap açmaya gerek kalmadan anında fotoğraf yüklemeye başlamak için tarayın!",
+    "feature1": "Hesap gerekli değil",
+    "feature2": "Anında fotoğraf yükleyin",
+    "feature3": "Anıları herkesle paylaşın",
+    "scanButton": "QR Kod Tara",
+    "navigate": "Veya aldığınız oturum bağlantısına doğrudan gidin"
+  },
+  
+  "qrDisplay": {
+    "successBadge": "Oturum Başarıyla Oluşturuldu!",
+    "title": "QR Kodunuz Hazır",
+    "description": "Fotoğraf toplamaya başlamak için bu QR kodu misafirlerinizle paylaşın",
+    "sessionLink": "Oturum Bağlantısı:",
+    "sessionId": "Oturum ID:",
+    "sessionInfo": "Yapılandırılabilir fotoğraf limiti • Oturum 24 saat sonra sona erer",
+    "copyButton": "Bağlantıyı Kopyala",
+    "copiedButton": "Kopyalandı!",
+    "downloadButton": "QR İndir",
+    "previewButton": "Oturumu Önizle"
+  },
+  
+  "errors": {
+    "authError": "Kimlik Doğrulama Hatası",
+    "authFailed": "Google ile giriş yapılamadı. Lütfen tekrar deneyin.",
+    "noToken": "Kimlik doğrulama başarısız. Lütfen tekrar deneyin."
+  },
+  
+  "scanner": {
+    "invalidSession": "Bu QR kod şunu içeriyor: \"{url}\"\n\nBu bir QR PhotoShare oturum bağlantısı gibi görünmüyor. Ne yapmak istiyorsunuz:\nTamam - Bu URL'yi yine de aç\nİptal - Geçerli bir oturum için taramaya devam et",
+    "invalidContent": "QR kod içeriği: \"{content}\"\n\nBu geçerli bir URL veya QR PhotoShare oturumu gibi görünmüyor. Ne yapmak istiyorsunuz:\nTamam - Panoya kopyala\nİptal - Geçerli bir oturum için taramaya devam et",
+    "copiedToClipboard": "QR kod içeriği panoya kopyalandı!",
+    "continueScanning": "Taramaya devam ediliyor..."
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "qr-photoshare-frontend",
   "version": "1.0.0",
   "main": "postcss.config.js",
   "dependencies": {
@@ -312,6 +312,8 @@
     "http-proxy-middleware": "^2.0.9",
     "https-proxy-agent": "^5.0.1",
     "human-signals": "^2.1.0",
+    "i18next": "^25.3.2",
+    "i18next-browser-languagedetector": "^8.2.0",
     "iconv-lite": "^0.6.3",
     "icss-utils": "^5.1.0",
     "idb": "^7.1.1",
@@ -626,6 +628,7 @@
     "react-dev-utils": "^12.0.1",
     "react-dom": "^18.2.0",
     "react-error-overlay": "^6.1.0",
+    "react-i18next": "^15.6.1",
     "react-is": "^17.0.2",
     "react-refresh": "^0.11.0",
     "react-router": "^6.30.1",
@@ -850,10 +853,17 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "qr",
+    "photo",
+    "sharing",
+    "session",
+    "react",
+    "pwa"
+  ],
+  "author": "QR PhotoShare Team",
+  "license": "MIT",
+  "description": "QR PhotoShare - Instant photo sharing through QR codes. Create photo sessions and share memories easily.",
   "devDependencies": {
     "react-scripts": "^5.0.1"
   },

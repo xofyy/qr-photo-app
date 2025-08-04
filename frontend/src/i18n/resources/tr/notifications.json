@@ -1,0 +1,41 @@
+{
+  "title": "Bildirimler",
+  "unread": "{{count}} okunmamış",
+  "unread_plural": "{{count}} okunmamış",
+  
+  "actions": {
+    "clearAll": "Tümünü Temizle",
+    "markAsRead": "Okundu olarak işaretle"
+  },
+  
+  "empty": {
+    "title": "Henüz bildirim yok",
+    "description": "Biri oturumlarınıza fotoğraf yüklediğinde burada bildirimler alacaksınız."
+  },
+  
+  "types": {
+    "photo_uploaded": "Yeni Fotoğraf Yüklendi!",
+    "connected": "Bağlandı",
+    "notification": "Bildirim"
+  },
+  
+  "messages": {
+    "photo_uploaded": "Yeni bir fotoğraf yüklendi{{uploaded_by}}. Toplam fotoğraf: {{upload_count}}",
+    "photo_uploaded_by": " {{name}} tarafından",
+    "default": "Yeni bir bildiriminiz var"
+  },
+  
+  "footer": {
+    "showing": "{{count}} bildirim gösteriliyor",
+    "showing_plural": "{{count}} bildirim gösteriliyor"
+  },
+  
+  "session": "Oturum: {{id}}",
+  
+  "time": {
+    "justNow": "Az önce",
+    "minutesAgo": "{{count}}dk önce",
+    "hoursAgo": "{{count}}sa önce", 
+    "daysAgo": "{{count}}g önce"
+  }
+}

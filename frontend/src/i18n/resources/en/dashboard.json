@@ -1,0 +1,126 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Manage your photo sessions",
+  "welcome": "Welcome back, {{name}}!",
+  
+  "admin": {
+    "title": "Admin Dashboard",
+    "subtitle": "Manage photo sessions and view analytics",
+    "welcome": "Welcome, {{name}} - ",
+    "loading": "Loading dashboard...",
+    "refresh": "Refresh"
+  },
+  
+  "sessions": {
+    "title": "Your Sessions",
+    "adminTitle": "Photo Sessions",
+    "noSessions": "No sessions found",
+    "noSessionsDescription": "You haven't created any photo sessions yet. Create your first session to get started!",
+    "adminNoSessionsDescription": "Create a new session to get started",
+    "createFirst": "Create Your First Session",
+    "active": "Active",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "loading": "Loading sessions...",
+    
+    "stats": {
+      "totalSessions": "Total Sessions",
+      "activeSessions": "Active Sessions",
+      "totalPhotos": "Total Photos",
+      "totalPhotos_plural": "{{count}} photos",
+      "uniqueUsers": "{{count}} user",
+      "uniqueUsers_plural": "{{count}} users",
+      "photoLimit": "Limit: {{limit}} per user",
+      "unlimited": "Unlimited photos",
+      "photosUnit": "photos"
+    }
+  },
+  
+  "actions": {
+    "createSession": "Create New Session",
+    "creating": "Creating...",
+    "viewSession": "View Session",
+    "view": "View",
+    "delete": "Delete",
+    "viewQR": "QR Code",
+    "downloadPhotos": "Download",
+    "updateLimit": "Settings",
+    "sessionDetails": "Session Details",
+    "copyLink": "Copy Link",
+    "copied": "Copied!",
+    "shareQR": "Share QR Code",
+    "downloadQR": "Download QR"
+  },
+  
+  "modals": {
+    "photoLimit": {
+      "title": "Update Photo Limit",
+      "description": "Set the maximum number of photos each user can upload to this session.",
+      "currentLimit": "Current limit: {{limit}} photos per user",
+      "newLimit": "Photos per user limit",
+      "placeholder": "Enter photo limit (1-100)",
+      "unlimited": "Unlimited",
+      "update": "Update Limit",
+      "cancel": "Cancel"
+    },
+    
+    "qrCode": {
+      "title": "Session QR Code",
+      "description": "Share this QR code for guests to upload photos to your session.",
+      "sessionId": "Session: {{id}}",
+      "sessionLink": "Session Link:",
+      "download": "Download QR Code",
+      "close": "Close",
+      "altText": "QR Code",
+      "loadError": "Failed to load QR code"
+    }
+  },
+  
+  "sessionCard": {
+    "createdAt": "Created {{date}}",
+    "expiresAt": "Expires {{date}}",
+    "sessionId": "Session {{id}}",
+    "session": "Session:",
+    "totalPhotos": "Total photos:",
+    "perUserLimit": "Per-user limit:",
+    "photosUnit": "photos",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "expired": "Expired"
+    },
+    "tooltips": {
+      "noPhotosDownload": "No photos to download",
+      "downloadPhotos": "Download {{count}} photos"
+    }
+  },
+  
+  "alerts": {
+    "sessionCreated": "Session created successfully!",
+    "createFailed": "Failed to create session. Please try again.",
+    "limitUpdated": "Photo limit updated to {{limit}} photos per user",
+    "limitUpdateFailed": "Failed to update photo limit. Please try again.",
+    "downloadStarted": "Photos downloaded successfully!",
+    "downloadUnauthorized": "You can only download photos from your own sessions.",
+    "downloadFailed": "Failed to download photos. Please try again.",
+    "linkCopied": "Session link copied to clipboard!",
+    "copyFailed": "Failed to copy link. Please try manually.",
+    "qrCodeLoadFailed": "Failed to load QR code. Please try again.",
+    "confirmDelete": "Are you sure you want to delete this session? This action cannot be undone.",
+    "deleteError": "Error deleting session. Please try again."
+  },
+  
+  "connection": {
+    "connected": "Connected to {{count}} session",
+    "connected_plural": "Connected to {{count}} sessions",
+    "disconnected": "Not connected to any sessions"
+  },
+  
+  "photos": {
+    "title": "Photos",
+    "sessionPhotos": "Session Photos",
+    "noPhotos": "No photos uploaded yet",
+    "selectSession": "Select a session to view photos",
+    "photo": "Photo"
+  }
+}

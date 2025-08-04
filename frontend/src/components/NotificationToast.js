@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const NotificationToast = ({ notification, onClose }) => {
+  const { t } = useTranslation(['notifications', 'common']);
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -61,20 +63,24 @@ const NotificationToast = ({ notification, onClose }) => {
   const getTitle = (type) => {
     switch (type) {
       case 'photo_uploaded':
-        return 'New Photo Uploaded!';
+        return t('notifications:types.photo_uploaded');
       case 'connected':
-        return 'Connected';
+        return t('notifications:types.connected');
       default:
-        return 'Notification';
+        return t('notifications:types.notification');
     }
   };
 
   const getMessage = () => {
     if (notification.type === 'photo_uploaded') {
       const data = notification.data;
-      return `A new photo was uploaded ${data?.uploaded_by ? `by ${data.uploaded_by}` : ''}. Total photos: ${data?.upload_count || 0}`;
+      const byText = data?.uploaded_by ? t('notifications:messages.photo_uploaded_by', { name: data.uploaded_by }) : '';
+      return t('notifications:messages.photo_uploaded', {
+        uploaded_by: byText,
+        upload_count: data?.upload_count || 0
+      });
     }
-    return notification.message || 'You have a new notification';
+    return notification.message || t('notifications:messages.default');
   };
 
   return (

@@ -1,0 +1,108 @@
+{
+  "title": "Fotoğraf Oturumu",
+  "liveSession": "Canlı Fotoğraf Oturumu",
+  "captureYourMoments": "Anılarını Yakala",
+  "uploadPhotos": "Fotoğraf Yükle",
+  "photoGallery": "Fotoğraf Galerisi",
+  "capturedMemories": "Yakalanan Anılar",
+  "noPhotosYet": "Henüz fotoğraf yüklenmedi. Bir anı paylaşan ilk kişi ol!",
+  
+  "errors": {
+    "sessionNotFound": "Oturum Bulunamadı",
+    "sessionNotFoundDescription": "Aradığınız oturum mevcut değil veya kaldırılmış.",
+    "loadingError": "Oturum yüklenemedi: ",
+    "uploadError": "Yükleme başarısız: ",
+    "noPhotoData": "Fotoğraf veya oturum verisi mevcut değil",
+    "emptyPhoto": "Fotoğraf dosyası boş. Lütfen fotoğrafı tekrar çekin.",
+    "corruptedPhoto": "Fotoğraf dosyası bozuk görünüyor. Lütfen fotoğrafı tekrar çekin.",
+    "downloadUnauthorized": "Sadece kendi oturumlarınızdan fotoğraf indirebilirsiniz.",
+    "downloadFailed": "Fotoğraflar indirilemedi. Lütfen tekrar deneyin.",
+    "deleteFailed": "Silme başarısız: ",
+    "qrLoadFailed": "QR kodu yüklenemedi",
+    "title": "Oturum Hatası"
+  },
+  
+  "status": {
+    "loadingInfo": "Oturum yükleniyor...",
+    "loadingProgress": "İlerlemeniz yükleniyor...",
+    "loadingUploadStatus": "Yükleme durumunuz yükleniyor...",
+    "processing": "İşleniyor...",
+    "uploading": "Yükleniyor...",
+    "expired": "Oturum Süresi Doldu",
+    "limitReached": "Yükleme Limiti Doldu",
+    "expiredDescription": "Bu oturumun süresi dolmuş ve artık fotoğraf kabul etmiyor.",
+    "limitDescription": "Maksimum {{limit}} fotoğrafınızı yüklediniz. Anılarınızı paylaştığınız için teşekkürler!",
+    "othersCanUpload": "Diğer kullanıcılar hala bu oturuma fotoğraf yükleyebilir."
+  },
+  
+  "camera": {
+    "stopCamera": "Kamerayı Durdur",
+    "mobile": "Mobil Kamera",
+    "pc": "PC Kamerası",
+    "mobileDescription": "Dokunmaya optimize edilmiş kamera, ön/arka geçiş ile",
+    "pcDescription": "Masaüstü için basit ve güvenilir kamera",
+    "startCamera": "{{type}} Kamerasını Başlat",
+    "start": "Başlat "
+  },
+  
+  "actions": {
+    "viewFullSize": "Tam boyutta görüntüle",
+    "deletePhoto": "Fotoğrafı sil",
+    "confirmDelete": "Bu fotoğrafı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "downloadAll": "Tüm Fotoğrafları İndir ({{count}})",
+    "downloadShort": "İndir ({{count}})"
+  },
+  
+  "upload": {
+    "selectPhotos": "Fotoğraf Seç",
+    "dragAndDrop": "Fotoğrafları buraya sürükle veya seçmek için tıkla",
+    "uploading": "{{current}}/{{total}} fotoğraf yükleniyor...",
+    "uploadSuccess": "{{count}} fotoğraf başarıyla yüklendi!",
+    "uploadSuccess_plural": "{{count}} fotoğraf başarıyla yüklendi!",
+    "uploadError": "Bazı fotoğraflar yüklenemedi. Lütfen tekrar deneyin."
+  },
+  
+  "limits": {
+    "photosRemaining": "{{count}} fotoğraf kaldı",
+    "photosRemaining_plural": "{{count}} fotoğraf kaldı",
+    "limitReached": "Fotoğraf limitinize ulaştınız ({{limit}} fotoğraf)",
+    "configurableLimit": "Yapılandırılabilir fotoğraf limiti",
+    "sessionExpires": "Oturum 24 saat sonra sona erer"
+  },
+  
+  "qr": {
+    "title": "QR Kodun Hazır",
+    "description": "Bu QR kodu misafirlerinizle paylaşarak fotoğraf toplamaya başlayın",
+    "sessionCreated": "Oturum Başarıyla Oluşturuldu!",
+    "sessionLink": "Oturum Linki:",
+    "downloadQr": "QR İndir",
+    "copyLink": "Linki Kopyala",
+    "copied": "Kopyalandı!",
+    "previewSession": "Oturumu Önizle"
+  },
+  
+  "userStats": {
+    "yourPhotos": "Fotoğraflarınız: ",
+    "of": " / ",
+    "remaining": " kaldı"
+  },
+  
+  "sessionInfo": {
+    "session": "Oturum ",
+    "sessionId": "Oturum {{id}}"
+  },
+  
+  "gallery": {
+    "photo": "Fotoğraf ",
+    "by": "Gönderen: ",
+    "photosStored": " fotoğraf saklandı",
+    "cloudSynchronized": "Bulut senkronize edildi",
+    "clickToView": "Tam boyutta görmek için herhangi bir fotoğrafa tıklayın"
+  },
+  
+  "info": {
+    "shareDescription": "Etkinliğinizden fotoğraf toplamaya başlamak için aşağıdaki QR kodu veya bağlantıyı misafirlerinizle paylaşın.",
+    "uploadLimit": "Oturumunuza her biri {{limit}}'e kadar fotoğraf yükleyebilir.",
+    "viewDescription": "Tüm fotoğrafları panelinizden veya oturum sayfasından görüntüleyebilir ve indirebilirsiniz."
+  }
+}
