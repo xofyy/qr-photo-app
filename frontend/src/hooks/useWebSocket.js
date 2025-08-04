@@ -18,13 +18,23 @@ const useWebSocket = (sessionId) => {
       return;
     }
 
-    // Determine WebSocket URL based on current location
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = process.env.NODE_ENV === 'production' 
-      ? window.location.host.replace(':3000', ':8001') // Adjust port for production
-      : 'localhost:8001'; // Development
+    // Determine WebSocket URL based on environment
+    let wsUrl;
+    if (process.env.NODE_ENV === 'production') {
+      // Use backend WebSocket URL from environment variable
+      const backendWsUrl = process.env.REACT_APP_WS_URL || process.env.REACT_APP_API_URL?.replace('http', 'ws');
+      if (backendWsUrl) {
+        wsUrl = `${backendWsUrl}/ws/${sessionId}?user_id=${user.user_id}`;
+      } else {
+        console.error('WebSocket URL not configured for production');
+        return;
+      }
+    } else {
+      // Development - use localhost
+      wsUrl = `ws://localhost:8001/ws/${sessionId}?user_id=${user.user_id}`;
+    }
     
-    const wsUrl = `${protocol}//${host}/ws/${sessionId}?user_id=${user.user_id}`;
+    console.log('WebSocket URL:', wsUrl);
     
     console.log('Connecting to WebSocket as authenticated user:', wsUrl);
 

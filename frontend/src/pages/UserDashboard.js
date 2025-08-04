@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { createSession, getQRCode, getUserSessions, updateSessionPhotoLimit, getSessionUserStats, downloadSessionPhotos } from '../services/api';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
+import ConnectionStatus from '../components/ConnectionStatus';
 import useDashboardWebSocket from '../hooks/useDashboardWebSocket';
 
 const UserDashboard = () => {

@@ -7,7 +7,8 @@ import Layout from '../components/Layout';
 import PCCamera from '../components/PCCamera';
 import MobileCamera from '../components/MobileCamera';
 import NotificationToast from '../components/NotificationToast';
-import useWebSocket from '../hooks/useWebSocket';
+import ConnectionStatus from '../components/ConnectionStatus';
+import useWebSocketWithFallback from '../hooks/useWebSocketWithFallback';
 
 const SessionPage = () => {
   const { sessionId } = useParams();
@@ -21,8 +22,8 @@ const SessionPage = () => {
   const [error, setError] = useState('');
   const [userStats, setUserStats] = useState(null);
   
-  // WebSocket for real-time notifications (only for session owners)
-  const { isConnected } = useWebSocket(sessionId);
+  // WebSocket with fallback for real-time notifications (only for session owners)
+  const { isConnected, connectionType, isPollingActive } = useWebSocketWithFallback(sessionId);
   
   // Device detection
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -265,12 +266,22 @@ const SessionPage = () => {
       <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-4 md:py-6 lg:py-8">
       {/* Session Header */}
       <div className="text-center mb-6 sm:mb-8">
-        <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4">
-          <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-          Live Photo Session
+        <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-3 mb-3 sm:mb-4">
+          <div className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 rounded-full text-xs sm:text-sm font-medium">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Live Photo Session
+          </div>
+          
+          {user && (
+            <ConnectionStatus 
+              isConnected={isConnected}
+              connectionType={connectionType}
+              isPollingActive={isPollingActive}
+            />
+          )}
         </div>
         
         <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-indigo-900 dark:from-dark-100 dark:via-blue-300 dark:to-indigo-300 bg-clip-text text-transparent mb-2 sm:mb-3 md:mb-4 px-2">
