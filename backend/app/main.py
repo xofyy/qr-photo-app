@@ -1,6 +1,7 @@
 ﻿from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, StreamingResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 import os
 from os import getenv
 import io
@@ -16,12 +17,14 @@ from app import crud, schemas, utils
 from app.database import get_database, get_photos_collection
 from app.utils.user_identifier import generate_user_identifier, get_user_ip, get_user_agent
 from app.utils.zip_generator import create_photos_zip, create_empty_session_zip
+from app.utils.logger import safe_log
 from app.auth import (
     oauth, create_access_token, get_current_user, require_authentication,
-    get_google_user_info, generate_user_id, GOOGLE_CLIENT_ID, exchange_code_for_token
+    get_current_user_optional, get_google_user_info, generate_user_id, GOOGLE_CLIENT_ID, exchange_code_for_token
 )
 from app.schemas.user import UserCreate, UserResponse, Token
 from app.websocket_manager import websocket_manager
+from app.middleware.rate_limiter import create_rate_limit_middleware
 
 # Initialize Cloudinary
 cloudinary.config(
@@ -34,14 +37,54 @@ cloudinary.config(
 app = FastAPI(title="QR PhotoShare API", version="1.0.0")
 
 # CORS configuration
-origins = os.getenv("CORS_ORIGINS", "").split(",")
+def get_allowed_origins():
+    """Get allowed origins with validation"""
+    cors_origins = os.getenv("CORS_ORIGINS", "")
+    
+    if not cors_origins:
+        # Development default
+        return ["http://localhost:3000", "http://127.0.0.1:3000"]
+    
+    origins = [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
+    
+    # Validate origins (no wildcards with credentials)
+    validated_origins = []
+    for origin in origins:
+        if origin == "*":
+            raise ValueError("Cannot use wildcard (*) origin with credentials=True")
+        if origin.startswith("http://") or origin.startswith("https://"):
+            validated_origins.append(origin)
+        else:
+            safe_log(f"Warning: Invalid CORS origin format: {origin}", 'warning')
+    
+    return validated_origins if validated_origins else ["http://localhost:3000"]
+
+allowed_origins = get_allowed_origins()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins if origins != [''] else ["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=[
+        "Authorization",
+        "Content-Type", 
+        "Accept",
+        "Origin",
+        "User-Agent",
+        "DNT",
+        "Cache-Control",
+        "X-Mx-ReqToken",
+        "Keep-Alive",
+        "X-Requested-With",
+        "If-Modified-Since"
+    ],
+    expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+    max_age=86400,  # 24 hours
 )
+
+# Add rate limiting middleware
+rate_limit_middleware = create_rate_limit_middleware(max_requests=100, window_seconds=3600)
+app.middleware("http")(rate_limit_middleware)
 
 @app.get("/")
 async def root():
@@ -72,15 +115,15 @@ async def health_check():
 
 @app.on_event("startup")
 async def startup_db_client():
-    print("🚀 FastAPI starting up...")
-    print(f"📍 Environment: {os.getenv('NODE_ENV', 'development')}")
-    print(f"🌐 CORS Origins: {os.getenv('CORS_ORIGINS', 'Not set')}")
-    print(f"🔗 Frontend URL: {os.getenv('FRONTEND_URL', 'Not set')}")
-    print(f"🔗 Backend URL: {os.getenv('BACKEND_URL', 'Not set')}")
-    print(f"📊 MongoDB: {'✅ Configured' if os.getenv('MONGODB_URL') else '❌ Not configured'}")
-    print(f"☁️ Cloudinary: {'✅ Configured' if os.getenv('CLOUDINARY_CLOUD_NAME') else '❌ Not configured'}")
-    print(f"🔐 Google OAuth: {'✅ Configured' if os.getenv('GOOGLE_CLIENT_ID') else '❌ Not configured'}")
-    print("✅ FastAPI startup complete!")
+    safe_log("🚀 FastAPI starting up...", 'info')
+    safe_log(f"📍 Environment: {os.getenv('NODE_ENV', 'development')}", 'info')
+    safe_log(f"🌐 CORS Origins: {'✅ Configured' if os.getenv('CORS_ORIGINS') else '❌ Not configured'}", 'info')
+    safe_log(f"🔗 Frontend URL: {'✅ Configured' if os.getenv('FRONTEND_URL') else '❌ Not configured'}", 'info')
+    safe_log(f"🔗 Backend URL: {'✅ Configured' if os.getenv('BACKEND_URL') else '❌ Not configured'}", 'info')
+    safe_log(f"📊 MongoDB: {'✅ Configured' if os.getenv('MONGODB_URL') else '❌ Not configured'}", 'info')
+    safe_log(f"☁️ Cloudinary: {'✅ Configured' if os.getenv('CLOUDINARY_CLOUD_NAME') else '❌ Not configured'}", 'info')
+    safe_log(f"🔐 Google OAuth: {'✅ Configured' if os.getenv('GOOGLE_CLIENT_ID') else '❌ Not configured'}", 'info')
+    safe_log("✅ FastAPI startup complete!", 'info')
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -124,8 +167,8 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             websocket_manager.disconnect(websocket)
             
     except Exception as e:
-        print(f"WebSocket error: {e}")
-        print(traceback.format_exc())
+        safe_log(f"WebSocket error: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         websocket_manager.disconnect(websocket)
 
 # Authentication endpoints
@@ -151,42 +194,36 @@ async def google_login():
 async def google_callback(code: str = None, error: str = None):
     """Handle Google OAuth2 callback"""
     try:
-        print(f"OAuth callback received - code: {'YES' if code else 'NO'}, error: {error}")
+        safe_log(f"OAuth callback received - code: {'YES' if code else 'NO'}, error: {error}", 'debug')
         
         if error:
-            print(f"OAuth error from Google: {error}")
+            safe_log(f"OAuth error from Google: {error}", 'error')
             frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
             return RedirectResponse(
                 url=f"{frontend_url}/?error=auth_failed"
             )
         
         if not code:
-            print("No authorization code received")
+            safe_log("No authorization code received", 'error')
             frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
             return RedirectResponse(
                 url=f"{frontend_url}/?error=no_code"
             )
         
-        print(f"Exchanging code for token...")
         # Exchange code for access token
         token_data = await exchange_code_for_token(code)
-        print(f"Token exchange successful, got access_token: {'YES' if token_data.get('access_token') else 'NO'}")
         
-        print(f"Getting user info from Google...")
+        # Get user info from Google
         user_data = await get_google_user_info(token_data['access_token'])
-        print(f"User data received: {user_data.email}")
         
-        print(f"Checking if user exists...")
         # Check if user already exists
         existing_user = await crud.get_user_by_provider_id("google", user_data.id)
         
         if existing_user:
-            print(f"Existing user found: {existing_user['email']}")
             # Update last login
             await crud.update_user_last_login(existing_user["user_id"])
             user = existing_user
         else:
-            print(f"Creating new user...")
             # Create new user
             user_create = UserCreate(
                 email=user_data.email,
@@ -196,16 +233,12 @@ async def google_callback(code: str = None, error: str = None):
                 provider_id=user_data.id
             )
             user = await crud.create_user(user_create)
-            print(f"New user created: {user['email']}")
         
-        print(f"Creating JWT token...")
         # Create JWT token
         access_token = create_access_token(data={
             "sub": user["user_id"], 
             "email": user["email"]
         })
-        
-        print(f"Redirecting to frontend with token...")
         # Redirect to frontend with token
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
         return RedirectResponse(
@@ -213,8 +246,8 @@ async def google_callback(code: str = None, error: str = None):
         )
         
     except Exception as e:
-        print(f"OAuth callback error: {e}")
-        print(traceback.format_exc())
+        safe_log(f"OAuth callback error: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
         return RedirectResponse(
             url=f"{frontend_url}/auth/error?error=oauth_failed"
@@ -257,8 +290,8 @@ async def create_session(current_user: UserResponse = Depends(get_current_user))
             
         return db_session
     except Exception as e:
-        print(f"Error creating session: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error creating session: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to create session: {str(e)}")
 
 @app.get("/sessions/{session_id}")
@@ -275,8 +308,8 @@ async def get_session(session_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error getting session {session_id}: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error getting session {session_id}: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to get session: {str(e)}")
 
 @app.get("/sessions/{session_id}/qr")
@@ -294,8 +327,8 @@ async def get_qr_code(session_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error generating QR code: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error generating QR code: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to generate QR code: {str(e)}")
 
 @app.post("/sessions/{session_id}/photos")
@@ -311,15 +344,15 @@ async def upload_photo(
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid session ID format")
             
-        print(f"Attempting to upload photo for session: {session_id}")
-        print(f"File details: {file.filename}, {file.content_type}")
+        safe_log(f"Attempting to upload photo for session: {session_id}", 'debug')
+        safe_log(f"File details: {file.filename}, {file.content_type}", 'debug')
         
         # Check if session exists
         db_session = await crud.get_session(session_id=session_id)
         if not db_session:
             raise HTTPException(status_code=404, detail=f"Session not found: {session_id}")
         
-        print(f"Session found: {db_session}")
+        safe_log(f"Session found: {db_session}", 'debug')
         
         # Check if session is active
         if not db_session.get("is_active", True):
@@ -330,7 +363,7 @@ async def upload_photo(
         user_ip = get_user_ip(request)
         user_agent = get_user_agent(request)
         
-        print(f"User identifier: {user_identifier}")
+        safe_log(f"User identifier: {user_identifier}", 'debug')
         
         # Get user's current upload count
         user_upload_stats = await crud.get_user_upload_stats(session_id, user_identifier)
@@ -339,7 +372,7 @@ async def upload_photo(
         # Check per-user photo limit
         photos_per_user_limit = db_session.get("photos_per_user_limit", 10)
         
-        print(f"User uploads: {current_user_uploads}, Per-user limit: {photos_per_user_limit}")
+        safe_log(f"User uploads: {current_user_uploads}, Per-user limit: {photos_per_user_limit}", 'debug')
         
         if current_user_uploads >= photos_per_user_limit:
             raise HTTPException(
@@ -354,7 +387,7 @@ async def upload_photo(
         # Read file content properly
         contents = await file.read()
         file_size = len(contents)
-        print(f"File size: {file_size} bytes")
+        safe_log(f"File size: {file_size} bytes", 'debug')
         
         # File size validation (10MB limit)
         MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -363,18 +396,54 @@ async def upload_photo(
         if file_size > MAX_FILE_SIZE:
             raise HTTPException(status_code=413, detail=f"File too large. Maximum size is {MAX_FILE_SIZE//1024//1024}MB")
         
-        # Validate filename
+        # Validate and sanitize filename
         if not file.filename or len(file.filename) > 255:
             raise HTTPException(status_code=400, detail="Invalid filename")
+        
+        # Sanitize filename - remove dangerous characters
+        import string
+        valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
+        sanitized_filename = ''.join(c for c in file.filename if c in valid_chars)
+        if not sanitized_filename:
+            raise HTTPException(status_code=400, detail="Filename contains only invalid characters")
+        
+        # Check for dangerous extensions
+        dangerous_extensions = ['.exe', '.bat', '.cmd', '.scr', '.pif', '.com', '.jar', '.js', '.php', '.asp']
+        file_lower = sanitized_filename.lower()
+        if any(file_lower.endswith(ext) for ext in dangerous_extensions):
+            raise HTTPException(status_code=400, detail="File extension not allowed")
         
         # Validate that it's an image file
         allowed_content_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
         if file.content_type not in allowed_content_types:
             raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed types: {allowed_content_types}")
         
+        # Magic number validation (file signature check)
+        def validate_image_magic_number(file_content: bytes) -> bool:
+            """Validate file content using magic numbers/file signatures"""
+            if len(file_content) < 12:
+                return False
+            
+            # JPEG: FF D8 FF
+            if file_content[:3] == b'\xFF\xD8\xFF':
+                return True
+            # PNG: 89 50 4E 47 0D 0A 1A 0A
+            elif file_content[:8] == b'\x89\x50\x4E\x47\x0D\x0A\x1A\x0A':
+                return True
+            # GIF: 47 49 46 38 (GIF8)
+            elif file_content[:4] == b'GIF8':
+                return True
+            # WebP: RIFF....WEBP
+            elif file_content[:4] == b'RIFF' and file_content[8:12] == b'WEBP':
+                return True
+            return False
+        
+        if not validate_image_magic_number(contents):
+            raise HTTPException(status_code=400, detail="File content does not match expected image format")
+        
         # Upload to Cloudinary
         try:
-            print("Uploading to Cloudinary...")
+            safe_log("Uploading to Cloudinary...", 'debug')
             # Upload to Cloudinary with folder structure
             folder_name = f"qr_sessions/{session_id}"
             result = cloudinary.uploader.upload(
@@ -383,11 +452,11 @@ async def upload_photo(
                 public_id=f"{uuid.uuid4()}_{file.filename.split('.')[0]}",
                 resource_type="image"
             )
-            print(f"Cloudinary upload result: {result}")
+            safe_log(f"Cloudinary upload result: {result}", 'debug')
             
         except Exception as cloudinary_error:
-            print(f"Cloudinary upload error: {cloudinary_error}")
-            print(traceback.format_exc())
+            safe_log(f"Cloudinary upload error: {cloudinary_error}", 'error')
+            safe_log(traceback.format_exc(), 'error')
             raise HTTPException(status_code=500, detail=f"Failed to upload to Cloudinary: {str(cloudinary_error)}")
         
         # Save photo record to database
@@ -399,20 +468,20 @@ async def upload_photo(
                 user_identifier=user_identifier
             )
             db_photo = await crud.create_photo(photo=photo_data)
-            print(f"Photo record created: {db_photo}")
+            safe_log(f"Photo record created: {db_photo}", 'debug')
             
         except Exception as db_error:
-            print(f"Database error: {db_error}")
-            print(traceback.format_exc())
+            safe_log(f"Database error: {db_error}", 'error')
+            safe_log(traceback.format_exc(), 'error')
             raise HTTPException(status_code=500, detail=f"Failed to save photo record: {str(db_error)}")
         
         # Increment photo count (legacy - keep for backward compatibility)
         try:
             await crud.increment_photo_count(session_id)
-            print(f"Photo count incremented for session: {session_id}")
+            safe_log(f"Photo count incremented for session: {session_id}", 'debug')
         except Exception as count_error:
-            print(f"Error incrementing photo count: {count_error}")
-            print(traceback.format_exc())
+            safe_log(f"Error incrementing photo count: {count_error}", 'error')
+            safe_log(traceback.format_exc(), 'error')
         
         # Record user upload for per-user tracking
         try:
@@ -422,10 +491,10 @@ async def upload_photo(
                 user_ip=user_ip,
                 user_agent=user_agent
             )
-            print(f"User upload recorded for: {user_identifier}")
+            safe_log(f"User upload recorded for: {user_identifier}", 'debug')
         except Exception as user_error:
-            print(f"Error recording user upload: {user_error}")
-            print(traceback.format_exc())
+            safe_log(f"Error recording user upload: {user_error}", 'error')
+            safe_log(traceback.format_exc(), 'error')
         
         # Convert ObjectId to string
         if "_id" in db_photo:
@@ -445,12 +514,12 @@ async def upload_photo(
                     "upload_count": photo_count,
                     "uploaded_by": user_identifier[:8] + "..."  # Show partial identifier
                 })
-                print(f"WebSocket notification sent to owner {db_session['owner_id']} for session {session_id}")
+                safe_log(f"WebSocket notification sent to owner {db_session['owner_id']} for session {session_id}", 'debug')
             else:
-                print(f"No owner found for session {session_id}, skipping notification")
+                safe_log(f"No owner found for session {session_id}, skipping notification", 'debug')
         except Exception as ws_error:
-            print(f"WebSocket notification error: {ws_error}")
-            print(traceback.format_exc())
+            safe_log(f"WebSocket notification error: {ws_error}", 'error')
+            safe_log(traceback.format_exc(), 'error')
         
         return {
             "filename": result["public_id"], 
@@ -461,59 +530,36 @@ async def upload_photo(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"General upload error: {e}")
-        print(traceback.format_exc())
+        safe_log(f"General upload error: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 @app.get("/sessions/{session_id}/photos")  
-async def get_session_photos(session_id: str, request: Request):
+async def get_session_photos(session_id: str, request: Request, current_user: dict = Depends(get_current_user_optional)):
     try:
-        print(f"Getting photos for session: {session_id}")
         db_session = await crud.get_session(session_id=session_id)
         if not db_session:
             raise HTTPException(status_code=404, detail="Session not found")
         
-        print(f"Session found")
-        
-        # Try to get current user from token (optional)
-        current_user = None
-        try:
-            auth_header = request.headers.get("authorization")
-            if auth_header and auth_header.startswith("Bearer "):
-                from jose import jwt, JWTError
-                token = auth_header.split(" ")[1]
-                payload = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
-                user_id = payload.get("sub")
-                if user_id:
-                    user = await crud.get_user_by_id(user_id)
-                    if user:
-                        current_user = user
-        except Exception as e:
-            print(f"Token verification failed: {e}")
-            pass
-        
         # Check if current user is the session owner
         is_owner = current_user and db_session.get("owner_id") == current_user.get("user_id")
-        print(f"User is owner: {is_owner}")
         
         if is_owner:
             # Owner sees all photos
             photos = await crud.get_photos_by_session(session_id=session_id)
-            print(f"Owner: returning all {len(photos)} photos")
         else:
             # Regular user sees only their photos
             # Generate user identifier from request
             try:
                 user_identifier = generate_user_identifier(request, session_id)
-                print(f"Generated user_identifier: {user_identifier[:16]}...")
             except Exception as e:
-                print(f"Error generating user identifier: {e}")
+                safe_log(f"Error generating user identifier: {e}", 'error')
                 traceback.print_exc()
                 user_identifier = "unknown"
             
             # Get all photos first
             all_photos = await crud.get_photos_by_session(session_id=session_id)
-            print(f"Found {len(all_photos)} total photos")
+            safe_log(f"Found {len(all_photos)} total photos", 'debug')
             
             # Filter photos for this specific user
             user_photos = []
@@ -522,9 +568,9 @@ async def get_session_photos(session_id: str, request: Request):
                 # Include photo if it belongs to this user OR if it has no user_identifier (legacy photos)
                 if photo_user_id == user_identifier or not photo_user_id:
                     user_photos.append(photo)
-                    print(f"Including photo: {photo.get('filename', 'unknown')} (user: {photo_user_id or 'legacy'})")
+                    safe_log(f"Including photo: {photo.get('filename', 'unknown')} (user: {photo_user_id or 'legacy'})", 'debug')
             
-            print(f"Regular user: filtered to {len(user_photos)} photos")
+            safe_log(f"Regular user: filtered to {len(user_photos)} photos", 'debug')
             photos = user_photos
         
         # Prepare photo data with URLs
@@ -541,8 +587,8 @@ async def get_session_photos(session_id: str, request: Request):
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error getting session photos: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error getting session photos: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to get session photos: {str(e)}")
 
 @app.get("/sessions/{session_id}/photos/all")
@@ -574,16 +620,14 @@ async def get_all_session_photos(session_id: str, current_user: dict = Depends(g
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error getting all session photos: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error getting all session photos: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to get all session photos: {str(e)}")
 
 @app.delete("/sessions/{session_id}/photos/{photo_id}")
-async def delete_photo(session_id: str, photo_id: str, request: Request):
+async def delete_photo(session_id: str, photo_id: str, request: Request, current_user: dict = Depends(get_current_user_optional)):
     """Delete a photo - only the uploader or session owner can delete"""
     try:
-        print(f"Deleting photo {photo_id} from session {session_id}")
-        
         # Get session
         db_session = await crud.get_session(session_id=session_id) 
         if not db_session:
@@ -591,30 +635,17 @@ async def delete_photo(session_id: str, photo_id: str, request: Request):
         
         # Get photo
         photos_collection = get_photos_collection()
-        photo = await photos_collection.find_one({"_id": ObjectId(photo_id)})
+        try:
+            sanitized_photo_id = crud.sanitize_object_id(photo_id)
+            photo = await photos_collection.find_one({"_id": ObjectId(sanitized_photo_id)})
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
         if not photo:
             raise HTTPException(status_code=404, detail="Photo not found")
         
         # Check if photo belongs to this session
         if photo.get("session_id") != session_id:
             raise HTTPException(status_code=400, detail="Photo does not belong to this session")
-        
-        # Try to get current user from token (optional)
-        current_user = None
-        try:
-            auth_header = request.headers.get("authorization")
-            if auth_header and auth_header.startswith("Bearer "):
-                from jose import jwt, JWTError
-                token = auth_header.split(" ")[1]
-                payload = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
-                user_id = payload.get("sub")
-                if user_id:
-                    user = await crud.get_user_by_id(user_id)
-                    if user:
-                        current_user = user
-        except Exception as e:
-            print(f"Token verification failed: {e}")
-            pass
         
         # Check permissions
         is_owner = current_user and db_session.get("owner_id") == current_user.get("user_id")
@@ -624,41 +655,40 @@ async def delete_photo(session_id: str, photo_id: str, request: Request):
             user_identifier = generate_user_identifier(request, session_id)
             photo_user_id = photo.get("user_identifier")
             
-            print(f"Delete permission check:")
-            print(f"  Current user identifier: {user_identifier}")
-            print(f"  Photo user identifier: {photo_user_id}")
-            print(f"  Match: {photo_user_id == user_identifier}")
+            safe_log(f"Delete permission check:", 'debug')
+            safe_log(f"  Current user identifier: {user_identifier}", 'debug')
+            safe_log(f"  Photo user identifier: {photo_user_id}", 'debug')
+            safe_log(f"  Match: {photo_user_id == user_identifier}", 'debug')
             
             # Allow deletion if photo has no user_identifier (legacy) or if it matches
             if photo_user_id and photo_user_id != user_identifier:
                 raise HTTPException(status_code=403, detail="You can only delete your own photos")
         
-        print(f"Permission granted - Owner: {is_owner}")
         
         # Delete from Cloudinary
         try:
             cloudinary.uploader.destroy(photo["filename"])
-            print(f"Deleted from Cloudinary: {photo['filename']}")
+            safe_log(f"Deleted from Cloudinary: {photo['filename']}", 'debug')
         except Exception as e:
-            print(f"Failed to delete from Cloudinary: {e}")
+            safe_log(f"Failed to delete from Cloudinary: {e}", 'error')
             # Continue anyway, delete from database
         
-        # Delete from database
-        result = await photos_collection.delete_one({"_id": ObjectId(photo_id)})
+        # Delete from database  
+        result = await photos_collection.delete_one({"_id": ObjectId(sanitized_photo_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Photo not found")
         
         # Update session photo count
         await crud.decrement_photo_count(session_id)
         
-        print(f"Photo {photo_id} deleted successfully")
+        safe_log(f"Photo {photo_id} deleted successfully", 'debug')
         return {"message": "Photo deleted successfully"}
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error deleting photo: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error deleting photo: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to delete photo: {str(e)}")
 
 # Admin endpoints
@@ -672,8 +702,8 @@ async def get_all_sessions():
                 session["_id"] = str(session["_id"])
         return sessions
     except Exception as e:
-        print(f"Error getting all sessions: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error getting all sessions: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to get sessions: {str(e)}")
 
 
@@ -688,8 +718,8 @@ async def get_user_sessions(current_user: UserResponse = Depends(require_authent
                 session["_id"] = str(session["_id"])
         return sessions
     except Exception as e:
-        print(f"Error getting user sessions: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error getting user sessions: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to get user sessions: {str(e)}")
 
 
@@ -726,8 +756,8 @@ async def update_session_photo_limit(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error updating session photo limit: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error updating session photo limit: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to update photo limit: {str(e)}")
 
 
@@ -770,8 +800,8 @@ async def get_session_user_stats(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error getting session user stats: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error getting session user stats: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to get user stats: {str(e)}")
 
 
@@ -806,8 +836,8 @@ async def get_my_upload_stats(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error getting user stats: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error getting user stats: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to get user stats: {str(e)}")
 
 
@@ -849,8 +879,8 @@ async def download_session_photos(
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error downloading session photos: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error downloading session photos: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to download photos: {str(e)}")
 
 
@@ -871,7 +901,7 @@ async def delete_session(session_id: str, current_user: UserResponse = Depends(r
             try:
                 cloudinary.uploader.destroy(photo["filename"])
             except Exception as e:
-                print(f"Failed to delete {photo['filename']} from Cloudinary: {e}")
+                safe_log(f"Failed to delete {photo['filename']} from Cloudinary: {e}", 'error')
         
         # Delete from database
         success = await crud.delete_session(session_id)
@@ -883,6 +913,6 @@ async def delete_session(session_id: str, current_user: UserResponse = Depends(r
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Error deleting session: {e}")
-        print(traceback.format_exc())
+        safe_log(f"Error deleting session: {e}", 'error')
+        safe_log(traceback.format_exc(), 'error')
         raise HTTPException(status_code=500, detail=f"Failed to delete session: {str(e)}")

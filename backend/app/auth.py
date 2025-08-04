@@ -13,12 +13,26 @@ from starlette.requests import Request
 
 from app.schemas.user import TokenData, UserResponse, GoogleUserInfo
 from app import crud
+from app.utils.logger import safe_log
 
 # Configuration
 config = Config('.env')
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 if not SECRET_KEY:
     raise ValueError("JWT_SECRET_KEY environment variable is required")
+
+# Validate JWT secret key security
+if len(SECRET_KEY) < 32:
+    raise ValueError("JWT_SECRET_KEY must be at least 32 characters long for security")
+
+# Check if secret key has sufficient entropy (basic check)
+if SECRET_KEY.isalnum() and len(set(SECRET_KEY)) < 8:
+    safe_log("⚠️  WARNING: JWT_SECRET_KEY appears to have low entropy. Consider using a more random key.", 'warning')
+
+# Ensure secret key is not a common weak pattern
+weak_patterns = ['password', '123456', 'secret', 'key', 'token']
+if any(pattern in SECRET_KEY.lower() for pattern in weak_patterns):
+    raise ValueError("JWT_SECRET_KEY contains weak patterns. Use a cryptographically secure random key.")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
@@ -95,6 +109,15 @@ async def require_authentication(current_user: Optional[UserResponse] = Depends(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return current_user
+
+
+async def get_current_user_optional(token_data: Optional[TokenData] = Depends(verify_token)) -> Optional[dict]:
+    """Get current user (optional) - returns user dict or None"""
+    if not token_data:
+        return None
+    
+    user = await crud.get_user_by_id(token_data.user_id)
+    return user
 
 
 async def get_google_user_info(access_token: str) -> GoogleUserInfo:

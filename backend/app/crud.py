@@ -1,20 +1,45 @@
 ﻿from datetime import datetime, timedelta
 import uuid
+import re
 from typing import Optional
 from app import schemas
 from app.schemas.user import UserCreate, UserUpdate, UserInDB
 from app.database import get_sessions_collection, get_photos_collection, get_users_collection, get_user_uploads_collection
 from bson import ObjectId
 
+def sanitize_session_id(session_id: str) -> str:
+    """Sanitize session ID to prevent NoSQL injection"""
+    if not session_id or not isinstance(session_id, str):
+        raise ValueError("Invalid session ID")
+    
+    # Allow only UUID format (alphanumeric + hyphens)
+    if not re.match(r'^[a-f0-9-]{36}$', session_id.lower()):
+        raise ValueError("Session ID must be a valid UUID format")
+    
+    return session_id.strip()
+
+def sanitize_object_id(object_id: str) -> str:
+    """Sanitize MongoDB ObjectId to prevent NoSQL injection"""
+    if not object_id or not isinstance(object_id, str):
+        raise ValueError("Invalid ObjectId")
+    
+    # Allow only valid ObjectId format (24 hex chars)
+    if not re.match(r'^[a-f0-9]{24}$', object_id.lower()):
+        raise ValueError("ObjectId must be 24 character hex string")
+    
+    return object_id.strip()
+
 async def get_session(session_id: str):
+    sanitized_id = sanitize_session_id(session_id)
     sessions_collection = get_sessions_collection()
-    session = await sessions_collection.find_one({"session_id": session_id})
+    session = await sessions_collection.find_one({"session_id": sanitized_id})
     return session
 
 async def get_active_session(session_id: str):
+    sanitized_id = sanitize_session_id(session_id)
     sessions_collection = get_sessions_collection()
     session = await sessions_collection.find_one({
-        "session_id": session_id,
+        "session_id": sanitized_id,
         "is_active": True,
         "photo_count": {"$lt": 10}
     })
@@ -69,16 +94,19 @@ async def create_photo(photo: schemas.PhotoCreate):
     return photo_dict
 
 async def get_photos_by_session(session_id: str):
+    sanitized_id = sanitize_session_id(session_id)
     photos_collection = get_photos_collection()
-    cursor = photos_collection.find({"session_id": session_id})
+    cursor = photos_collection.find({"session_id": sanitized_id})
     photos = await cursor.to_list(length=100)
     return photos
 
 async def get_photos_by_session_and_user(session_id: str, user_identifier: str):
     """Get photos uploaded by a specific user in a session"""
+    sanitized_id = sanitize_session_id(session_id)
+    # Note: user_identifier validation handled at application level
     photos_collection = get_photos_collection()
     cursor = photos_collection.find({
-        "session_id": session_id,
+        "session_id": sanitized_id,
         "user_identifier": user_identifier
     })
     photos = await cursor.to_list(length=100)

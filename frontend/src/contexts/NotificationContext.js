@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import useWebSocket from '../hooks/useWebSocket';
+import { devLog } from '../utils/helpers';
 
 const NotificationContext = createContext();
 
@@ -27,8 +28,8 @@ export const NotificationProvider = ({ children }) => {
     const authToken = localStorage.getItem('auth_token');
     const storedUser = localStorage.getItem('user');
     
-    console.log('NotificationContext: Direct check - token:', !!authToken, 'stored user:', !!storedUser);
-    console.log('NotificationContext: AuthContext - loading:', loading, 'isAuthenticated:', isAuthenticated, 'user:', !!user);
+    devLog('NotificationContext: Direct check - token:', !!authToken, 'stored user:', !!storedUser);
+    devLog('NotificationContext: AuthContext - loading:', loading, 'isAuthenticated:', isAuthenticated, 'user:', !!user);
     
     // Use direct localStorage check to avoid auth timing issues
     if (authToken && storedUser) {
@@ -37,22 +38,22 @@ export const NotificationProvider = ({ children }) => {
         const userStorageKey = `notifications_${userObj.user_id}`;
         const stored = localStorage.getItem(userStorageKey);
         
-        console.log('NotificationContext: Loading with direct auth check. User ID:', userObj.user_id);
-        console.log('NotificationContext: Loaded from storage:', stored);
+        devLog('NotificationContext: Loading with direct auth check. User ID:', userObj.user_id);
+        devLog('NotificationContext: Loaded from storage:', stored);
         
         if (stored) {
           const parsedNotifications = JSON.parse(stored);
           setNotifications(parsedNotifications);
           updateUnreadCount(parsedNotifications);
-          console.log('NotificationContext: Set notifications count:', parsedNotifications.length);
+          devLog('NotificationContext: Set notifications count:', parsedNotifications.length);
         } else {
-          console.log('NotificationContext: No stored notifications found');
+          devLog('NotificationContext: No stored notifications found');
         }
       } catch (error) {
         console.error('Error loading notifications from storage:', error);
       }
     } else {
-      console.log('NotificationContext: No auth token or user, clearing notifications');
+      devLog('NotificationContext: No auth token or user, clearing notifications');
       setNotifications([]);
       setUnreadCount(0);
     }
@@ -64,10 +65,10 @@ export const NotificationProvider = ({ children }) => {
       try {
         if (notifications.length > 0) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(notifications));
-          console.log('NotificationContext: Saved to storage:', notifications.length, 'notifications');
+          devLog('NotificationContext: Saved to storage:', notifications.length, 'notifications');
         } else {
           localStorage.removeItem(STORAGE_KEY);
-          console.log('NotificationContext: Removed from storage (no notifications)');
+          devLog('NotificationContext: Removed from storage (no notifications)');
         }
       } catch (error) {
         console.error('Error saving notifications to storage:', error);

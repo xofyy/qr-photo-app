@@ -6,6 +6,27 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import tempfile
 import os
+import os
+import logging
+
+def safe_log(message: str, level: str = 'info'):
+    """Simple logging that works in all environments"""
+    # Check multiple environment indicators for production
+    env = (os.getenv('NODE_ENV', '') or 
+           os.getenv('RAILWAY_ENVIRONMENT', '') or 
+           os.getenv('VERCEL_ENV', '') or 
+           'development').lower()
+    
+    is_production = env in ('production', 'prod')
+    if is_production and level in ('info', 'debug'):
+        return
+    
+    if level == 'error':
+        logging.error(message)
+    elif level == 'warning':
+        logging.warning(message)
+    else:
+        logging.info(message)
 
 
 def download_image_from_url(url: str, filename: str) -> tuple:
@@ -15,7 +36,7 @@ def download_image_from_url(url: str, filename: str) -> tuple:
         response.raise_for_status()
         return filename, response.content
     except Exception as e:
-        print(f"Failed to download {url}: {e}")
+        safe_log(f"Failed to download {url}: {e}", 'error')
         return filename, None
 
 
@@ -78,11 +99,11 @@ This ZIP file contains all photos uploaded to your QR Photo Session.
                     filename, content = future.result(timeout=60)
                     if content:
                         zip_file.writestr(f"photos/{filename}", content)
-                        print(f"Added {filename} to ZIP")
+                        safe_log(f"Added {filename} to ZIP", 'debug')
                     else:
-                        print(f"Skipped {filename} - download failed")
+                        safe_log(f"Skipped {filename} - download failed", 'warning')
                 except Exception as e:
-                    print(f"Error processing download result: {e}")
+                    safe_log(f"Error processing download result: {e}", 'error')
     
     zip_buffer.seek(0)
     return zip_buffer

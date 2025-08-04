@@ -3,6 +3,7 @@ from fastapi import WebSocket
 import json
 import asyncio
 from datetime import datetime
+from app.utils.logger import safe_log
 
 class WebSocketManager:
     def __init__(self):
@@ -23,11 +24,11 @@ class WebSocketManager:
         if user_id:
             self.session_connections[session_id][user_id] = websocket
             self.connection_mapping[websocket] = (session_id, user_id)
-            print(f"WebSocket connected to session {session_id} for user {user_id}")
+            safe_log(f"WebSocket connected to session {session_id} for user {user_id}", 'debug')
         else:
             # For anonymous users, don't store the connection (no notifications)
             self.connection_mapping[websocket] = (session_id, None)
-            print(f"WebSocket connected to session {session_id} (anonymous - no notifications)")
+            safe_log(f"WebSocket connected to session {session_id} (anonymous - no notifications)", 'debug')
     
     def disconnect(self, websocket: WebSocket):
         """Disconnect a WebSocket and clean up"""
@@ -46,24 +47,24 @@ class WebSocketManager:
             # Remove from connection mapping
             del self.connection_mapping[websocket]
             
-            print(f"WebSocket disconnected from session {session_id} (user: {user_id or 'anonymous'})")
+            safe_log(f"WebSocket disconnected from session {session_id} (user: {user_id or 'anonymous'})", 'debug')
     
     async def send_personal_message(self, message: str, websocket: WebSocket):
         """Send message to a specific WebSocket"""
         try:
             await websocket.send_text(message)
         except Exception as e:
-            print(f"Error sending personal message: {e}")
+            safe_log(f"Error sending personal message: {e}", 'error')
             self.disconnect(websocket)
     
     async def notify_session_owner(self, session_id: str, owner_id: str, message: dict):
         """Send notification only to session owner"""
         if session_id not in self.session_connections:
-            print(f"No connections found for session {session_id}")
+            safe_log(f"No connections found for session {session_id}", 'debug')
             return
         
         if owner_id not in self.session_connections[session_id]:
-            print(f"Session owner {owner_id} not connected to session {session_id}")
+            safe_log(f"Session owner {owner_id} not connected to session {session_id}", 'debug')
             return
             
         websocket = self.session_connections[session_id][owner_id]
@@ -71,9 +72,9 @@ class WebSocketManager:
         
         try:
             await websocket.send_text(message_str)
-            print(f"Notification sent to session owner {owner_id} for session {session_id}")
+            safe_log(f"Notification sent to session owner {owner_id} for session {session_id}", 'debug')
         except Exception as e:
-            print(f"Error sending notification to owner: {e}")
+            safe_log(f"Error sending notification to owner: {e}", 'error')
             self.disconnect(websocket)
     
     async def notify_photo_uploaded(self, session_id: str, owner_id: str, photo_data: dict):

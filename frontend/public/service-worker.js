@@ -12,19 +12,19 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache opened');
+        // Cache opened - production safe logging removed
         // Dosyaları tek tek ekleyerek hata toleransı sağla
         return Promise.allSettled(
           urlsToCache.map(url => {
             return cache.add(url).catch(err => {
-              console.warn('Failed to cache:', url, err);
+              // Failed to cache - production safe logging removed
               return null;
             });
           })
         );
       })
       .catch(err => {
-        console.error('Service worker install failed:', err);
+        // Service worker install failed - production safe logging removed
       })
   );
   
@@ -39,7 +39,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+            // Deleting old cache - production safe logging removed
             return caches.delete(cacheName);
           }
         })
@@ -118,7 +118,7 @@ self.addEventListener('sync', event => {
 
 function doBackgroundSync() {
   // Background sync işlemleri buraya eklenebilir
-  console.log('Background sync triggered');
+  // Background sync triggered - production safe logging removed
 }
 
 // Push notification için (opsiyonel)
