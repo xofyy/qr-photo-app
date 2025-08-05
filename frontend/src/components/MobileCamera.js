@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { devLog, devError } from '../utils/helpers';
+import { devLog, devError } from '../utils/logger';
 import { formatFileSize } from '../utils/i18nHelpers';
 
 const MobileCamera = ({ 

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import Layout from '../components/Layout';
 import QRScannerComponent from '../components/QRScanner';
+import { logger } from '../utils/logger';
 
 const Home = () => {
   const { t } = useTranslation(['home', 'common']);
@@ -72,11 +73,11 @@ const Home = () => {
   };
 
   const handleQRScanSuccess = (scannedResult) => {
-    console.log('QR Scan Success:', scannedResult);
+    logger.debug('QR Scan Success:', scannedResult);
     
     // Extract the actual data from the scan result
     const scannedUrl = typeof scannedResult === 'string' ? scannedResult : scannedResult.data;
-    console.log('Extracted URL:', scannedUrl);
+    logger.debug('Extracted URL:', scannedUrl);
     
     try {
       // First check if it's a valid URL
@@ -89,7 +90,7 @@ const Home = () => {
         
         if (sessionIndex !== -1 && pathSegments[sessionIndex + 1]) {
           const scannedSessionId = pathSegments[sessionIndex + 1];
-          console.log('Navigating to session:', scannedSessionId);
+          logger.info('Navigating to session:', scannedSessionId);
           
           // Close scanner
           setQrScannerActive(false);
@@ -114,7 +115,7 @@ const Home = () => {
         setTimeout(() => {
           if (document.querySelector('video')) {
             // Scanner is still active, just continue
-            console.log(t('home:scanner.continueScanning'));
+            logger.debug('Continue scanning message');
           }
         }, 100);
       }

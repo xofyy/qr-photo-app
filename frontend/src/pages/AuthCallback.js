@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { logger } from '../utils/logger';
 
 const AuthCallback = () => {
   const { t } = useTranslation(['auth', 'common']);
@@ -17,7 +18,7 @@ const AuthCallback = () => {
 
       if (error) {
         // Handle OAuth error
-        console.error('OAuth error:', error);
+        logger.auth.error('OAuth error:', error);
         let errorType = 'auth_failed';
         
         // Map specific errors

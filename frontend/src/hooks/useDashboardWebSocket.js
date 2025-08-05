@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { logger } from '../utils/logger';
 
 const useDashboardWebSocket = (userSessions) => {
   const { user, isAuthenticated } = useAuth();
@@ -29,23 +30,23 @@ const useDashboardWebSocket = (userSessions) => {
       wsUrl = `ws://localhost:8001/ws/${sessionId}?user_id=${user.user_id}`;
     }
     
-    console.log('Dashboard WebSocket URL:', wsUrl);
+    logger.websocket.connect('Dashboard WebSocket URL:', wsUrl);
     
-    console.log('Dashboard WebSocket connecting to session:', sessionId);
+    logger.websocket.connect('Dashboard connecting to session:', sessionId);
 
     try {
       const ws = new WebSocket(wsUrl);
       websocketsRef.current.set(sessionId, ws);
 
       ws.onopen = () => {
-        console.log('Dashboard WebSocket connected to session:', sessionId);
+        logger.websocket.connect('Dashboard connected to session:', sessionId);
         setConnectedSessions(prev => new Set([...prev, sessionId]));
       };
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('Dashboard WebSocket message from session', sessionId, ':', data);
+          logger.websocket.message('Dashboard message from session', sessionId, ':', data);
           
           // Add notification for photo uploads
           if (data.type === 'photo_uploaded') {
@@ -57,7 +58,7 @@ const useDashboardWebSocket = (userSessions) => {
       };
 
       ws.onclose = (event) => {
-        console.log('Dashboard WebSocket disconnected from session:', sessionId);
+        logger.websocket.disconnect('Dashboard disconnected from session:', sessionId);
         websocketsRef.current.delete(sessionId);
         setConnectedSessions(prev => {
           const newSet = new Set(prev);

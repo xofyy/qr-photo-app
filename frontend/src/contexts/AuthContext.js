@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { devLog, devError } from '../utils/helpers';
+import { devLog, devError } from '../utils/logger';
 
 const AuthContext = createContext();
 

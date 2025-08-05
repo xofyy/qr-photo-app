@@ -4,6 +4,7 @@ import { getUserSessions, deleteSession, getSessionPhotos } from '../services/ap
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateOnly } from '../utils/i18nHelpers';
 import Layout from '../components/Layout';
+import { logger } from '../utils/logger';
 
 const AdminDashboard = () => {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -25,7 +26,7 @@ const AdminDashboard = () => {
       const response = await getUserSessions();
       setSessions(response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
     } catch (error) {
-      console.error('Error loading sessions:', error);
+      logger.api.error('Error loading sessions:', error);
     } finally {
       setLoading(false);
     }
@@ -42,7 +43,7 @@ const AdminDashboard = () => {
           setSessionPhotos([]);
         }
       } catch (error) {
-        console.error('Error deleting session:', error);
+        logger.api.error('Error deleting session:', error);
         alert(t('dashboard:alerts.deleteError'));
       } finally {
         setDeleteLoading(null);
@@ -57,7 +58,7 @@ const AdminDashboard = () => {
       const response = await getSessionPhotos(session.session_id);
       setSessionPhotos(response.data);
     } catch (error) {
-      console.error('Error loading photos:', error);
+      logger.api.error('Error loading photos:', error);
     } finally {
       setPhotoLoading(false);
     }

@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { formatDate } from '../utils/i18nHelpers';
 import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { logger } from '../utils/logger';
 
 const SessionInfo = () => {
   const { t } = useTranslation(['session', 'common']);
@@ -40,7 +41,7 @@ const SessionInfo = () => {
       setQrCode(qrResponse.data.qr_code);
       setSessionUrl(qrResponse.data.session_url);
     } catch (error) {
-      console.error('Error loading session info:', error);
+      logger.api.error('Error loading session info:', error);
       setError(t('session:errors.loadingError'));
     } finally {
       setLoading(false);

@@ -1,3 +1,5 @@
+// Utility functions for QR Photo App
+
 // Format date to readable string
 export const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -89,24 +91,8 @@ export const debounce = (func, wait) => {
   };
 };
 
-// Development-only logging
-export const devLog = (...args) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(...args);
-  }
-};
-
-export const devWarn = (...args) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.warn(...args);
-  }
-};
-
-export const devError = (...args) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.error(...args);
-  }
-};
+// Note: devLog, devWarn, devError are now exported from logger.js
+// Import them from there: import { devLog } from '../utils/logger';
 
 // Handle API errors
 export const handleApiError = (error) => {

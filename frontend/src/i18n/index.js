@@ -74,11 +74,12 @@ i18n
     
     initImmediate: false, // Initialize synchronously
     
-    // Development settings
-    debug: process.env.NODE_ENV === 'development',
+    // Development settings - reduce noise by showing only important debug info
+    debug: process.env.NODE_ENV === 'development' && process.env.REACT_APP_I18N_DEBUG === 'true',
     
     // Optimization settings
     load: 'languageOnly', // Load only 'en' instead of 'en-US'
+    cleanCode: true, // Clean language codes like 'en-US' -> 'en'
     preload: ['en', 'tr'], // Preload both languages
   });
 

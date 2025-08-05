@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { getSession, getSessionPhotos, getAllSessionPhotos, uploadPhoto, getMyUploadStats, downloadSessionPhotos, deletePhoto } from '../services/api';
-import { devLog, devWarn, devError } from '../utils/helpers';
+import { devLog, devWarn, devError } from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateOnly } from '../utils/i18nHelpers';
 import Layout from '../components/Layout';

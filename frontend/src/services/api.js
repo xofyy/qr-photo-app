@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logger } from '../utils/logger';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
 
@@ -33,11 +34,11 @@ api.interceptors.response.use(
       window.location.href = '/';
     } else if (error.response?.status === 502) {
       // Bad Gateway - backend is down
-      console.error('Backend service unavailable (502)');
+      logger.api.error('Backend service unavailable (502)');
       // Don't redirect, let the component handle it
     } else if (error.code === 'NETWORK_ERROR' || !error.response) {
       // Network error or no response
-      console.error('Network error or backend unreachable');
+      logger.api.error('Network error or backend unreachable');
     }
     
     return Promise.reject(error);

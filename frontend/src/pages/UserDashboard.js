@@ -8,6 +8,7 @@ import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConnectionStatus from '../components/ConnectionStatus';
 import useDashboardWebSocket from '../hooks/useDashboardWebSocket';
+import { logger } from '../utils/logger';
 
 const UserDashboard = () => {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -38,7 +39,7 @@ const UserDashboard = () => {
       const sessions = response.data;
       setUserSessions(sessions.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)));
     } catch (error) {
-      console.error('Error loading user sessions:', error);
+      logger.api.error('Error loading user sessions:', error);
     } finally {
       setLoading(false);
     }
@@ -56,7 +57,7 @@ const UserDashboard = () => {
       // Navigate to session info page to show QR code and details
       navigate(`/session-info/${newSession.session_id}`);
     } catch (error) {
-      console.error('Error creating session:', error);
+      logger.api.error('Error creating session:', error);
       alert(t('dashboard:alerts.createFailed'));
     } finally {
       setIsCreatingSession(false);
@@ -96,7 +97,7 @@ const UserDashboard = () => {
       closePhotoLimitModal();
       alert(t('dashboard:alerts.limitUpdated', { limit: photoLimitModal.newLimit }));
     } catch (error) {
-      console.error('Error updating photo limit:', error);
+      logger.api.error('Error updating photo limit:', error);
       alert(t('dashboard:alerts.limitUpdateFailed'));
     }
   };
@@ -109,7 +110,7 @@ const UserDashboard = () => {
         [sessionId]: response.data
       }));
     } catch (error) {
-      console.error('Error loading session stats:', error);
+      logger.api.error('Error loading session stats:', error);
     }
   };
 
@@ -141,7 +142,7 @@ const UserDashboard = () => {
       
       alert(t('dashboard:alerts.downloadStarted'));
     } catch (error) {
-      console.error('Error downloading photos:', error);
+      logger.api.error('Error downloading photos:', error);
       if (error.response?.status === 403) {
         alert(t('dashboard:alerts.downloadUnauthorized'));
       } else {
@@ -168,7 +169,7 @@ const UserDashboard = () => {
         loading: false
       }));
     } catch (error) {
-      console.error('Error loading QR code:', error);
+      logger.api.error('Error loading QR code:', error);
       setQrModal(prev => ({
         ...prev,
         loading: false

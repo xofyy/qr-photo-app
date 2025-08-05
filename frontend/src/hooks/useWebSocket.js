@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { logger } from '../utils/logger';
 
 const useWebSocket = (sessionId) => {
   const { user, isAuthenticated } = useAuth();
@@ -14,7 +15,7 @@ const useWebSocket = (sessionId) => {
 
   const connect = useCallback(() => {
     if (!sessionId || !isAuthenticated || !user) {
-      console.log('WebSocket connection skipped - not authenticated or no session');
+      logger.debug('WebSocket connection skipped - not authenticated or no session');
       return;
     }
 
@@ -34,16 +35,16 @@ const useWebSocket = (sessionId) => {
       wsUrl = `ws://localhost:8001/ws/${sessionId}?user_id=${user.user_id}`;
     }
     
-    console.log('WebSocket URL:', wsUrl);
+    // WebSocket URL logged only in debug mode
     
-    console.log('Connecting to WebSocket as authenticated user:', wsUrl);
+    logger.websocket.connect('Connecting as authenticated user:', wsUrl);
 
     try {
       const ws = new WebSocket(wsUrl);
       websocketRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connected');
+        logger.websocket.connect('Connected');
         setIsConnected(true);
         reconnectAttemptsRef.current = 0;
       };
@@ -51,7 +52,7 @@ const useWebSocket = (sessionId) => {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('WebSocket message received:', data);
+          logger.websocket.message('Message received:', data);
           
           // Add notification for display (skip connection messages)
           if (data.type !== 'connected' && data.type !== 'owner_connected' && data.type !== 'echo') {
@@ -63,14 +64,14 @@ const useWebSocket = (sessionId) => {
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
+        logger.websocket.disconnect('Disconnected:', event.code, event.reason);
         setIsConnected(false);
         websocketRef.current = null;
 
         // Attempt to reconnect if not intentionally closed
         if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
           const timeout = Math.pow(2, reconnectAttemptsRef.current) * 1000; // Exponential backoff
-          console.log(`Attempting to reconnect in ${timeout}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
+          logger.websocket.connect(`Reconnecting in ${timeout}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++;

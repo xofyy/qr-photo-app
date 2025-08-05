@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import QrScanner from 'qr-scanner';
-import { devLog, devError } from '../utils/helpers';
+import { devLog, devError } from '../utils/logger';
 
 const QRScannerComponent = ({ 
   isActive,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { logger } from '../utils/logger';
 
 const PWAInstallPrompt = () => {
   const { t } = useTranslation('common');
@@ -17,7 +18,7 @@ const PWAInstallPrompt = () => {
     };
 
     const handleAppInstalled = () => {
-      console.log('PWA yüklendi');
+      logger.info('PWA installed');
       setShowInstallPrompt(false);
       setDeferredPrompt(null);
     };
@@ -43,9 +44,9 @@ const PWAInstallPrompt = () => {
     const { outcome } = await deferredPrompt.userChoice;
     
     if (outcome === 'accepted') {
-      console.log('Kullanıcı PWA yüklemeyi kabul etti');
+      logger.info('User accepted PWA install');
     } else {
-      console.log('Kullanıcı PWA yüklemeyi reddetti');
+      logger.info('User rejected PWA install');
     }
 
     // Prompt'u temizle

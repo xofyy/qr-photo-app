@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { getSessionPhotos } from '../services/api';
+import { logger } from '../utils/logger';
 
 const useWebSocketWithFallback = (sessionId) => {
   const { user, isAuthenticated } = useAuth();
@@ -20,7 +21,7 @@ const useWebSocketWithFallback = (sessionId) => {
       return;
     }
 
-    console.log('Starting polling fallback for notifications');
+    logger.info('Starting polling fallback for notifications');
     setIsPolling(true);
 
     const poll = async () => {
@@ -59,12 +60,12 @@ const useWebSocketWithFallback = (sessionId) => {
       pollingIntervalRef.current = null;
     }
     setIsPolling(false);
-    console.log('Stopped polling fallback');
+    logger.info('Stopped polling fallback');
   }, []);
 
   const connectWebSocket = useCallback(() => {
     if (!sessionId || !isAuthenticated || !user) {
-      console.log('WebSocket connection skipped - not authenticated or no session');
+      logger.debug('WebSocket connection skipped - not authenticated or no session');
       return;
     }
 
@@ -85,7 +86,7 @@ const useWebSocketWithFallback = (sessionId) => {
       wsUrl = `ws://localhost:8001/ws/${sessionId}?user_id=${user.user_id}`;
     }
     
-    console.log('Attempting WebSocket connection:', wsUrl);
+    logger.websocket.connect('Attempting connection:', wsUrl);
 
     try {
       const ws = new WebSocket(wsUrl);
@@ -93,14 +94,14 @@ const useWebSocketWithFallback = (sessionId) => {
 
       const connectionTimeout = setTimeout(() => {
         if (ws.readyState !== WebSocket.OPEN) {
-          console.log('WebSocket connection timeout, falling back to polling');
+          logger.websocket.error('Connection timeout, falling back to polling');
           ws.close();
           startPolling();
         }
       }, 5000); // 5 second timeout
 
       ws.onopen = () => {
-        console.log('WebSocket connected successfully');
+        logger.websocket.connect('Connected successfully');
         clearTimeout(connectionTimeout);
         setIsConnected(true);
         stopPolling(); // Stop polling if WebSocket works
@@ -110,7 +111,7 @@ const useWebSocketWithFallback = (sessionId) => {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('WebSocket message received:', data);
+          logger.websocket.message('Message received:', data);
           
           // Add notification for display (skip connection messages)
           if (data.type !== 'connected' && data.type !== 'owner_connected' && data.type !== 'echo') {
@@ -122,7 +123,7 @@ const useWebSocketWithFallback = (sessionId) => {
       };
 
       ws.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
+        logger.websocket.disconnect('Disconnected:', event.code, event.reason);
         clearTimeout(connectionTimeout);
         setIsConnected(false);
         websocketRef.current = null;
@@ -130,14 +131,14 @@ const useWebSocketWithFallback = (sessionId) => {
         // Attempt to reconnect if not intentionally closed
         if (event.code !== 1000 && reconnectAttemptsRef.current < maxReconnectAttempts) {
           const timeout = Math.pow(2, reconnectAttemptsRef.current) * 1000; // Exponential backoff
-          console.log(`Attempting WebSocket reconnect in ${timeout}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
+          logger.websocket.connect(`Reconnecting in ${timeout}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts})`);
           
           reconnectTimeoutRef.current = setTimeout(() => {
             reconnectAttemptsRef.current++;
             connectWebSocket();
           }, timeout);
         } else {
-          console.log('Max WebSocket reconnect attempts reached, falling back to polling');
+          logger.websocket.error('Max reconnect attempts reached, falling back to polling');
           startPolling();
         }
       };
@@ -148,7 +149,7 @@ const useWebSocketWithFallback = (sessionId) => {
         
         // Immediately fall back to polling on error
         if (reconnectAttemptsRef.current >= maxReconnectAttempts - 1) {
-          console.log('WebSocket error, falling back to polling');
+          logger.websocket.error('WebSocket error, falling back to polling');
           startPolling();
         }
       };

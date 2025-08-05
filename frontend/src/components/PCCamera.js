@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { devLog, devWarn, devError } from '../utils/helpers';
+import { devLog, devWarn, devError } from '../utils/logger';
 import { formatFileSize } from '../utils/i18nHelpers';
 
 const PCCamera = ({ 

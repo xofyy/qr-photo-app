@@ -44,7 +44,6 @@ const UnifiedMenu = () => {
     i18n.changeLanguage(lang);
   };
 
-  const currentLanguage = i18n.language || 'en';
   const languages = [
     { 
       code: 'en', 
@@ -59,6 +58,22 @@ const UnifiedMenu = () => {
       flagAlt: 'Turkey Flag'
     }
   ];
+
+  // Handle compound language codes like 'tr-TR' -> 'tr'
+  const getCurrentLanguage = () => {
+    let langCode = i18n.language || localStorage.getItem('i18nextLng') || 'en';
+    
+    // Handle compound codes like 'tr-TR' -> 'tr'
+    if (langCode.includes('-')) {
+      langCode = langCode.split('-')[0];
+    }
+    
+    // Language code cleaned and ready to use
+    
+    return langCode;
+  };
+  
+  const currentLanguage = getCurrentLanguage();
 
   return (
     <div className="relative" ref={menuRef}>
@@ -158,12 +173,24 @@ const UnifiedMenu = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
               </svg>
               <div className="flex items-center space-x-2 flex-1">
-                <img 
-                  src={languages.find(lang => lang.code === currentLanguage)?.flagSrc} 
-                  alt={languages.find(lang => lang.code === currentLanguage)?.flagAlt}
-                  className="w-5 h-5 rounded-full border border-gray-200 dark:border-dark-600 shadow-sm"
-                />
-                <span>{languages.find(lang => lang.code === currentLanguage)?.name}</span>
+                {(() => {
+                  const currentLangData = languages.find(lang => lang.code === currentLanguage) || languages[0];
+                  return (
+                    <>
+                      <img 
+                        src={currentLangData.flagSrc} 
+                        alt={currentLangData.flagAlt}
+                        className="w-5 h-5 rounded-full border border-gray-200 dark:border-dark-600 shadow-sm"
+                        style={{ minWidth: '20px', minHeight: '20px', objectFit: 'cover' }}
+                        onError={(e) => {
+                          // Hide broken flag images gracefully
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                      <span>{currentLangData.name}</span>
+                    </>
+                  );
+                })()}
               </div>
               <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
