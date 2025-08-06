@@ -19,9 +19,12 @@ const Layout = ({ children }) => {
     isNotificationPanelOpen, 
     openNotificationPanel, 
     closeNotificationPanel,
+    toggleNotificationPanel,
     markAsRead,
     clearAllNotifications,
-    addNotification
+    addNotification,
+    isReady: notificationReady,
+    messageQueue: queuedMessages
   } = useNotifications();
   
   // Layout-level WebSocket management (MASTER CONTROLLER)
@@ -74,23 +77,33 @@ const Layout = ({ children }) => {
     manageLayoutWebSocket();
   }, [isAuthenticated, user, connectToSessions, disconnectAll]);
 
-  // Register the stable message handler ONCE using refs
+  // Register the stable message handler ONCE using refs - WITH READINESS CHECK
   useEffect(() => {
-    if (!addMessageHandler) {
+    if (!addMessageHandler || !notificationReady) {
+      console.log('Layout: Waiting for message handler and notification readiness...', {
+        hasHandler: !!addMessageHandler,
+        notificationReady,
+        queuedMessages
+      });
       return;
     }
 
-    // Create a truly stable handler that uses refs
+    console.log('Layout: Registering WebSocket message handler (notification context ready)');
+
+    // Create a truly stable handler that uses refs AND checks readiness
     const trulyStableHandler = (message) => {
       if (message.type === 'photo_uploaded') {
         // Use ref to get current addNotification
         const currentAddNotification = addNotificationRef.current;
         if (currentAddNotification) {
           try {
+            console.log('Layout: Processing photo_uploaded message via WebSocket');
             currentAddNotification(message);
           } catch (error) {
-            console.error('Error in message handler:', error);
+            console.error('Error in WebSocket message handler:', error);
           }
+        } else {
+          console.warn('Layout: addNotification ref not available');
         }
       }
     };
@@ -104,7 +117,7 @@ const Layout = ({ children }) => {
       }
       stableMessageHandlerRef.current = null;
     };
-  }, [addMessageHandler]); // Only depends on addMessageHandler, not addNotification
+  }, [addMessageHandler, notificationReady]); // Depend on both handler AND readiness
 
 
   // Cleanup on unmount
@@ -159,7 +172,11 @@ const Layout = ({ children }) => {
               {isAuthenticated && (
                 <div className="relative">
                   <button
-                    onClick={() => isNotificationPanelOpen ? closeNotificationPanel() : openNotificationPanel()}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent event bubbling
+                      toggleNotificationPanel();
+                    }}
+                    data-notification-button
                     className="relative p-2 text-gray-600 dark:text-dark-300 hover:text-gray-900 dark:hover:text-dark-100 hover:bg-gray-100 dark:hover:bg-dark-700/50 rounded-lg transition-all duration-200"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

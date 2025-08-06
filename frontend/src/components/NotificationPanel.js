@@ -30,25 +30,77 @@ const NotificationPanel = ({ notifications, onMarkAsRead, onClearAll, isOpen, on
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (panelRef.current && !panelRef.current.contains(event.target)) {
-        onClose();
+        // Also check if the click was on the notification button itself
+        const notificationButton = event.target.closest('[data-notification-button]');
+        if (!notificationButton) {
+          onClose();
+        }
       }
     };
     
     if (isOpen && !isMobile) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      // Use a slight delay to prevent immediate closure on the same click that opened it
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+      }, 10);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
     }
   }, [isOpen, onClose, isMobile]);
+
+  // Escape key handler
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => document.removeEventListener('keydown', handleEscapeKey);
+    }
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
+    let date;
+    
+    // Check if timestamp is a number (milliseconds) or string
+    if (typeof timestamp === 'number') {
+      date = new Date(timestamp);
+    } else if (typeof timestamp === 'string') {
+      // Backend timestamp'i önce parse et
+      const tempDate = new Date(timestamp);
+      
+      // Backend'den gelen timestamp muhtemelen server local time (UTC+0 server'da UTC+3 zaman)
+      // Bu durumda 3 saat ekleyerek düzeltelim
+      if (timestamp.includes('T') && !timestamp.includes('Z') && !timestamp.includes('+') && !timestamp.includes('-')) {
+        // 3 saat (10800000 ms) ekle çünkü backend server UTC'de çalışıyor ama local time gönderiyor
+        date = new Date(tempDate.getTime() + (3 * 60 * 60 * 1000));
+        
+      } else {
+        date = tempDate;
+      }
+    } else {
+      return t('notifications:time.unknown', 'Unknown time');
+    }
+    
+    // Check if timestamp is valid
+    if (isNaN(date.getTime())) {
+      return t('notifications:time.unknown', 'Unknown time');
+    }
+    
     const now = new Date();
-    const diffMs = now - date;
+    const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
+
 
     if (diffMins < 1) return t('notifications:time.justNow');
     if (diffMins < 60) return t('notifications:time.minutesAgo', { count: diffMins });

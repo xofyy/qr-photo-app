@@ -12,6 +12,7 @@ class WebSocketConnectionManager {
     this.messageHandlers = new Set();
     this.pendingConnections = new Set();
     this.lastMessages = new Map(); // sessionId -> lastMessage
+    this.pendingAcks = new Map(); // sessionId -> Set of sequence numbers awaiting ACK
     
     // Connection pool settings
     this.MAX_CONNECTIONS = 3;
@@ -99,6 +100,18 @@ class WebSocketConnectionManager {
         try {
           const message = JSON.parse(event.data);
           logger.websocket.message(`Layout received message for ${sessionId}:`, message);
+          
+          // Handle ACK messages
+          if (message.type === 'ack' && message.sequence) {
+            this.handleAck(sessionId, message.sequence);
+            return;
+          }
+          
+          // Send ACK if required
+          if (message.ack_required && message.sequence) {
+            this.sendAck(ws, message.sequence);
+          }
+          
           this.broadcastMessage({ ...message, session_id: sessionId });
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -194,6 +207,36 @@ class WebSocketConnectionManager {
     logger.websocket.disconnect(`Layout disconnected from session: ${sessionId}`);
   }
 
+  // Send ACK for received message
+  async sendAck(ws, sequence) {
+    try {
+      const ackMessage = {
+        type: 'ack',
+        sequence: sequence,
+        timestamp: new Date().toISOString()
+      };
+      await ws.send(JSON.stringify(ackMessage));
+      logger.websocket.message(`Sent ACK for sequence ${sequence}`);
+    } catch (error) {
+      console.error('Error sending ACK:', error);
+    }
+  }
+
+  // Handle received ACK
+  handleAck(sessionId, sequence) {
+    const pending = this.pendingAcks.get(sessionId);
+    if (pending && pending.has(sequence)) {
+      pending.delete(sequence);
+      logger.websocket.message(`Received ACK for sequence ${sequence} from session ${sessionId}`);
+    }
+  }
+
+  // Get unacknowledged message count for session
+  getUnackedCount(sessionId) {
+    const pending = this.pendingAcks.get(sessionId);
+    return pending ? pending.size : 0;
+  }
+
   // Disconnect all connections
   async disconnectAll() {
     logger.websocket.disconnect('Layout disconnecting all connections');
@@ -203,6 +246,7 @@ class WebSocketConnectionManager {
     }
     
     this.messageHandlers.clear();
+    this.pendingAcks.clear();
   }
 
   // Get connection summary

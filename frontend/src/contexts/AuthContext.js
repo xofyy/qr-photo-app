@@ -14,6 +14,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
   const [token, setToken] = useState(localStorage.getItem('auth_token'));
 
   // API base URL
@@ -44,20 +45,25 @@ export const AuthProvider = ({ children }) => {
         const userData = await response.json();
         setUser(userData);
         setToken(storedToken);
+        // Store user data for notification context recovery
+        localStorage.setItem('user', JSON.stringify(userData));
         devLog('User authenticated:', userData);
       } else {
         // Token is invalid, remove it
         localStorage.removeItem('auth_token');
+        localStorage.removeItem('user');
         setToken(null);
         setUser(null);
       }
     } catch (error) {
       devError('Auth check failed:', error);
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
       setToken(null);
       setUser(null);
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
   };
 
@@ -85,8 +91,10 @@ export const AuthProvider = ({ children }) => {
     } finally {
       // Clear local state regardless of API call success
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('user');
       setToken(null);
       setUser(null);
+      setInitialized(false);
       devLog('User logged out');
     }
   };
@@ -103,6 +111,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     initiateGoogleLogin,
     loading,
+    initialized,
     isAuthenticated: !!user,
   };
 
