@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { getSession, getQRCode } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDate } from '../utils/i18nHelpers';
-import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { logger } from '../utils/logger';
 
@@ -85,40 +84,36 @@ const SessionInfo = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex justify-center items-center min-h-screen">
-          <LoadingSpinner size="lg" text={t('session:status.loadingInfo')} />
-        </div>
-      </Layout>
+      <div className="flex justify-center items-center min-h-screen">
+        <LoadingSpinner size="lg" text={t('session:status.loadingInfo')} />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Layout>
-        <div className="max-w-2xl mx-auto px-3 sm:px-4 py-8">
-          <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-2xl p-6 text-center">
-            <div className="w-12 h-12 bg-red-100 dark:bg-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-red-900 dark:text-red-300 mb-2">Error Loading Session</h3>
-            <p className="text-red-700 dark:text-red-400 mb-4">{error}</p>
-            <button
-              onClick={goToDashboard}
-              className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-            >
-              Go to Dashboard
-            </button>
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 py-8">
+        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-2xl p-6 text-center">
+          <div className="w-12 h-12 bg-red-100 dark:bg-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 15.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
           </div>
+          <h3 className="text-lg font-semibold text-red-900 dark:text-red-300 mb-2">Error Loading Session</h3>
+          <p className="text-red-700 dark:text-red-400 mb-4">{error}</p>
+          <button
+            onClick={goToDashboard}
+            className="bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            Go to Dashboard
+          </button>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <>
       <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
         {/* Success Header */}
         <div className="text-center mb-8 sm:mb-12">
@@ -312,7 +307,7 @@ const SessionInfo = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

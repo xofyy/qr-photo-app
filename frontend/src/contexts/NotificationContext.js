@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import useWebSocket from '../hooks/useWebSocket';
 import { devLog } from '../utils/logger';
 
 const NotificationContext = createContext();
@@ -81,7 +80,7 @@ export const NotificationProvider = ({ children }) => {
     setUnreadCount(unread);
   };
 
-  const addNotification = (notification) => {
+  const addNotification = useCallback((notification) => {
     const newNotification = {
       ...notification,
       id: Date.now() + Math.random(),
@@ -96,9 +95,9 @@ export const NotificationProvider = ({ children }) => {
       updateUnreadCount(trimmed);
       return trimmed;
     });
-  };
+  }, []);
 
-  const markAsRead = (notificationId) => {
+  const markAsRead = useCallback((notificationId) => {
     setNotifications(prev => {
       const updated = prev.map(n => 
         n.id === notificationId ? { ...n, read: true } : n
@@ -106,31 +105,31 @@ export const NotificationProvider = ({ children }) => {
       updateUnreadCount(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotifications(prev => {
       const updated = prev.map(n => ({ ...n, read: true }));
       updateUnreadCount(updated);
       return updated;
     });
-  };
+  }, []);
 
-  const clearAllNotifications = () => {
+  const clearAllNotifications = useCallback(() => {
     setNotifications([]);
     setUnreadCount(0);
     if (user?.user_id) {
       localStorage.removeItem(STORAGE_KEY);
     }
-  };
+  }, [user?.user_id, STORAGE_KEY]);
 
-  const openNotificationPanel = () => {
+  const openNotificationPanel = useCallback(() => {
     setIsNotificationPanelOpen(true);
-  };
+  }, []);
 
-  const closeNotificationPanel = () => {
+  const closeNotificationPanel = useCallback(() => {
     setIsNotificationPanelOpen(false);
-  };
+  }, []);
 
   const value = {
     notifications,

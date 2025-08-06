@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { getUserSessions } from '../services/api';
+import { useLayoutWebSocketManager } from '../hooks/useLayoutWebSocket';
 import UnifiedMenu from './UnifiedMenu';
 import NotificationPanel from './NotificationPanel';
 import { useTranslation } from 'react-i18next';
@@ -18,8 +20,26 @@ const Layout = ({ children }) => {
     openNotificationPanel, 
     closeNotificationPanel,
     markAsRead,
-    clearAllNotifications
+    clearAllNotifications,
+    addNotification
   } = useNotifications();
+  
+  // Layout-level WebSocket management (MASTER CONTROLLER)
+  const { 
+    connectToSessions, 
+    disconnectAll, 
+    addMessageHandler,
+    connectionSummary 
+  } = useLayoutWebSocketManager();
+
+  // Stable message handler reference
+  const addNotificationRef = useRef(addNotification);
+  const stableMessageHandlerRef = useRef(null);
+
+  // Update ref when addNotification changes
+  useEffect(() => {
+    addNotificationRef.current = addNotification;
+  }, [addNotification]);
 
   // Removed mobile menu and user dropdown states - now handled by UnifiedMenu
 
@@ -27,6 +47,72 @@ const Layout = ({ children }) => {
   const isAdminPage = location.pathname === '/admin';
   const isDashboardPage = location.pathname === '/dashboard';
   const isSessionPage = location.pathname.startsWith('/session/');
+
+  // Layout WebSocket Management (SINGLE SOURCE OF TRUTH)
+  useEffect(() => {
+    const manageLayoutWebSocket = async () => {
+      if (!isAuthenticated || !user) {
+        // User not authenticated, disconnect all
+        await disconnectAll();
+        return;
+      }
+
+      try {
+        // Get user sessions for WebSocket connections
+        const response = await getUserSessions();
+        const sessions = response.data;
+        
+        if (sessions.length > 0) {
+          // Connect to all user sessions with priority
+          await connectToSessions(sessions);
+        }
+      } catch (error) {
+        console.error('Layout WebSocket error loading sessions:', error);
+      }
+    };
+
+    manageLayoutWebSocket();
+  }, [isAuthenticated, user, connectToSessions, disconnectAll]);
+
+  // Register the stable message handler ONCE using refs
+  useEffect(() => {
+    if (!addMessageHandler) {
+      return;
+    }
+
+    // Create a truly stable handler that uses refs
+    const trulyStableHandler = (message) => {
+      if (message.type === 'photo_uploaded') {
+        // Use ref to get current addNotification
+        const currentAddNotification = addNotificationRef.current;
+        if (currentAddNotification) {
+          try {
+            currentAddNotification(message);
+          } catch (error) {
+            console.error('Error in message handler:', error);
+          }
+        }
+      }
+    };
+
+    stableMessageHandlerRef.current = trulyStableHandler;
+    const removeHandler = addMessageHandler(trulyStableHandler);
+    
+    return () => {
+      if (removeHandler) {
+        removeHandler();
+      }
+      stableMessageHandlerRef.current = null;
+    };
+  }, [addMessageHandler]); // Only depends on addMessageHandler, not addNotification
+
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      disconnectAll();
+    };
+  }, [disconnectAll]);
 
   // Click outside handling now managed by UnifiedMenu
 

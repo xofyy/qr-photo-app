@@ -5,12 +5,11 @@ import { getSession, getSessionPhotos, getAllSessionPhotos, uploadPhoto, getMyUp
 import { devLog, devWarn, devError } from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateOnly } from '../utils/i18nHelpers';
-import Layout from '../components/Layout';
 import PCCamera from '../components/PCCamera';
 import MobileCamera from '../components/MobileCamera';
 import NotificationToast from '../components/NotificationToast';
 import ConnectionStatus from '../components/ConnectionStatus';
-import useWebSocketWithFallback from '../hooks/useWebSocketWithFallback';
+import { useLayoutWebSocket } from '../hooks/useLayoutWebSocket';
 
 const SessionPage = () => {
   const { t } = useTranslation(['session', 'common']);
@@ -25,8 +24,19 @@ const SessionPage = () => {
   const [error, setError] = useState('');
   const [userStats, setUserStats] = useState(null);
   
-  // WebSocket with fallback for real-time notifications (only for session owners)
-  const { isConnected, connectionType, isPollingActive } = useWebSocketWithFallback(sessionId);
+  // Use Layout-managed WebSocket connections (READ-ONLY)
+  const { 
+    isConnected, 
+    connectionStatus,
+    connectionType, 
+    isSessionConnected,
+    getSessionStatus 
+  } = useLayoutWebSocket();
+  
+  // Session-specific connection status
+  const isThisSessionConnected = isSessionConnected(sessionId);
+  const thisSessionStatus = getSessionStatus(sessionId);
+  const isPollingActive = false; // Layout system doesn't use polling
   
   // Device detection
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -246,7 +256,7 @@ const SessionPage = () => {
   const canTakeMorePhotos = session.is_active && userStats && userStats.can_upload;
 
   return (
-    <Layout>
+    <>
       {/* Mobile Camera - render outside constrained container for full screen */}
       {isMobile && (
         <MobileCamera
@@ -548,7 +558,7 @@ const SessionPage = () => {
         </div>
       )}
       </div>
-    </Layout>
+    </>
   );
 };
 

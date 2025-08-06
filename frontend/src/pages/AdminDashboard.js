@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { getUserSessions, deleteSession, getSessionPhotos } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateOnly } from '../utils/i18nHelpers';
-import Layout from '../components/Layout';
 import { logger } from '../utils/logger';
 
 const AdminDashboard = () => {
@@ -75,19 +74,17 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex justify-center items-center h-96">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-dark-300">{t('dashboard:admin.loading')}</p>
-          </div>
+      <div className="flex justify-center items-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-dark-300">{t('dashboard:admin.loading')}</p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <>
       <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-8">
@@ -316,7 +313,7 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </>
   );
 };
 

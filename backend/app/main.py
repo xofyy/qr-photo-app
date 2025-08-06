@@ -20,7 +20,8 @@ from app.utils.zip_generator import create_photos_zip, create_empty_session_zip
 from app.utils.logger import safe_log
 from app.auth import (
     oauth, create_access_token, get_current_user, require_authentication,
-    get_current_user_optional, get_google_user_info, generate_user_id, GOOGLE_CLIENT_ID, exchange_code_for_token
+    get_current_user_optional, get_google_user_info, generate_user_id, GOOGLE_CLIENT_ID, exchange_code_for_token,
+    validate_websocket_token
 )
 from app.schemas.user import UserCreate, UserResponse, Token
 from app.websocket_manager import websocket_manager
@@ -134,9 +135,9 @@ async def shutdown_db_client():
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
     """WebSocket endpoint for real-time notifications (owners only)"""
     try:
-        # Get user_id from query parameters
+        # Get authentication token from query parameters
         query_params = dict(websocket.query_params)
-        user_id = query_params.get('user_id')
+        token = query_params.get('token')
         
         # Validate session exists
         db_session = await crud.get_session(session_id=session_id)
@@ -144,25 +145,67 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
             await websocket.close(code=1008, reason="Session not found")
             return
         
-        # Connect with user_id if provided (for owners)
+        user = None
+        user_id = None
+        
+        # Validate JWT token if provided
+        if token:
+            user = await validate_websocket_token(token)
+            if user:
+                user_id = user.get('user_id')
+                # Verify user is the session owner
+                if user_id != db_session.get('owner_id'):
+                    await websocket.close(code=1003, reason="Not session owner")
+                    return
+            else:
+                await websocket.close(code=1008, reason="Invalid token")
+                return
+        else:
+            # Anonymous connection - allow but don't store for notifications
+            safe_log(f"Anonymous WebSocket connection to session {session_id}", 'debug')
+        
+        # Connect with user_id if authenticated and is session owner
         await websocket_manager.connect(websocket, session_id, user_id)
         
         # Send welcome message
         message_type = "owner_connected" if user_id else "connected"
-        await websocket_manager.send_personal_message(
-            f'{{"type": "{message_type}", "session_id": "{session_id}", "message": "Connected to session notifications"}}',
-            websocket
-        )
+        welcome_data = {
+            "type": message_type,
+            "session_id": session_id,
+            "message": "Connected to session notifications",
+            "authenticated": bool(user_id)
+        }
+        await websocket_manager.send_enhanced_message(welcome_data, websocket)
         
         try:
             while True:
                 # Keep connection alive and handle any incoming messages
                 data = await websocket.receive_text()
-                # Echo back any received messages (for testing/debugging)
-                await websocket_manager.send_personal_message(
-                    f'{{"type": "echo", "message": "Received: {data}"}}',
-                    websocket
-                )
+                
+                # Parse message for potential heartbeat
+                try:
+                    import json
+                    message = json.loads(data)
+                    if message.get("type") == "ping":
+                        # Update heartbeat timestamp
+                        websocket_manager.update_heartbeat(websocket)
+                        
+                        # Send pong response with enhanced message
+                        pong_data = {"type": "pong"}
+                        await websocket_manager.send_enhanced_message(pong_data, websocket)
+                    elif message.get("type") == "ack":
+                        # Handle message acknowledgments
+                        sequence = message.get("sequence")
+                        safe_log(f"Received acknowledgment for sequence {sequence}", 'debug')
+                    else:
+                        # Echo back other messages (for testing/debugging)
+                        echo_data = {"type": "echo", "message": f"Received: {data}"}
+                        await websocket_manager.send_enhanced_message(echo_data, websocket)
+                except json.JSONDecodeError:
+                    # Handle non-JSON messages
+                    echo_data = {"type": "echo", "message": f"Received non-JSON: {data}"}
+                    await websocket_manager.send_enhanced_message(echo_data, websocket)
+                    
         except WebSocketDisconnect:
             websocket_manager.disconnect(websocket)
             

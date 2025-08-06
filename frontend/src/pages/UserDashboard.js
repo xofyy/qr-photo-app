@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { createSession, getQRCode, getUserSessions, updateSessionPhotoLimit, getSessionUserStats, downloadSessionPhotos } from '../services/api';
 import { formatDateOnly } from '../utils/i18nHelpers';
-import Layout from '../components/Layout';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ConnectionStatus from '../components/ConnectionStatus';
-import useDashboardWebSocket from '../hooks/useDashboardWebSocket';
+import { useLayoutWebSocket } from '../hooks/useLayoutWebSocket';
 import { logger } from '../utils/logger';
 
 const UserDashboard = () => {
@@ -21,8 +19,30 @@ const UserDashboard = () => {
   const { user, token, logout } = useAuth();
   const navigate = useNavigate();
   
-  // WebSocket connections for real-time notifications
-  const { connectedSessions } = useDashboardWebSocket(userSessions);
+  // Use Layout-managed WebSocket connections (READ-ONLY)
+  const { 
+    connectedSessions, 
+    connectionStatus, 
+    isConnected,
+    totalConnections,
+    isSessionConnected,
+    getSessionStatus
+  } = useLayoutWebSocket();
+
+  // Connection summary for UI display
+  const getConnectionSummary = useMemo(() => {
+    const sessionIds = userSessions.map(s => s.session_id);
+    const connectedCount = sessionIds.filter(id => isSessionConnected(id)).length;
+    
+    return {
+      totalSessions: sessionIds.length,
+      connectedCount,
+      connectionRate: sessionIds.length > 0 ? connectedCount / sessionIds.length : 0,
+      isFullyConnected: connectedCount === sessionIds.length && sessionIds.length > 0,
+      isPartiallyConnected: connectedCount > 0 && connectedCount < sessionIds.length,
+      isDisconnected: connectedCount === 0
+    };
+  }, [userSessions, isSessionConnected]);
 
   // API base URL
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8001';
@@ -211,16 +231,14 @@ const UserDashboard = () => {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex justify-center items-center h-96">
-          <LoadingSpinner size="lg" text={t('dashboard:sessions.loading')} />
-        </div>
-      </Layout>
+      <div className="flex justify-center items-center h-96">
+        <LoadingSpinner size="lg" text={t('dashboard:sessions.loading')} />
+      </div>
     );
   }
 
   return (
-    <Layout>
+    <>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -290,7 +308,7 @@ const UserDashboard = () => {
               <div className="w-16 h-16 sm:w-20 sm:h-20 bg-blue-100 dark:bg-blue-500/20 rounded-2xl sm:rounded-3xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
                 <svg className="w-8 h-8 sm:w-10 sm:h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 616 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
               <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-dark-50 mb-3 sm:mb-4">{t('dashboard:sessions.noSessions')}</h3>
@@ -541,7 +559,7 @@ const UserDashboard = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </>
   );
 };
 

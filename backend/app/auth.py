@@ -120,6 +120,30 @@ async def get_current_user_optional(token_data: Optional[TokenData] = Depends(ve
     return user
 
 
+async def validate_websocket_token(token: str) -> Optional[dict]:
+    """Validate JWT token for WebSocket connections"""
+    if not token:
+        return None
+    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        email: str = payload.get("email")
+        
+        if user_id is None:
+            return None
+        
+        # Get user from database to ensure they still exist
+        user = await crud.get_user_by_id(user_id)
+        if user is None:
+            return None
+            
+        return user
+    except JWTError as e:
+        safe_log(f"WebSocket JWT validation failed: {e}", 'warning')
+        return None
+
+
 async def get_google_user_info(access_token: str) -> GoogleUserInfo:
     """Get user info from Google using access token"""
     async with httpx.AsyncClient() as client:

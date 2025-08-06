@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createSession, getQRCode } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import Layout from '../components/Layout';
 import QRScannerComponent from '../components/QRScanner';
 import { logger } from '../utils/logger';
 
@@ -149,8 +148,7 @@ const Home = () => {
   };
 
   return (
-    <Layout>
-      <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:py-12">
+    <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:py-12">
         {/* Hero Section */}
         <div className="text-center mb-10 sm:mb-16">
           <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-100 dark:bg-dark-700 text-blue-800 dark:text-dark-100 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
@@ -427,8 +425,7 @@ const Home = () => {
           onScanSuccess={handleQRScanSuccess}
         />
 
-      </div>
-    </Layout>
+    </div>
   );
 };
 
