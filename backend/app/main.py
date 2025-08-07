@@ -1,5 +1,6 @@
 ﻿from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse, StreamingResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import os
@@ -25,7 +26,7 @@ from app.auth import (
 )
 from app.schemas.user import UserCreate, UserResponse, Token
 from app.websocket_manager import websocket_manager
-from app.middleware.rate_limiter import create_rate_limit_middleware
+from app.middleware.rate_limiter import create_rate_limit_middleware, api_rate_limiter
 
 # Initialize Cloudinary
 cloudinary.config(
@@ -69,23 +70,51 @@ app.add_middleware(
     allow_headers=[
         "Authorization",
         "Content-Type", 
-        "Accept",
-        "Origin",
-        "User-Agent",
-        "DNT",
-        "Cache-Control",
-        "X-Mx-ReqToken",
-        "Keep-Alive",
-        "X-Requested-With",
-        "If-Modified-Since"
+        "Accept"
     ],
     expose_headers=["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
     max_age=86400,  # 24 hours
 )
 
-# Add rate limiting middleware
-rate_limit_middleware = create_rate_limit_middleware(max_requests=100, window_seconds=3600)
-app.middleware("http")(rate_limit_middleware)
+# Add endpoint-specific rate limiting middleware
+async def endpoint_rate_limit_middleware(request: Request, call_next):
+    """Endpoint-specific rate limiting middleware"""
+    # Skip rate limiting for certain paths
+    skip_paths = ["/health", "/docs", "/openapi.json", "/favicon.ico", "/"]
+    if request.url.path in skip_paths:
+        response = await call_next(request)
+        return response
+    
+    # Get endpoint-specific limits
+    max_requests, window_seconds = api_rate_limiter.get_limits_for_endpoint(
+        request.url.path, request.method
+    )
+    
+    # Check rate limit
+    is_allowed, info = api_rate_limiter.limiter.is_allowed(request, max_requests, window_seconds)
+    
+    if not is_allowed:
+        return JSONResponse(
+            status_code=429,
+            content=info,
+            headers={
+                "Retry-After": str(info.get("retry_after", window_seconds)),
+                "X-RateLimit-Limit": str(max_requests),
+                "X-RateLimit-Window": str(window_seconds)
+            }
+        )
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Add rate limit headers to response
+    response.headers["X-RateLimit-Limit"] = str(info["limit"])
+    response.headers["X-RateLimit-Remaining"] = str(info["remaining"])
+    response.headers["X-RateLimit-Reset"] = str(info["reset_time"])
+    
+    return response
+
+app.middleware("http")(endpoint_rate_limit_middleware)
 
 @app.get("/")
 async def root():
@@ -125,6 +154,34 @@ async def startup_db_client():
     safe_log(f"☁️ Cloudinary: {'✅ Configured' if os.getenv('CLOUDINARY_CLOUD_NAME') else '❌ Not configured'}", 'info')
     safe_log(f"🔐 Google OAuth: {'✅ Configured' if os.getenv('GOOGLE_CLIENT_ID') else '❌ Not configured'}", 'info')
     safe_log("✅ FastAPI startup complete!", 'info')
+
+# Global exception handler for production
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Global exception handler that hides stack traces in production"""
+    is_production = os.getenv('NODE_ENV', '').lower() == 'production'
+    
+    if is_production:
+        # In production, return generic error without exposing details
+        safe_log(f"Internal server error: {str(exc)}", 'error')
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": "Internal server error",
+                "error_code": "INTERNAL_ERROR"
+            }
+        )
+    else:
+        # In development, show full details for debugging
+        safe_log(f"Development error: {traceback.format_exc()}", 'error')
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": str(exc),
+                "error_code": "INTERNAL_ERROR",
+                "traceback": traceback.format_exc() if not is_production else None
+            }
+        )
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

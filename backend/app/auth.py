@@ -27,7 +27,7 @@ if len(SECRET_KEY) < 32:
 
 # Check if secret key has sufficient entropy (basic check)
 if SECRET_KEY.isalnum() and len(set(SECRET_KEY)) < 8:
-    safe_log("⚠️  WARNING: JWT_SECRET_KEY appears to have low entropy. Consider using a more random key.", 'warning')
+    raise ValueError("JWT_SECRET_KEY has low entropy. Must contain at least 8 different characters and include special characters.")
 
 # Ensure secret key is not a common weak pattern
 weak_patterns = ['password', '123456', 'secret', 'key', 'token']
@@ -144,22 +144,6 @@ async def validate_websocket_token(token: str) -> Optional[dict]:
         return None
 
 
-async def get_google_user_info(access_token: str) -> GoogleUserInfo:
-    """Get user info from Google using access token"""
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            "https://www.googleapis.com/oauth2/v2/userinfo",
-            headers={"Authorization": f"Bearer {access_token}"}
-        )
-        
-        if response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to fetch user info from Google"
-            )
-        
-        user_data = response.json()
-        return GoogleUserInfo(**user_data)
 
 
 def generate_user_id() -> str:

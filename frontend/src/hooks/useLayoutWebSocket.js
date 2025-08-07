@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { logger } from '../utils/logger';
+import { logger, devLog, devError } from '../utils/logger';
 
 /**
  * Centralized WebSocket manager for Layout-based architecture
@@ -32,7 +32,7 @@ class WebSocketConnectionManager {
       try {
         handler(message);
       } catch (error) {
-        console.error('Error in message handler:', error);
+        devError('Error in message handler:', error);
       }
     });
   }
@@ -114,7 +114,7 @@ class WebSocketConnectionManager {
           
           this.broadcastMessage({ ...message, session_id: sessionId });
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          devError('Error parsing WebSocket message:', error);
         }
       };
 
@@ -143,7 +143,7 @@ class WebSocketConnectionManager {
 
       return ws;
     } catch (error) {
-      console.error(`Error connecting to session ${sessionId}:`, error);
+      devError(`Error connecting to session ${sessionId}:`, error);
       this.connectionStates.set(sessionId, 'error');
       this.pendingConnections.delete(sessionId);
       throw error;
@@ -218,7 +218,7 @@ class WebSocketConnectionManager {
       await ws.send(JSON.stringify(ackMessage));
       logger.websocket.message(`Sent ACK for sequence ${sequence}`);
     } catch (error) {
-      console.error('Error sending ACK:', error);
+      devError('Error sending ACK:', error);
     }
   }
 
@@ -296,7 +296,7 @@ export const useLayoutWebSocketManager = () => {
       await Promise.allSettled(promises);
       updateSummary();
     } catch (error) {
-      console.error('Error connecting to sessions:', error);
+      devError('Error connecting to sessions:', error);
     }
   }, [updateSummary]);
 

@@ -7,6 +7,7 @@ import { useLayoutWebSocketManager } from '../hooks/useLayoutWebSocket';
 import UnifiedMenu from './UnifiedMenu';
 import NotificationPanel from './NotificationPanel';
 import { useTranslation } from 'react-i18next';
+import { devLog, devError } from '../utils/logger';
 
 const Layout = ({ children }) => {
   const { t } = useTranslation('common');
@@ -70,7 +71,7 @@ const Layout = ({ children }) => {
           await connectToSessions(sessions);
         }
       } catch (error) {
-        console.error('Layout WebSocket error loading sessions:', error);
+        devError('Layout WebSocket error loading sessions:', error);
       }
     };
 
@@ -80,7 +81,7 @@ const Layout = ({ children }) => {
   // Register the stable message handler ONCE using refs - WITH READINESS CHECK
   useEffect(() => {
     if (!addMessageHandler || !notificationReady) {
-      console.log('Layout: Waiting for message handler and notification readiness...', {
+      devLog('Layout: Waiting for message handler and notification readiness...', {
         hasHandler: !!addMessageHandler,
         notificationReady,
         queuedMessages
@@ -88,7 +89,7 @@ const Layout = ({ children }) => {
       return;
     }
 
-    console.log('Layout: Registering WebSocket message handler (notification context ready)');
+    devLog('Layout: Registering WebSocket message handler (notification context ready)');
 
     // Create a truly stable handler that uses refs AND checks readiness
     const trulyStableHandler = (message) => {
@@ -97,10 +98,10 @@ const Layout = ({ children }) => {
         const currentAddNotification = addNotificationRef.current;
         if (currentAddNotification) {
           try {
-            console.log('Layout: Processing photo_uploaded message via WebSocket');
+            devLog('Layout: Processing photo_uploaded message via WebSocket');
             currentAddNotification(message);
           } catch (error) {
-            console.error('Error in WebSocket message handler:', error);
+            devError('Error in WebSocket message handler:', error);
           }
         } else {
           console.warn('Layout: addNotification ref not available');

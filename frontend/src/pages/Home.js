@@ -4,7 +4,7 @@ import { createSession, getQRCode } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import QRScannerComponent from '../components/QRScanner';
-import { logger } from '../utils/logger';
+import { logger, devLog, devError } from '../utils/logger';
 
 const Home = () => {
   const { t } = useTranslation(['home', 'common']);
@@ -40,7 +40,7 @@ const Home = () => {
         setSessionUrl(qrResponse.data.session_url);
       }
     } catch (error) {
-      console.error('Error creating session:', error);
+      devError('Error creating session:', error);
     } finally {
       setIsLoading(false);
     }
@@ -120,7 +120,7 @@ const Home = () => {
       }
       
     } catch (error) {
-      console.error('Error processing scanned content:', error);
+      devError('Error processing scanned content:', error);
       
       // Not a valid URL - show the raw content and ask user
       const userChoice = window.confirm(

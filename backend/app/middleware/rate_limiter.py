@@ -139,7 +139,7 @@ class APIRateLimiter:
         
         # Authentication endpoints
         elif "/auth" in path:
-            return 5, 300   # 5 auth attempts per 5 minutes
+            return 50, 300   # 5 auth attempts per 5 minutes
         
         # Session creation
         elif path.startswith("/sessions") and method == "POST":

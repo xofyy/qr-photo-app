@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
-import { devLog } from '../utils/logger';
+import { devLog, devError } from '../utils/logger';
 
 const NotificationContext = createContext();
 
@@ -73,7 +73,7 @@ export const NotificationProvider = ({ children }) => {
       devLog('NotificationContext: Ready for WebSocket messages');
       
     } catch (error) {
-      console.error('Error loading notifications from storage:', error);
+      devError('Error loading notifications from storage:', error);
       setNotifications([]);
       setUnreadCount(0);
       setIsReady(true); // Still mark as ready even if loading failed
@@ -112,7 +112,7 @@ export const NotificationProvider = ({ children }) => {
         devLog('NotificationContext: Removed from storage (no notifications) key:', storageKey);
       }
     } catch (error) {
-      console.error('Error saving notifications to storage:', error);
+      devError('Error saving notifications to storage:', error);
       // If localStorage is full, try to free up space by clearing old notifications
       if (error.name === 'QuotaExceededError') {
         devLog('NotificationContext: Storage quota exceeded, clearing notifications');
@@ -139,7 +139,7 @@ export const NotificationProvider = ({ children }) => {
         try {
           await addNotificationWithRetry(queuedMessage, 3);
         } catch (error) {
-          console.error('Failed to process queued notification after retries:', error);
+          devError('Failed to process queued notification after retries:', error);
         }
       }
       setMessageQueue([]); // Clear queue after processing
@@ -189,7 +189,7 @@ export const NotificationProvider = ({ children }) => {
         return; // Success, exit retry loop
         
       } catch (error) {
-        console.error(`Attempt ${attempt} failed to add notification:`, error);
+        devError(`Attempt ${attempt} failed to add notification:`, error);
         
         if (attempt === maxRetries) {
           throw error; // Final attempt failed
@@ -212,7 +212,7 @@ export const NotificationProvider = ({ children }) => {
     
     // Process immediately if ready
     addNotificationWithRetry(notification, 3).catch(error => {
-      console.error('Failed to add notification after retries:', error);
+      devError('Failed to add notification after retries:', error);
     });
   }, [isReady, addNotificationWithRetry]);
 
