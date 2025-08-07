@@ -85,13 +85,30 @@ async def endpoint_rate_limit_middleware(request: Request, call_next):
         response = await call_next(request)
         return response
     
-    # Get endpoint-specific limits
+    # Try to extract user ID from JWT token for authenticated rate limiting
+    user_id = None
+    auth_header = request.headers.get("authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            from jose import jwt
+            from app.auth import SECRET_KEY, ALGORITHM
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id = payload.get("sub")
+        except Exception:
+            # Invalid token, treat as anonymous
+            pass
+    
+    # Get endpoint-specific limits with user context
     max_requests, window_seconds = api_rate_limiter.get_limits_for_endpoint(
-        request.url.path, request.method
+        request.url.path, request.method, user_id
     )
     
-    # Check rate limit
-    is_allowed, info = api_rate_limiter.limiter.is_allowed(request, max_requests, window_seconds)
+    # Check rate limit with user context
+    is_allowed, info = api_rate_limiter.limiter.is_allowed(request, max_requests, window_seconds, user_id)
+    
+    # Record analytics
+    api_rate_limiter.record_request(request.url.path, user_id, blocked=not is_allowed)
     
     if not is_allowed:
         return JSONResponse(
@@ -142,6 +159,19 @@ async def health_check():
             "error": str(e),
             "timestamp": datetime.utcnow().isoformat()
         }
+
+@app.get("/debug/rate-limit-stats")
+async def get_rate_limit_stats():
+    """Get rate limiting statistics (development/admin only)"""
+    # Only allow in development or for admin users
+    if os.getenv('NODE_ENV', '').lower() not in ['development', 'dev']:
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    return {
+        "message": "Rate Limiting Analytics",
+        "data": api_rate_limiter.get_analytics_summary(),
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 @app.on_event("startup")
 async def startup_db_client():
