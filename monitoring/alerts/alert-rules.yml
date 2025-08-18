@@ -1,0 +1,105 @@
+groups:
+  - name: qr-photoshare-alerts
+    rules:
+      # Application Health Alerts
+      - alert: ServiceDown
+        expr: up{job=~"qr-backend|qr-frontend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} service is down"
+          description: "{{ $labels.job }} has been down for more than 1 minute"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status_code=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate on {{ $labels.job }}"
+          description: "Error rate is {{ $value }} errors per second"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time on {{ $labels.job }}"
+          description: "95th percentile response time is {{ $value }}s"
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}%"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}%"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Only {{ $value }}% disk space remaining"
+
+      # Business Logic Alerts
+      - alert: DatabaseConnectionDown
+        expr: qr_database_connection_status == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection is down"
+          description: "Cannot connect to MongoDB database"
+
+      - alert: CloudinaryConnectionDown
+        expr: qr_cloudinary_connection_status == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Cloudinary connection is down"
+          description: "Cannot connect to Cloudinary service"
+
+      - alert: HighRateLimitHits
+        expr: rate(rate_limit_hits_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate limit hits"
+          description: "Rate limit being hit {{ $value }} times per second"
+
+      # Security Alerts
+      - alert: SuspiciousActivity
+        expr: rate(http_requests_total{status_code="401"}[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of unauthorized requests"
+          description: "{{ $value }} unauthorized requests per second"
+
+      - alert: TooManyFailedUploads
+        expr: rate(qr_photo_upload_failures_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High photo upload failure rate"
+          description: "{{ $value }} photo upload failures per second"

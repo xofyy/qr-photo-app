@@ -1,0 +1,167 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "title": "QR PhotoShare - System Overview",
+      "type": "row",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "title": "Application Health",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"qr-backend\"}",
+          "legendFormat": "Backend Status",
+          "refId": "A"
+        },
+        {
+          "expr": "up{job=\"qr-frontend\"}",
+          "legendFormat": "Frontend Status", 
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Response Time",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "http_request_duration_seconds{job=\"qr-backend\"}",
+          "legendFormat": "Backend Response Time",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Request Rate",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{job=\"qr-backend\"}[5m])",
+          "legendFormat": "Requests/sec",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Error Rate",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{job=\"qr-backend\",status_code=~\"5..\"}[5m])",
+          "legendFormat": "5xx Errors/sec",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "System Resources",
+      "type": "row",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "title": "CPU Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU Usage %",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Memory Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+          "legendFormat": "Memory Usage %",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Business Metrics",
+      "type": "row",
+      "collapsed": false,
+      "panels": []
+    },
+    {
+      "title": "Active Sessions",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "qr_active_sessions_total",
+          "legendFormat": "Active Sessions",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Photos Uploaded",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(qr_photos_uploaded_total[5m])",
+          "legendFormat": "Photos/sec",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 16,
+  "style": "dark",
+  "tags": ["qr-photoshare"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "QR PhotoShare Dashboard",
+  "uid": "qr-photoshare",
+  "version": 1
+}

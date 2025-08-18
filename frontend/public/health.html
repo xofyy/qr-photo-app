@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR PhotoShare Frontend Health</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>QR PhotoShare Frontend</h1>
+    <p>Status: <span style="color: green;">Healthy</span></p>
+    <p>Timestamp: <span id="timestamp"></span></p>
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toISOString();
+    </script>
+</body>
+</html>

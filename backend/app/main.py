@@ -139,26 +139,88 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for monitoring"""
+    """Basic health check endpoint for load balancers"""
+    return {"status": "healthy", "timestamp": datetime.utcnow().isoformat()}
+
+@app.get("/health/detailed")
+async def detailed_health_check():
+    """Comprehensive health check with all dependencies"""
     try:
+        health_status = {
+            "status": "healthy",
+            "timestamp": datetime.utcnow().isoformat(),
+            "version": "1.0.0",
+            "environment": os.getenv("NODE_ENV", "development"),
+            "services": {}
+        }
+        
         # Test database connection
+        try:
+            from app.database import get_database
+            db = get_database()
+            start_time = datetime.utcnow()
+            await db.admin.command('ping')
+            response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            health_status["services"]["database"] = {
+                "status": "healthy",
+                "response_time_ms": round(response_time, 2)
+            }
+        except Exception as e:
+            health_status["services"]["database"] = {
+                "status": "unhealthy",
+                "error": str(e)
+            }
+            health_status["status"] = "degraded"
+        
+        # Test Cloudinary connection
+        try:
+            start_time = datetime.utcnow()
+            cloudinary.api.ping()
+            response_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            health_status["services"]["cloudinary"] = {
+                "status": "healthy",
+                "response_time_ms": round(response_time, 2)
+            }
+        except Exception as e:
+            health_status["services"]["cloudinary"] = {
+                "status": "unhealthy",
+                "error": str(e)
+            }
+            health_status["status"] = "degraded"
+        
+        # System resources
+        import psutil
+        health_status["system"] = {
+            "cpu_percent": psutil.cpu_percent(),
+            "memory_percent": psutil.virtual_memory().percent,
+            "disk_percent": psutil.disk_usage('/').percent
+        }
+        
+        return health_status
+        
+    except Exception as e:
+        return {
+            "status": "unhealthy",
+            "timestamp": datetime.utcnow().isoformat(),
+            "error": str(e)
+        }
+
+@app.get("/health/ready")
+async def readiness_check():
+    """Kubernetes readiness probe"""
+    try:
+        # Test critical dependencies
         from app.database import get_database
         db = get_database()
         await db.admin.command('ping')
-        
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "version": "1.0.0",
-            "timestamp": datetime.utcnow().isoformat()
-        }
-    except Exception as e:
-        return {
-            "status": "unhealthy", 
-            "database": "disconnected",
-            "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
-        }
+        return {"status": "ready"}
+    except Exception:
+        raise HTTPException(status_code=503, detail="Service not ready")
+
+@app.get("/health/live")
+async def liveness_check():
+    """Kubernetes liveness probe"""
+    return {"status": "alive", "timestamp": datetime.utcnow().isoformat()}
 
 @app.get("/debug/rate-limit-stats")
 async def get_rate_limit_stats():

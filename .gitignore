@@ -262,11 +262,18 @@ frontend/dist/
 .env.local
 .env.development
 .env.test
-.env.production
-.env.staging
-.env.example
 backend/.env
 frontend/.env
+
+# Keep example files but not production/staging
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+!backend/.env.production
+!frontend/.env.production
+.env.staging
+backend/.env.staging
+frontend/.env.staging
 
 # Configuration files with secrets
 config.json
@@ -392,6 +399,14 @@ frontend/logs/
 .dockerignore
 docker-compose.override.yml
 
+# Keep CI/CD and production configs
+!.gitlab-ci.yml
+!docker-compose.production.yml
+!docker-compose.staging.yml
+!frontend/Dockerfile
+!backend/Dockerfile
+!frontend/nginx.conf
+
 # ==============================================================================
 # Testing
 # ==============================================================================
@@ -465,3 +480,6 @@ access_token*
 refresh_token*
 DEPLOYMENT.md
 RAILWAY_TROUBLESHOOTING.md
+/backend-nestjs/
+/microservices/
+job-desc.txt

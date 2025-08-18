@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: ${CI_REGISTRY_IMAGE}/frontend:${CI_COMMIT_SHA}
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - qr-staging-network
+    environment:
+      - NODE_ENV=staging
+
+  backend:
+    image: ${CI_REGISTRY_IMAGE}/backend:${CI_COMMIT_SHA}
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - NODE_ENV=staging
+      - MONGODB_URL=${STAGING_MONGODB_URL}
+      - DATABASE_NAME=${STAGING_DATABASE_NAME}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - FRONTEND_URL=${STAGING_FRONTEND_URL}
+      - JWT_SECRET=${STAGING_JWT_SECRET}
+      - GOOGLE_CLIENT_ID=${STAGING_GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${STAGING_GOOGLE_CLIENT_SECRET}
+    networks:
+      - qr-staging-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+networks:
+  qr-staging-network:
+    driver: bridge
