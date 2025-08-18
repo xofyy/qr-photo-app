@@ -36,8 +36,8 @@ backend-test:
     - python -m pytest --cov=app tests/
     - python -m flake8 app/
   artifacts:
-    reports:
-      coverage: backend/coverage.xml
+    paths:
+      - backend/coverage.xml
   only:
     changes:
       - backend/**/*
