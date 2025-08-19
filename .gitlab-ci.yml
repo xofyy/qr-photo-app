@@ -160,6 +160,7 @@ deploy-production:
         export CLOUDINARY_API_KEY='$CLOUDINARY_API_KEY' &&
         export CLOUDINARY_API_SECRET='$CLOUDINARY_API_SECRET' &&
         export FRONTEND_URL='$FRONTEND_URL' &&
+        export BACKEND_URL='$BACKEND_URL' &&
         export JWT_SECRET_KEY='$JWT_SECRET_KEY' &&
         export GOOGLE_CLIENT_ID='$GOOGLE_CLIENT_ID' &&
         export GOOGLE_CLIENT_SECRET='$GOOGLE_CLIENT_SECRET' &&
