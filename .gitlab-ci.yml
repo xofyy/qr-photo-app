@@ -152,7 +152,18 @@ deploy-production:
         docker pull $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA &&
         docker pull $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
         docker-compose -f docker-compose.production.yml down &&
-        CI_COMMIT_SHA=$CI_COMMIT_SHA docker-compose -f docker-compose.production.yml up -d
+        export CI_REGISTRY_IMAGE=$CI_REGISTRY_IMAGE &&
+        export CI_COMMIT_SHA=$CI_COMMIT_SHA &&
+        export MONGODB_URL='$MONGODB_URL' &&
+        export DATABASE_NAME='$DATABASE_NAME' &&
+        export CLOUDINARY_CLOUD_NAME='$CLOUDINARY_CLOUD_NAME' &&
+        export CLOUDINARY_API_KEY='$CLOUDINARY_API_KEY' &&
+        export CLOUDINARY_API_SECRET='$CLOUDINARY_API_SECRET' &&
+        export FRONTEND_URL='$FRONTEND_URL' &&
+        export JWT_SECRET='$JWT_SECRET' &&
+        export GOOGLE_CLIENT_ID='$GOOGLE_CLIENT_ID' &&
+        export GOOGLE_CLIENT_SECRET='$GOOGLE_CLIENT_SECRET' &&
+        docker-compose -f docker-compose.production.yml up -d
       "
   environment:
     name: production
