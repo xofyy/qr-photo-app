@@ -148,6 +148,7 @@ deploy-production:
     - chmod 644 ~/.ssh/known_hosts
   script:
     - ssh $PRODUCTION_USER@$PRODUCTION_HOST "
+        echo '$PRODUCTION_DEPLOY_TOKEN' | docker login registry.gitlab.com -u '$PRODUCTION_DEPLOY_USER' --password-stdin &&
         docker pull $CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHA &&
         docker pull $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHA &&
         docker-compose -f docker-compose.production.yml down &&
