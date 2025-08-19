@@ -9,8 +9,22 @@ COPY package*.json ./
 # Install ALL dependencies (including dev for build)
 RUN npm ci && npm cache clean --force
 
-# Copy source code
-COPY . .
+# Build arguments for environment variables
+ARG REACT_APP_API_URL
+ARG REACT_APP_WS_URL
+ARG REACT_APP_GA_TRACKING_ID
+
+# Set environment variables
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_WS_URL=$REACT_APP_WS_URL
+ENV REACT_APP_GA_TRACKING_ID=$REACT_APP_GA_TRACKING_ID
+ENV REACT_APP_ENV=production
+
+# Copy source code (excluding .env files to prevent build issues)
+COPY src/ ./src/
+COPY public/ ./public/
+COPY tailwind.config.js ./
+COPY postcss.config.js ./
 
 # Build the application
 RUN npm run build
