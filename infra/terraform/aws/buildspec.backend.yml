@@ -24,7 +24,7 @@ phases:
   build:
     commands:
       - "echo \"[build] Docker imajini olusturuyorum...\""
-      - "docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f backend/Dockerfile ."
+      - "docker build -t $IMAGE_REPO_NAME:$IMAGE_TAG -f backend/Dockerfile backend"
       - "docker tag $IMAGE_REPO_NAME:$IMAGE_TAG $ECR_REGISTRY/$IMAGE_REPO_NAME:$IMAGE_TAG"
   post_build:
     commands:
