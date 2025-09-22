@@ -1,0 +1,42 @@
+# Terraform dosyaları
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfstate.lock.info
+.terraform/
+.terraform.lock.hcl
+
+# Terraform değişken dosyaları
+*.tfvars
+*.tfvars.json
+
+# Crash log dosyaları
+crash.log
+crash.*.log
+
+# Override dosyaları
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# CLI yapılandırma dosyaları
+.terraformrc
+terraform.rc
+
+# Credentials ve hassas bilgiler
+credentials.json
+*.pem
+*.key
+service-account.json
+account.json
+
+# Local .terraform dizinleri
+**/.terraform/*
+
+# Local tfplan dosyaları
+*.tfplan
+tfplan
+
+# Logs
+*.log

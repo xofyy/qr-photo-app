@@ -1,0 +1,65 @@
+﻿# Cloud Build pipeline
+# Bu dosya, GitHub tetikleyicisi çalıştığında Docker imajını build edip Artifact
+# Registry'ye push eder ve ardından Cloud Run'a deploy eder. Her değişkenin yanına
+# ne işe yaradığını ve hangi değerleri alabileceğini belirttim.
+substitutions:
+  # _REGION: Cloud Run dağıtımının yapılacağı bölge. Örnek: europe-west1, us-central1.
+  _REGION: europe-west1
+  # _REPOSITORY: Artifact Registry depo adı; Terraform varsayılanı qr-photo-repo.
+  _REPOSITORY: qr-photo-repo
+  # _SERVICE: Deploy edilecek Cloud Run servisinin adı (örn. qr-photo-backend).
+  _SERVICE: qr-photo-backend
+  # _IMAGE_NAME: Docker imaj adı; backend için qr-photo-backend, frontend için farklı olabilir.
+  _IMAGE_NAME: qr-photo-backend
+
+# Build adımlarının uzun sürmesi (dependency install vb.) durumunda süreyi artırabilirsiniz.
+timeout: 1200s
+
+steps:
+  - name: gcr.io/cloud-builders/docker
+    id: Build image
+    # Docker build komutu; repository kökünde backend Dockerfile'ını kullanıyoruz.
+    args:
+      - build
+      - "-t"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA"
+      - "-f"
+      - backend/Dockerfile
+      - .
+
+  - name: gcr.io/cloud-builders/docker
+    id: Push image
+    # Build edilen imajı Artifact Registry'ye gönderir.
+    args:
+      - push
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA"
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: Deploy Cloud Run
+    entrypoint: gcloud
+    # Cloud Run deploy komutu yeni imajı kullanarak servisi günceller.
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA"
+      - --region
+      - ${_REGION}
+      - --allow-unauthenticated
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    id: Tag latest
+    entrypoint: gcloud
+    # Son komut: commit hash'li tag'i latest ile eşleyerek manuel rollback'i kolaylaştırır.
+    args:
+      - artifacts
+      - docker
+      - tags
+      - add
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE_NAME}:latest"
+
+# Cloud Build, bu listeyi kullanarak hangi imajların üretildiğini kaydeder.
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE_NAME}:$SHORT_SHA"

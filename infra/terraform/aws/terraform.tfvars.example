@@ -1,0 +1,35 @@
+﻿# terraform.tfvars.example (AWS)
+# Değerleri ihtiyaçlarınıza göre düzenleyip terraform.tfvars olarak kopyalayın.
+# Her anahtarın yanında kullanım açıklaması yer alır.
+
+project_name = "qr-photo"   # Zorunlu: Kaynak adlarına prefix olacak uygulama adı.
+environment  = "prod"       # Opsiyonel: Ortam etiketi (prod/staging/dev).
+aws_region   = "eu-west-1"  # Opsiyonel: AWS bölgesi (örn. "us-east-1").
+
+# Plain environment değişkenleri; state dosyasına aynen kaydedilir.
+service_env_vars = {
+  "DJANGO_SETTINGS_MODULE" = "backend.settings"
+}
+
+# Secrets Manager'a yazılacak örnek gizli değer; production'da gerçek sırla değiştirin.
+# Map'i boş bırakırsanız ({}), ilgili secret oluşturulmaz.
+service_secrets = {
+  "django-secret-key" = "replace-me"
+}
+
+# Opsiyonel: Tüm kaynaklara uygulanacak ek etiketler; maliyet takibi için önerilir.
+default_tags = {
+  Application = "qr-photo"
+  Environment = "prod"
+}
+# CI/CD ayarlari: CodeBuild/CodePipeline'i etkinlestirmek icin asagidaki degerleri doldurun.
+enable_codebuild       = true
+enable_codepipeline    = true
+codebuild_project_name = "qr-photo-backend-build"
+codebuild_image_repo_name = "qr-photo-prod-backend"
+codepipeline_name      = "qr-photo-backend-pipeline"
+codepipeline_artifact_bucket_name = "qr-photo-artifacts-123456"  # global benzersiz olmalidir.
+codepipeline_codestar_connection_arn = "arn:aws:codestar-connections:eu-central-1:123456789012:connection/xxxx"
+codepipeline_source_repo_owner = "my-github-org"
+codepipeline_source_repo_name  = "qr-photo-app"
+codepipeline_source_branch     = "main"
