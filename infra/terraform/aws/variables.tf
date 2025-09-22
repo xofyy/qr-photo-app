@@ -1,4 +1,4 @@
-﻿# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Değişken Tanımları (AWS)
 # Her değişken için kullanım amacı, örnek değerler/seçenekler ve zorunluluk bilgisi
 # verilmiştir. Varsayılan değeri olan değişkenler isteğe bağlıdır.

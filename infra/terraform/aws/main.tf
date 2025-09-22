@@ -1,4 +1,4 @@
-﻿# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # Terraform infrastructure for QR Photo backend on Amazon Web Services.
 # Bu dosya Fargate tabanli dagitim icin ag (VPC, subnet, SG), container registry
 # (ECR), calistirma ortami (ECS Fargate) ve Application Load Balancer kaynaklarini
@@ -244,6 +244,25 @@ resource "aws_iam_role" "ecs_task" {
 
 # Secrets Manager'da saklanacak gizli degerler. replication gereksinimi varsa
 # multi-region replication config ekleyebilirsiniz.
+# Execution role needs explicit access to Secrets Manager values injected into containers.
+resource "aws_iam_role_policy" "ecs_task_execution_secrets" {
+  count = length(var.service_secrets) > 0 ? 1 : 0
+
+  name = "${local.name_prefix}-exec-secrets"
+  role = aws_iam_role.ecs_task_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"]
+        Resource = [for s in aws_secretsmanager_secret.service : s.arn]
+      }
+    ]
+  })
+}
+
 resource "aws_secretsmanager_secret" "service" {
   for_each = var.service_secrets
 
@@ -719,6 +738,7 @@ output "ecs_service_name" {
   description = "ECS service handling the backend"
   value       = aws_ecs_service.backend.name
 }
+
 
 
 
