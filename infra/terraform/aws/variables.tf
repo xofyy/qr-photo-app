@@ -1,4 +1,4 @@
-# -----------------------------------------------------------------------------
+﻿# -----------------------------------------------------------------------------
 # Değişken Tanımları (AWS)
 # Her değişken için kullanım amacı, örnek değerler/seçenekler ve zorunluluk bilgisi
 # verilmiştir. Varsayılan değeri olan değişkenler isteğe bağlıdır.
@@ -272,7 +272,7 @@ variable "codepipeline_source_repo_owner" {
   default     = null
 
   validation {
-    condition     = var.enable_codepipeline == false || try(length(trim(var.codepipeline_source_repo_owner)) > 0, false)
+    condition     = var.enable_codepipeline == false || try(length(trimspace(var.codepipeline_source_repo_owner)) > 0, false)
     error_message = "CodePipeline etkinse repository sahibini (org/kullanici) belirtmelisiniz."
   }
 }
@@ -283,7 +283,7 @@ variable "codepipeline_source_repo_name" {
   default     = null
 
   validation {
-    condition     = var.enable_codepipeline == false || try(length(trim(var.codepipeline_source_repo_name)) > 0, false)
+    condition     = var.enable_codepipeline == false || try(length(trimspace(var.codepipeline_source_repo_name)) > 0, false)
     error_message = "CodePipeline icin repository adini bos birakmayin."
   }
 }
@@ -293,6 +293,7 @@ variable "codepipeline_source_branch" {
   type        = string
   default     = "main"
 }
+
 
 
 

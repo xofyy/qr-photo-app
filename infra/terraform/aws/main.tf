@@ -1,8 +1,8 @@
-# -----------------------------------------------------------------------------
+﻿# -----------------------------------------------------------------------------
 # Terraform infrastructure for QR Photo backend on Amazon Web Services.
 # Bu dosya Fargate tabanli dagitim icin ag (VPC, subnet, SG), container registry
 # (ECR), calistirma ortami (ECS Fargate) ve Application Load Balancer kaynaklarini
-# oluÃƒâ€¦Ã…Â¸turur. Yorumlar her blokta hangi ayarlarin mevcut oldugunu ve nasil
+# oluşturur. Yorumlar her blokta hangi ayarlarin mevcut oldugunu ve nasil
 # ozellestirilebilecegini aciklar.
 # -----------------------------------------------------------------------------
 terraform {
@@ -16,7 +16,7 @@ terraform {
 }
 
 # provider "aws": region degiskeni terraform.tfvars ile kontrol edilir. Ayrica
-# farklÃƒâ€Ã‚Â± hesaplara dagitim yapacaksaniz profile veya assume_role parametreleri
+# farklı hesaplara dagitim yapacaksaniz profile veya assume_role parametreleri
 # ekleyebilirsiniz.
 provider "aws" {
   region = var.aws_region
@@ -453,7 +453,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_ecs" {
   count = local.codebuild_enabled ? 1 : 0
 
   role       = aws_iam_role.codebuild[0].name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonECSFullAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "codebuild_logs" {
@@ -551,7 +551,12 @@ resource "aws_codebuild_project" "backend" {
 resource "aws_s3_bucket" "codepipeline_artifacts" {
   count = local.codepipeline_enabled ? 1 : 0
 
-  bucket = local.codepipeline_artifact_bucket_name
+  bucket        = local.codepipeline_artifact_bucket_name
+  force_destroy = true
+
+  lifecycle {
+    prevent_destroy = false
+  }
 
   tags = merge(var.default_tags, {
     Name = "${local.name_prefix}-pipeline-artifacts"
@@ -714,6 +719,8 @@ output "ecs_service_name" {
   description = "ECS service handling the backend"
   value       = aws_ecs_service.backend.name
 }
+
+
 
 
 
