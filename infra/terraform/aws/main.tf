@@ -1,4 +1,4 @@
-# -----------------------------------------------------------------------------
+﻿# -----------------------------------------------------------------------------
 # Terraform infrastructure for QR Photo backend on Amazon Web Services.
 # Bu dosya Fargate tabanli dagitim icin ag (VPC, subnet, SG), container registry
 # (ECR), calistirma ortami (ECS Fargate) ve Application Load Balancer kaynaklarini
@@ -612,7 +612,7 @@ resource "aws_s3_bucket_public_access_block" "codepipeline" {
   restrict_public_buckets = true
 }
 
-# CodePipeline servis rolü: kaynak cekme, CodeBuild tetikleme ve S3'e yazma yetkileri.
+# CodePipeline servis rolü: kaynak çekme, CodeBuild tetikleme ve S3'e yazma yetkileri.
 resource "aws_iam_role" "codepipeline" {
   count = local.codepipeline_enabled ? 1 : 0
 
