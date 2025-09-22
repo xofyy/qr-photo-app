@@ -593,7 +593,7 @@ resource "aws_s3_bucket_public_access_block" "codepipeline" {
   restrict_public_buckets = true
 }
 
-# CodePipeline servis rolu: kaynak cekme, CodeBuild tetikleme ve S3'e yazma yetkileri.
+# CodePipeline servis rolü: kaynak cekme, CodeBuild tetikleme ve S3'e yazma yetkileri.
 resource "aws_iam_role" "codepipeline" {
   count = local.codepipeline_enabled ? 1 : 0
 
