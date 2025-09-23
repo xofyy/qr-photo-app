@@ -1,3 +1,6 @@
+# Platform CI/CD modulunde CodeBuild ve CodePipeline kaynaklari tanimlanir.
+
+# CodeBuild islerinin calismasi icin IAM rolunu olusturur.
 resource "aws_iam_role" "codebuild" {
   count = var.enable_codebuild ? 1 : 0
 
@@ -14,6 +17,7 @@ resource "aws_iam_role" "codebuild" {
   tags = var.tags
 }
 
+# CodeBuild rolune ECR yetkilerini ekler.
 resource "aws_iam_role_policy_attachment" "codebuild_ecr" {
   count = var.enable_codebuild ? 1 : 0
 
@@ -21,6 +25,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_ecr" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
 }
 
+# CodeBuild rolune ECS yetkilerini ekler.
 resource "aws_iam_role_policy_attachment" "codebuild_ecs" {
   count = var.enable_codebuild ? 1 : 0
 
@@ -28,6 +33,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_ecs" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonECS_FullAccess"
 }
 
+# CodeBuild rolune CloudWatch Logs yetkisini ekler.
 resource "aws_iam_role_policy_attachment" "codebuild_logs" {
   count = var.enable_codebuild ? 1 : 0
 
@@ -35,6 +41,7 @@ resource "aws_iam_role_policy_attachment" "codebuild_logs" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchLogsFullAccess"
 }
 
+# CodePipeline tetiklendiginde CodeBuild icin gerekli ek izinleri saglar.
 resource "aws_iam_role_policy" "codebuild_inline" {
   count = var.enable_codepipeline ? 1 : 0
 
@@ -61,6 +68,7 @@ resource "aws_iam_role_policy" "codebuild_inline" {
   depends_on = [aws_s3_bucket.codepipeline_artifacts]
 }
 
+# Docker build ve ECS deploy adimini yoneten CodeBuild projesini olusturur.
 resource "aws_codebuild_project" "backend" {
   count = var.enable_codebuild ? 1 : 0
 
@@ -120,6 +128,7 @@ resource "aws_codebuild_project" "backend" {
   })
 }
 
+# Pipeline artifact dosyalarinin saklanacagi S3 bucket olusturur.
 resource "aws_s3_bucket" "codepipeline_artifacts" {
   count = var.enable_codepipeline ? 1 : 0
 
@@ -135,6 +144,7 @@ resource "aws_s3_bucket" "codepipeline_artifacts" {
   })
 }
 
+# Artifact bucket icin versiyonlama ayarini etkinlestirir.
 resource "aws_s3_bucket_versioning" "codepipeline" {
   count = var.enable_codepipeline ? 1 : 0
 
@@ -144,6 +154,7 @@ resource "aws_s3_bucket_versioning" "codepipeline" {
   }
 }
 
+# Artifact bucket icin SSE ayarlarini yapar.
 resource "aws_s3_bucket_server_side_encryption_configuration" "codepipeline" {
   count = var.enable_codepipeline ? 1 : 0
 
@@ -155,6 +166,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "codepipeline" {
   }
 }
 
+# Artifact bucket uzerinde public erisimi engeller.
 resource "aws_s3_bucket_public_access_block" "codepipeline" {
   count = var.enable_codepipeline ? 1 : 0
 
@@ -165,6 +177,7 @@ resource "aws_s3_bucket_public_access_block" "codepipeline" {
   restrict_public_buckets = true
 }
 
+# CodePipeline icin gerekli IAM rolunu olusturur.
 resource "aws_iam_role" "codepipeline" {
   count = var.enable_codepipeline ? 1 : 0
 
@@ -181,6 +194,7 @@ resource "aws_iam_role" "codepipeline" {
   tags = var.tags
 }
 
+# CodePipeline rolune S3, CodeBuild ve Codestar izinlerini tanimlar.
 resource "aws_iam_role_policy" "codepipeline_inline" {
   count = var.enable_codepipeline ? 1 : 0
 
@@ -210,6 +224,7 @@ resource "aws_iam_role_policy" "codepipeline_inline" {
   })
 }
 
+# Kaynaktan CodeBuilde kadar olan is akisini yoneten CodePipeline kaynagini kurar.
 resource "aws_codepipeline" "backend" {
   count = var.enable_codepipeline ? 1 : 0
 

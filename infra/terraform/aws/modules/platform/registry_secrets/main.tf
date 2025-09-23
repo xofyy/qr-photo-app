@@ -1,3 +1,6 @@
+# Platform registry_secrets modulunde ECR deposu ve Secrets Manager girdileri olusturulur.
+
+# Uygulama container imajlarini saklamak icin ECR deposu kurar.
 resource "aws_ecr_repository" "this" {
   name                 = "${var.name_prefix}-backend"
   image_tag_mutability = var.image_tag_mutability
@@ -11,6 +14,7 @@ resource "aws_ecr_repository" "this" {
   })
 }
 
+# Secrets Manager icinde her gizli deger icin secret kaydi olusturur.
 resource "aws_secretsmanager_secret" "this" {
   for_each = var.service_secrets
 
@@ -19,6 +23,7 @@ resource "aws_secretsmanager_secret" "this" {
   tags = var.tags
 }
 
+# Secret icine gercek degerleri version olarak yazar.
 resource "aws_secretsmanager_secret_version" "this" {
   for_each = var.service_secrets
 
@@ -26,6 +31,7 @@ resource "aws_secretsmanager_secret_version" "this" {
   secret_string = each.value
 }
 
+# ECS icin hazirlanan secret referanslarini liste seklinde toparlar.
 locals {
   container_secrets = [
     for name, secret in aws_secretsmanager_secret_version.this : {

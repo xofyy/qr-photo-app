@@ -1,11 +1,15 @@
+# Foundation Network modulunde VPC ve public subnet yapisi olusturulur.
+
 terraform {
   required_version = ">= 1.6.0"
 }
 
+# Mevcut AWS availability zone listesini ceker.
 data "aws_availability_zones" "available" {
   state = "available"
 }
 
+# Local hesaplamalar: tercih edilen AZ secimi ve subnet haritalari.
 locals {
   selected_azs = length(var.availability_zones) > 0 ? var.availability_zones : data.aws_availability_zones.available.names
   public_subnets = {
@@ -16,6 +20,7 @@ locals {
   }
 }
 
+# VPC kaynagini olusturarak temel ag sinirlarini belirler.
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
@@ -26,6 +31,7 @@ resource "aws_vpc" "this" {
   })
 }
 
+# Internet gateway ile VPC nin dis dunyaya cikisini saglar.
 resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
@@ -34,6 +40,7 @@ resource "aws_internet_gateway" "this" {
   })
 }
 
+# Public subnetleri cift halde olusturur ve istege bagli public IP atamasini etkinlestirir.
 resource "aws_subnet" "public" {
   for_each = local.public_subnets
 
@@ -47,6 +54,7 @@ resource "aws_subnet" "public" {
   })
 }
 
+# Public route table ile internet cikisini tanimlar.
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
 
@@ -55,12 +63,14 @@ resource "aws_route_table" "public" {
   })
 }
 
+# Default route kaydi ile tum trafigi internet gateway e yonlendirir.
 resource "aws_route" "public_internet" {
   route_table_id         = aws_route_table.public.id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.this.id
 }
 
+# Her public subneti ilgili route table ile eslestirir.
 resource "aws_route_table_association" "public" {
   for_each = aws_subnet.public
 

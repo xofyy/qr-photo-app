@@ -1,3 +1,6 @@
+# Foundation Security modulunde ALB ve servis security gruplari tanimlanir.
+
+# ALB icin gelen ve giden trafik kurallarini belirler.
 resource "aws_security_group" "alb" {
   name        = "${var.name_prefix}-alb"
   description = "Load balancer ingress"
@@ -23,6 +26,7 @@ resource "aws_security_group" "alb" {
   })
 }
 
+# ECS servis tasklarinin yalnizca ALB uzerinden erisilmesini saglar.
 resource "aws_security_group" "service" {
   name        = "${var.name_prefix}-service"
   description = "ECS service ingress from ALB"

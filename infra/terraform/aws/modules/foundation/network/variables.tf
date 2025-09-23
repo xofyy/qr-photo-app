@@ -1,32 +1,40 @@
+# Degiskenler: foundation/network modulunde kullanilan girdiler.
+
+# Kaynak isimlerine eklenecek prefix degerini belirler.
 variable "name_prefix" {
-  description = "Prefix appended to resource names"
+  description = "Kaynak adlarina eklenecek prefix degeri"
   type        = string
 }
 
+# Tum kaynaklara uygulanacak temel tag ciftlerini iletir.
 variable "tags" {
-  description = "Base tags applied to all resources"
+  description = "Tum kaynaklara uygulanacak temel tag haritasi"
   type        = map(string)
   default     = {}
 }
 
+# Olusturulacak VPC icin kullanilacak CIDR blogunu tanimlar.
 variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
+  description = "Olusturulacak VPC icin CIDR blogu"
   type        = string
 }
 
+# Public subnetler icin CIDR listesi saglar.
 variable "public_subnet_cidrs" {
-  description = "CIDR blocks for public subnets"
+  description = "Public subnetler icin CIDR bloklari listesi"
   type        = list(string)
 }
 
+# Opsiyonel olarak siralanmis AZ isimlerini belirler.
 variable "availability_zones" {
-  description = "Optional ordered list of availability zone names"
+  description = "Opsiyonel sirali AZ isimleri listesi"
   type        = list(string)
   default     = []
 }
 
+# Public subnet icin otomatik public IP ata secenegi.
 variable "enable_public_ip_on_launch" {
-  description = "Assign public IPs to instances launched in public subnets"
+  description = "Public subnet icinde baslatilan instancelara public IP ata"
   type        = bool
   default     = true
 }

@@ -1,9 +1,8 @@
-﻿# -----------------------------------------------------------------------------
-# Terraform infrastructure for QR Photo backend on Amazon Web Services.
-# Bu dosya Fargate tabanli dagitim icin ag (VPC, subnet, SG), container registry
-# (ECR), calistirma ortami (ECS Fargate) ve Application Load Balancer kaynaklarini
-# oluşturur. Yorumlar her blokta hangi ayarlarin mevcut oldugunu ve nasil
-# ozellestirilebilecegini aciklar.
+# -----------------------------------------------------------------------------
+# Terraform altyapisi: QR Photo backend AWS ortami
+# Bu dosya Fargate tabanli dagitim icin ag, registry, calisma ortami ve ALB
+# kaynaklarini tanimlar. Her bolumde hangi yapi taslarinin konfigure edildigi
+# ascii karakterler kullanilarak aciklayici yorumlarda belirtilmistir.
 # -----------------------------------------------------------------------------
 terraform {
   required_version = ">= 1.6.0"
@@ -16,7 +15,7 @@ terraform {
 }
 
 # provider "aws": region degiskeni terraform.tfvars ile kontrol edilir. Ayrica
-# farklı hesaplara dagitim yapacaksaniz profile veya assume_role parametreleri
+# farkli hesaplara dagitim yapacaksaniz profile veya assume_role parametreleri
 # ekleyebilirsiniz.
 provider "aws" {
   region = var.aws_region
@@ -50,6 +49,7 @@ locals {
     var.codepipeline_artifact_bucket_name,
     "${replace(lower(local.name_prefix), "_", "-")}-codepipeline-${data.aws_caller_identity.current.account_id}"
   )
+  vm_subnet_id = module.foundation_network.public_subnet_ids[0]
 }
 
 
@@ -57,6 +57,7 @@ locals {
 
 # --------------------------- Ag Katmani --------------------------------------
 
+# Modul: VPC ve public subnet yapisini olusturur.
 module "foundation_network" {
   source              = "./modules/foundation/network"
   name_prefix         = local.name_prefix
@@ -66,6 +67,7 @@ module "foundation_network" {
 }
 # ------------------------- Guvenlik Gruplari ---------------------------------
 
+# Modul: ALB ve servis icin guvenlik gruplarini tanimlar.
 module "foundation_security" {
   source           = "./modules/foundation/security"
   name_prefix      = local.name_prefix
@@ -76,6 +78,7 @@ module "foundation_security" {
 }
 # --------------------------- Registry ve Secrets ------------------------------
 
+# Modul: ECR ve Secrets Manager kaynaklarini olusturur.
 module "platform_registry_secrets" {
   source          = "./modules/platform/registry_secrets"
   name_prefix     = local.name_prefix
@@ -85,6 +88,7 @@ module "platform_registry_secrets" {
 
 # --------------------------- Gozlenebilirlik -------------------------------
 
+# Modul: CloudWatch log grubunu ve saklama politikasini ayarlar.
 module "platform_observability" {
   source            = "./modules/platform/observability"
   name_prefix       = local.name_prefix
@@ -154,6 +158,7 @@ resource "aws_iam_role_policy" "ecs_task_execution_secrets" {
 
 # --------------------------- ALB Katmani --------------------------------------
 
+# Modul: Uygulama icin Application Load Balancer ve hedef grubunu kurar.
 module "network_edge_alb" {
   source            = "./modules/network_edge/alb"
   name_prefix       = local.name_prefix
@@ -168,6 +173,7 @@ module "network_edge_alb" {
 
 # --------------------------- ECS Calisma Ortami ------------------------------
 
+# Modul: ECS Fargate servisinin tum bilesenlerini konfigure eder.
 module "workload_ecs_service" {
   source                    = "./modules/workload/ecs_service"
   name_prefix               = local.name_prefix
@@ -193,6 +199,26 @@ module "workload_ecs_service" {
   autoscaling_cpu_target    = var.autoscaling_cpu_target
   task_execution_role_arn   = aws_iam_role.ecs_task_execution.arn
   task_role_arn             = aws_iam_role.ecs_task.arn
+}
+
+# Modul: Opsiyonel EC2 instance ihtiyaci varsa devreye alir.
+module "workload_ec2_instance" {
+  source = "./modules/workload/ec2_instance"
+  count  = var.enable_vm_instance ? 1 : 0
+
+  name_prefix            = local.name_prefix
+  tags                   = var.default_tags
+  subnet_id              = local.vm_subnet_id
+  ami_id                 = var.vm_ami_id
+  instance_type          = var.vm_instance_type
+  assign_public_ip       = var.vm_assign_public_ip
+  key_name               = var.vm_key_name
+  user_data              = var.vm_user_data
+  iam_instance_profile   = var.vm_iam_instance_profile
+  security_group_ids     = var.vm_additional_security_group_ids
+  security_group_ingress = var.vm_security_group_ingress
+  root_volume_size       = var.vm_root_volume_size
+  root_volume_type       = var.vm_root_volume_type
 }
 
 # --------------------------- CI/CD (CodeBuild & CodePipeline) ---------------
@@ -222,6 +248,7 @@ module "platform_ci_cd" {
   log_group_name                       = module.platform_observability.log_group_name
 }
 
+# Cikti: Pipeline icin olusturulan CodeBuild projesinin adini iletir.
 output "codebuild_project_name" {
   description = "CodeBuild projesi (etkinse)"
   value       = module.platform_ci_cd.codebuild_project_name
@@ -229,6 +256,7 @@ output "codebuild_project_name" {
 
 
 
+# Cikti: CodePipeline kaynagi etkinse adini iletir.
 output "codepipeline_name" {
   description = "CodePipeline adi (etkinse)"
   value       = module.platform_ci_cd.codepipeline_name
@@ -238,20 +266,42 @@ output "codepipeline_name" {
 
 # --------------------------- Ciktilar ----------------------------------------
 
+# Cikti: ALB uzerinden erisim icin DNS adresini saglar.
 output "alb_dns_name" {
   description = "DNS name of the public Application Load Balancer"
   value       = module.network_edge_alb.load_balancer_dns_name
 }
 
+# Cikti: Container imajlari icin ECR repository URL bilgisini verir.
 output "ecr_repository_url" {
   description = "ECR repository URI for pushing container images"
   value       = module.platform_registry_secrets.repository_url
 }
 
+# Cikti: Fargate servis adini dondurur.
 output "ecs_service_name" {
   description = "ECS service handling the backend"
   value       = module.workload_ecs_service.service_name
 }
+
+# Cikti: Opsiyonel EC2 instance kimligini saglar.
+output "vm_instance_id" {
+  description = "ID of the optional VM instance"
+  value       = var.enable_vm_instance ? module.workload_ec2_instance[0].instance_id : null
+}
+
+# Cikti: Opsiyonel EC2 instance public IP bilgisini verir.
+output "vm_public_ip" {
+  description = "Public IP of the optional VM instance"
+  value       = var.enable_vm_instance ? module.workload_ec2_instance[0].public_ip : null
+}
+
+# Cikti: Opsiyonel EC2 instance private IP bilgisini verir.
+output "vm_private_ip" {
+  description = "Private IP of the optional VM instance"
+  value       = var.enable_vm_instance ? module.workload_ec2_instance[0].private_ip : null
+}
+
 
 
 

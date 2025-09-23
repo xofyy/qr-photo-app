@@ -1,197 +1,174 @@
 # -----------------------------------------------------------------------------
-# Değişken Tanımları (AWS)
-# Her değişken için kullanım amacı, örnek değerler/seçenekler ve zorunluluk bilgisi
-# verilmiştir. Varsayılan değeri olan değişkenler isteğe bağlıdır.
+# Degisken Tanimlari (AWS)
+# Her degisken icin kullanim amaci ASCII karakterlerle aciklanmistir.
+# Varsayilan degeri olan degiskenler ihtiyaca gore override edilebilir.
 # -----------------------------------------------------------------------------
 
-# Zorunlu: Hayır — Kaynakların konuşlandırılacağı AWS bölgesi.
-# Seçenekler: "eu-west-1", "us-east-1", "ap-southeast-1" vb.
+# Tum kaynaklar icin kullanilacak AWS bolgesini belirler.
 variable "aws_region" {
-  description = "AWS region for all resources"
+  description = "Tum kaynaklar icin kullanilacak AWS bolgesi"
   type        = string
   default     = "eu-central-1"
 }
 
-# Zorunlu: Evet — Kaynak isimlendirmesinde baz alınacak uygulama adı.
-# Seçenekler: Küçük harf, tire kullanılabilir (örn. "qr-photo", "backend-api").
+# Kaynak adlandirmasinda kullanilacak proje kisaltmasini gir.
 variable "project_name" {
-  description = "Base name for AWS resources"
+  description = "Kaynak adlandirmasi icin temel proje adi"
   type        = string
 }
 
-# Zorunlu: Hayır — Ortam etiketi; adlandırma ve tag'lerde kullanılır.
-# Seçenekler: "prod", "staging", "dev" gibi kısa stringler.
+# Kaynak etiketleri ve isimleri icin ortam kimligini ayarlar.
 variable "environment" {
-  description = "Deployment environment identifier (e.g. prod, staging)"
+  description = "Isim ve etiketlerde kullanilan ortam kimligi"
   type        = string
   default     = "prod"
 }
 
-# Zorunlu: Hayır — Oluşturulacak VPC'nin CIDR bloğu.
-# Seçenekler: RFC1918 aralıkları (örn. "10.10.0.0/16", "172.16.0.0/16").
+# Yeni VPC icin kullanilacak CIDR blogunu tanimlar.
 variable "vpc_cidr" {
-  description = "CIDR block for the VPC"
+  description = "Olusturulacak VPC icin CIDR blogu"
   type        = string
   default     = "10.10.0.0/16"
 }
 
-# Zorunlu: Hayır — Public subnet'ler için CIDR listesi.
-# Seçenekler: Her biri farklı AZ'de olacak şekilde /24 veya uygun bloklar.
+# Her public subnet icin CIDR listesi saglar.
 variable "public_subnet_cidrs" {
-  description = "List of CIDR blocks for public subnets"
+  description = "Her public subnet icin CIDR listesi"
   type        = list(string)
   default     = ["10.10.0.0/24", "10.10.1.0/24"]
 }
 
-# Zorunlu: Hayır — Backend container'ın expose ettiği port.
-# Seçenekler: HTTP 80, 443 veya uygulamanızın portu (örn. 8000).
+# ECS konteynerinin dinleyecegi port numarasini belirler.
 variable "container_port" {
-  description = "Container port exposed by the backend service"
+  description = "ECS container tarafindan disari acilan port"
   type        = number
   default     = 8000
 }
 
-# Zorunlu: Hayır — Application Load Balancer listener portu.
-# Seçenekler: 80 (HTTP), 443 (HTTPS) veya özel portlar.
+# ALB listener port numarasini tanimlar.
 variable "lb_listener_port" {
-  description = "Port that the load balancer listens on"
+  description = "Application Load Balancer listener portu"
   type        = number
   default     = 80
 }
 
-# Zorunlu: Hayır — ECS task definition içindeki container adı.
-# Seçenekler: Harf/rakam ile sınırlı (örn. "backend", "web").
+# ECS task definition icindeki konteyner adini ayarlar.
 variable "container_name" {
-  description = "Container name in the ECS task definition"
+  description = "ECS task definition icindeki container adi"
   type        = string
   default     = "backend"
 }
 
-# Zorunlu: Hayır — Fargate görevine ayrılacak CPU (unit cinsinden).
-# Seçenekler: 256, 512, 1024, 2048, 4096 vb. (AWS Fargate kombinasyonlarına uygun).
+# Her Fargate gorevi icin ayrilacak CPU birimini belirler.
 variable "task_cpu" {
-  description = "CPU units for the ECS task (e.g. 512, 1024)"
+  description = "Her ECS gorevi icin ayrilacak CPU birimi"
   type        = number
   default     = 512
 }
 
-# Zorunlu: Hayır — Fargate görevine ayrılacak bellek (MiB cinsinden).
-# Seçenekler: 512, 1024, 2048, 3072, 4096 vb. (seçilen CPU değerine uyumlu olmalı).
+# Her Fargate gorevi icin ayrilacak bellek miktarini (MiB) belirler.
 variable "task_memory" {
-  description = "Memory (in MiB) for the ECS task"
+  description = "Her ECS gorevi icin ayrilacak bellek (MiB)"
   type        = number
   default     = 1024
 }
 
-# Zorunlu: Hayır — ECS servisinin başlangıçta kaç görev çalıştıracağı.
-# Seçenekler: 1+; yüksek erişilebilirlik için 2 veya daha fazla önerilir.
+# ECS servisinin calistiracagi gorev sayisini belirler.
 variable "desired_count" {
-  description = "Desired number of running ECS tasks"
+  description = "Baslangicta calisacak ECS gorev sayisi"
   type        = number
   default     = 1
 }
 
-# Zorunlu: Hayır — Terraform state'te plaintext saklanmasında sakınca olmayan environment değişkenleri.
-# Seçenekler: KEY => VALUE map'i (örn. { "ENV" = "prod" }).
+# Plain ortam degiskenlerini key-value olarak tanimlar.
 variable "service_env_vars" {
-  description = "Plain environment variables for the ECS container"
+  description = "Plain ortam degiskenlerini tasiyan map"
   type        = map(string)
   default     = {}
 }
 
-# Zorunlu: Duruma göre — AWS Secrets Manager'a kaydedilecek gizli değerler.
-# Seçenekler: KEY => VALUE map'i; KEY, ECS container'ında environment adı olacak.
+# Secrets Manager icine yazilacak gizli degerleri belirtir.
 variable "service_secrets" {
-  description = "Secrets to store in AWS Secrets Manager (key = logical name, value = secret string)"
+  description = "AWS Secrets Manager icine yazilacak gizli veriler"
   type        = map(string)
   default     = {}
 }
 
-# Zorunlu: Hayır — ECS servisinin kullanacağı Docker imaj tag'i.
-# Seçenekler: "latest", sürüm numarı, commit SHA vb.
+# Dagitimda kullanilacak konteyner imaj tagini belirler.
 variable "image_tag" {
-  description = "Container image tag to deploy"
+  description = "Dagitim icin kullanilacak container imaj tagi"
   type        = string
   default     = "latest"
 }
 
-# Zorunlu: Hayır — CloudWatch Container Insights metriklerini açma.
-# Seçenekler: `true` (metrik toplar, ek maliyet), `false` (devre dışı).
+
+# Container Insights metrik toplamasini acip kapatir.
 variable "enable_container_insights" {
-  description = "Enable ECS Container Insights monitoring"
+  description = "CloudWatch Container Insights metriklerini ac"
   type        = bool
   default     = true
 }
 
-# Zorunlu: Hayır — `aws ecs execute-command` kullanımını etkinleştirir.
-# Seçenekler: `true` (ek yetki/kms gerektirir), `false` (varsayılan).
+# ECS execute-command ozelligini acip kapatir.
 variable "enable_execute_command" {
-  description = "Allow ECS exec into running tasks"
+  description = "ECS execute-command ozelligini etkinlestir"
   type        = bool
   default     = false
 }
 
-# Zorunlu: Hayır — CloudWatch loglarının kaç gün saklanacağı.
-# Seçenekler: 1–3653 gün arası (AWS limiti), 0 => sonsuz.
+# CloudWatch log grubunun kac gun saklanacagini belirler.
 variable "log_retention_days" {
-  description = "Retention period for CloudWatch Logs"
+  description = "CloudWatch log grubunun saklama suresi (gun)"
   type        = number
   default     = 30
 }
 
-# Zorunlu: Hayır — ALB health check için kullanılacak HTTP path'i.
-# Seçenekler: "/", "/healthz", "/status" vb.
+# ALB saglik kontrolu icin HTTP path degerini tanimlar.
 variable "health_check_path" {
-  description = "HTTP path ALB uses for health checks"
+  description = "ALB saglik kontrolu icin HTTP yolu"
   type        = string
   default     = "/"
 }
 
-# Zorunlu: Hayır — Tüm kaynaklara uygulanacak ortak tagler.
-# Seçenekler: KEY => VALUE map'i (örn. { Application = "qr-photo", Owner = "infra" }).
+# Tum kaynaklara uygulanacak varsayilan tag ciftlerini tutar.
 variable "default_tags" {
-  description = "Tags applied to AWS resources"
+  description = "Tum kaynaklara uygulanacak varsayilan tagler"
   type        = map(string)
   default     = {}
 }
 
-# Zorunlu: Hayır — AutoScaling alt sınırı.
-# Seçenekler: 1+; gece düşük trafikte bile minimum kapasiteyi belirler.
+# ECS autoscaling icin minimum gorev sayisini ayarlar.
 variable "autoscaling_min_capacity" {
-  description = "Minimum number of ECS tasks for auto scaling"
+  description = "ECS autoscaling icin minimum gorev sayisi"
   type        = number
   default     = 1
 }
 
-# Zorunlu: Hayır — AutoScaling üst sınırı.
-# Seçenekler: 1 üzeri; trafik artışında çıkılacak maksimum görev sayısı.
+# ECS autoscaling icin maksimum gorev sayisini ayarlar.
 variable "autoscaling_max_capacity" {
-  description = "Maximum number of ECS tasks for auto scaling"
+  description = "ECS autoscaling icin maksimum gorev sayisi"
   type        = number
   default     = 4
 }
 
-# Zorunlu: Hayır — CPU hedef yüzdesi.
-# Seçenekler: 10–100 arası; değer yükseldikçe AutoScaling daha geç devreye girer.
+
+# Autoscaling icin hedef CPU yuzdesini belirler.
 variable "autoscaling_cpu_target" {
-  description = "Target CPU utilisation percentage for auto scaling"
+  description = "Autoscaling icin hedef CPU yuzdesi"
   type        = number
   default     = 60
 }
-# -----------------------------------------------------------------------------
-# CI/CD degiskenleri (CodeBuild & CodePipeline)
-# Bu degiskenler otomatik Docker build/push ve ECS deploy zincirini etkinlestirmek
-# icin kullanilir. enable_* false ise ilgili kaynaklar olusturulmaz.
-# -----------------------------------------------------------------------------
 
+# CodeBuild kaynaklarini olusturup olusturmayacagini belirler.
 variable "enable_codebuild" {
-  description = "CodeBuild kaynaklari olusturulsun mu? true yapmadan pipeline calismaz"
+  description = "CodeBuild kaynaklarini olustur"
   type        = bool
   default     = false
 }
 
+# CodePipeline kaynaklarini olusturup olusturmayacagini belirler.
 variable "enable_codepipeline" {
-  description = "CodePipeline kurulsun mu? true ise enable_codebuild de true olmalidir"
+  description = "CodePipeline kaynaklarini olustur"
   type        = bool
   default     = false
 
@@ -201,62 +178,76 @@ variable "enable_codepipeline" {
   }
 }
 
+# -----------------------------------------------------------------------------
+# CI/CD Ilgili Degiskenler
+# -----------------------------------------------------------------------------
+
+# Olusturulacak CodeBuild projesinin adini tanimlar.
 variable "codebuild_project_name" {
-  description = "CodeBuild projesinin adi (enable_codebuild=true ise gerekli)"
+  description = "CodeBuild projesinin adi"
   type        = string
   default     = "qr-photo-backend-build"
 }
 
+# CodeBuild calisma ortami icin base imaji belirtir.
 variable "codebuild_environment_image" {
-  description = "CodeBuild Linux ortam imgasi (Docker build icin aws/codebuild/standard:7.0 onerilir)"
+  description = "CodeBuild calisma ortami icin container imaji"
   type        = string
   default     = "aws/codebuild/standard:7.0"
 }
 
+# CodeBuild isleri icin compute tipini sec.
 variable "codebuild_compute_type" {
-  description = "CodeBuild compute tipi (BUILD_GENERAL1_SMALL/2/4)"
+  description = "CodeBuild compute tipi (instance boyutu)"
   type        = string
   default     = "BUILD_GENERAL1_SMALL"
 }
 
+# CodeBuild islerinin zaman asimini dakika olarak ayarlar.
 variable "codebuild_timeout_minutes" {
   description = "CodeBuild calisma zaman asimi (dakika)"
   type        = number
   default     = 60
 }
 
+# CodeBuild buildspec dosyasinin yolunu tanimlar.
 variable "codebuild_buildspec_path" {
-  description = "Repo icindeki buildspec dosyasinin yolu"
+  description = "CodeBuild icin buildspec dosya yolu"
   type        = string
   default     = "infra/terraform/aws/buildspec.backend.yml"
 }
 
+# CodeBuild tarafindan push edilecek ECR depo adini belirler.
 variable "codebuild_image_repo_name" {
-  description = "CodeBuild'in push edecegi ECR repo adi (Terraform ile olusan repo ile eslesmeli)"
+  description = "CodeBuild tarafindan push edilecek ECR repo adi"
   type        = string
   default     = "qr-photo-prod-backend"
 }
 
+# CodeBuild icin varsayilan imaj tagini tanimlar.
 variable "codebuild_image_tag" {
-  description = "CodeBuild'in kullanacagi varsayilan imaj tag'i (CI pipeline'inda override edilebilir)"
+  description = "CodeBuild icin varsayilan imaj tagi"
   type        = string
   default     = "latest"
 }
 
+# Olusturulacak CodePipeline kaynagina isim verir.
 variable "codepipeline_name" {
-  description = "CodePipeline adi (enable_codepipeline=true ise gerekli)"
+  description = "CodePipeline kaynagi icin isim"
   type        = string
   default     = "qr-photo-backend-pipeline"
 }
 
+# CodePipeline artifact bucket adini override eder.
 variable "codepipeline_artifact_bucket_name" {
-  description = "CodePipeline artifact'lerini tutacak benzersiz S3 bucket adi"
+  description = "CodePipeline artifact bucket adi (bos ise uretilir)"
   type        = string
   default     = null
 }
 
+# Kaynak deposuna baglanmak icin CodeStar ARN saglar.
 variable "codepipeline_codestar_connection_arn" {
-  description = "GitHub/Bitbucket icin onceden olusturulmus CodeStar Connection ARN'i"
+  description = "Kaynak repo baglantisi icin CodeStar Connection ARN"
   type        = string
   default     = null
 
@@ -266,8 +257,9 @@ variable "codepipeline_codestar_connection_arn" {
   }
 }
 
+# Kaynak deposunun sahibi olan org veya kullaniciyi belirtir.
 variable "codepipeline_source_repo_owner" {
-  description = "Kaynak repository sahibi (GitHub org veya kullanici)"
+  description = "Kaynak repository sahibi (org veya kullanici)"
   type        = string
   default     = null
 
@@ -277,6 +269,7 @@ variable "codepipeline_source_repo_owner" {
   }
 }
 
+# Kaynak repository adini tanimlar.
 variable "codepipeline_source_repo_name" {
   description = "Kaynak repository adi"
   type        = string
@@ -288,13 +281,103 @@ variable "codepipeline_source_repo_name" {
   }
 }
 
+# Pipeline tarafindan izlenecek branch adini belirler.
 variable "codepipeline_source_branch" {
-  description = "Pipeline'in takip edecegi branch (ornegin main)"
+  description = "Pipeline tarafindan izlenecek branch adi"
   type        = string
   default     = "main"
 }
 
+# -----------------------------------------------------------------------------
+# VM Instance Degiskenleri
+# -----------------------------------------------------------------------------
 
+# Ek bir EC2 instance calistirilip calistirilmayacagini belirler.
+variable "enable_vm_instance" {
+  description = "Ek bir EC2 instance calistirmayi etkinlestir"
+  type        = bool
+  default     = false
+}
 
+# EC2 instance icin kullanilacak AMI kimligini gir.
+variable "vm_ami_id" {
+  description = "VM icin kullanilacak AMI kimligi"
+  type        = string
+  default     = null
 
+  validation {
+    condition     = var.enable_vm_instance == false || try(length(trimspace(var.vm_ami_id)) > 0, false)
+    error_message = "vm_ami_id must be set when enable_vm_instance is true."
+  }
+}
 
+# EC2 instance tipi secimini yapar.
+variable "vm_instance_type" {
+  description = "VM icin secilecek EC2 instance tipi"
+  type        = string
+  default     = "t3.micro"
+}
+
+# Instance icin public IP atanip atanmayacagini belirler.
+variable "vm_assign_public_ip" {
+  description = "VM icin public IP atanip atanmayacagini belirler"
+  type        = bool
+  default     = true
+}
+
+# Opsiyonel SSH key pair adini belirtir.
+variable "vm_key_name" {
+  description = "SSH erisimi icin opsiyonel key pair adi"
+  type        = string
+  default     = null
+}
+
+# Instance bootstrap icin user data betigini tanimlar.
+variable "vm_user_data" {
+  description = "VM bootstrap islemleri icin user data betigi"
+  type        = string
+  default     = null
+}
+
+# Instance icin IAM instance profile adini saglar.
+variable "vm_iam_instance_profile" {
+  description = "VM icin opsiyonel IAM instance profile adi"
+  type        = string
+  default     = null
+}
+
+# Instance icin eklenecek mevcut SG ID listesini gir.
+variable "vm_additional_security_group_ids" {
+  description = "VM icin eklenecek mevcut security group ID listesi"
+  type        = list(string)
+  default     = []
+}
+
+# Olusturulan SG icin ingress kurallarini tanimlar.
+variable "vm_security_group_ingress" {
+  description = "VM icin olusturulan SG ingress kurallari"
+  type = list(object({
+    description      = optional(string, null)
+    from_port        = number
+    to_port          = number
+    protocol         = string
+    cidr_blocks      = optional(list(string), [])
+    ipv6_cidr_blocks = optional(list(string), [])
+    security_groups  = optional(list(string), [])
+  }))
+  default = []
+}
+
+# Instance root EBS disk boyutunu GiB olarak ayarlar.
+variable "vm_root_volume_size" {
+  description = "VM root EBS disk boyutu (GiB)"
+  type        = number
+  default     = 20
+}
+
+# Instance root EBS disk tipini belirler.
+variable "vm_root_volume_type" {
+  description = "VM root EBS disk tipi"
+  type        = string
+  default     = "gp3"
+}

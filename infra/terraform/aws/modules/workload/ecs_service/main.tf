@@ -1,3 +1,6 @@
+# Workload ECS Service modulunde Fargate tabanli uygulama kaynaklari olusturulur.
+
+# ECS cluster kaynagini olusturarak servislerin calisacagi ortami hazirlar.
 resource "aws_ecs_cluster" "this" {
   name = "${var.name_prefix}-cluster"
 
@@ -9,6 +12,7 @@ resource "aws_ecs_cluster" "this" {
   tags = var.tags
 }
 
+# Uygulama container yapisini ve log/secret ayarlarini tanimlar.
 resource "aws_ecs_task_definition" "this" {
   family                   = "${var.name_prefix}-backend"
   cpu                      = tostring(var.task_cpu)
@@ -46,6 +50,7 @@ resource "aws_ecs_task_definition" "this" {
   tags = var.tags
 }
 
+# Fargate servisinin calisma parametrelerini ve load balancer baglantisini kurar.
 resource "aws_ecs_service" "this" {
   name                               = "${var.name_prefix}-service"
   cluster                            = aws_ecs_cluster.this.id
@@ -71,6 +76,7 @@ resource "aws_ecs_service" "this" {
   tags = var.tags
 }
 
+# Servis icin autoscaling hedefini tanimlar.
 resource "aws_appautoscaling_target" "this" {
   max_capacity       = var.autoscaling_max_capacity
   min_capacity       = var.autoscaling_min_capacity
@@ -79,6 +85,7 @@ resource "aws_appautoscaling_target" "this" {
   service_namespace  = "ecs"
 }
 
+# CPU temelli autoscaling politikasini olusturur.
 resource "aws_appautoscaling_policy" "cpu" {
   name               = "${var.name_prefix}-cpu"
   policy_type        = "TargetTrackingScaling"

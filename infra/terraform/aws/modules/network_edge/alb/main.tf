@@ -1,3 +1,6 @@
+# Network Edge ALB modulunde load balancer ve hedef gruplar tanimlanir.
+
+# Application Load Balancer kaynagini olusturur.
 resource "aws_lb" "this" {
   name               = "${var.name_prefix}-alb"
   internal           = var.internal
@@ -12,6 +15,7 @@ resource "aws_lb" "this" {
   })
 }
 
+# ALB nin trafik yonlendirecegi hedef grubunu tanimlar.
 resource "aws_lb_target_group" "this" {
   name        = "${var.name_prefix}-tg"
   port        = var.container_port
@@ -31,6 +35,7 @@ resource "aws_lb_target_group" "this" {
   tags = var.tags
 }
 
+# HTTP listener ile gelen istekleri hedef gruba iletir.
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.this.arn
   port              = var.listener_port
