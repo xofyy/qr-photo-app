@@ -10,7 +10,7 @@ substitutions:
   _LOCATION: us-central1
   _NAMESPACE: app-namespace
   _DEPLOYMENT: app-deployment
-  _CONTAINER: qr-photo-dev-app
+  _CONTAINER: app
 
 # Build islemleri icin maksimum calisma suresi.
 timeout: 1200s
