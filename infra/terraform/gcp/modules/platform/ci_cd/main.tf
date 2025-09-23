@@ -21,7 +21,6 @@ resource "google_cloudbuild_trigger" "github" {
 
   substitutions = var.substitutions
 
-  service_account = var.service_account
 
   tags = ["terraform", "cloud-build", var.environment]
 }
