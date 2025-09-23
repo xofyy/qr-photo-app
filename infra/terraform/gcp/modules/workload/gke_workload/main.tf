@@ -2,10 +2,17 @@ terraform {
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.25"
+      version = "~> 2.26"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 5.25"
     }
   }
 }
+
+# Get Google Cloud client configuration
+data "google_client_config" "default" {}
 # Workload gke_workload modulunde Kubernetes uzerinde uygulama nesneleri olusturulur.
 
 # Namespace olusturarak kaynaklari izole eder.
@@ -13,6 +20,10 @@ resource "kubernetes_namespace" "this" {
   metadata {
     name   = var.namespace
     labels = var.labels
+  }
+
+  timeouts {
+    delete = "20m"
   }
 }
 
@@ -42,7 +53,7 @@ resource "kubernetes_deployment" "this" {
 
       spec {
         container {
-          name  = "-app"
+          name  = "app"
           image = var.image
 
           port {
@@ -70,9 +81,11 @@ resource "kubernetes_deployment" "this" {
 # Servis ile load balancer IP sine yonlendirme yapar.
 resource "kubernetes_service" "this" {
   metadata {
-    name      = "app-service"
+    name      = "${var.name_prefix}-service"
     namespace = kubernetes_namespace.this.metadata[0].name
-    labels    = var.labels
+    labels    = merge(var.labels, {
+      app = var.name_prefix
+    })
   }
 
   spec {

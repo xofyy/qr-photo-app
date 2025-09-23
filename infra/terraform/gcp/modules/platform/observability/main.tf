@@ -11,6 +11,11 @@ resource "google_logging_metric" "error_count" {
   metric_descriptor {
     metric_kind = "DELTA"
     value_type  = "INT64"
+    labels {
+      key         = "pod"
+      value_type  = "STRING"
+      description = "Kubernetes pod name"
+    }
   }
 
   label_extractors = {
@@ -28,7 +33,7 @@ resource "google_monitoring_alert_policy" "cpu" {
     display_name = "CPU Utilization"
 
     condition_threshold {
-      filter          = "metric.type=\"kubernetes.io/node/cpu/core_usage_time\""
+      filter          = "resource.type=\"k8s_node\" AND metric.type=\"kubernetes.io/node/cpu/core_usage_time\""
       duration        = "60s"
       comparison      = "COMPARISON_GT"
       threshold_value = var.cpu_threshold / 100

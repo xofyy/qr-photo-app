@@ -13,7 +13,7 @@ variable "gcp_project_id" {
 variable "gcp_region" {
   description = "GCP bolge adi"
   type        = string
-  default     = "europe-west1"
+  default     = "us-central1"
 }
 
 # Ortak isimlendirme icin proje adini belirtir.
@@ -167,7 +167,7 @@ variable "github_branch" {
 variable "cloudbuild_location" {
   description = "Cloud Build tetikleyici lokasyonu"
   type        = string
-  default     = "europe-west1"
+  default     = "us-central1"
 }
 
 # Cloud Build isinleri icin hizmet hesabini belirtir.

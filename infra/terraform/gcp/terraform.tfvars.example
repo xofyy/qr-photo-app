@@ -2,7 +2,7 @@
 # Tum degerler ascii formatinda tutuldu.
 
 gcp_project_id            = "my-gcp-project"
-gcp_region                = "europe-west1"
+gcp_region                = "us-central1"
 project_name              = "qr-photo"
 environment               = "dev"
 
@@ -42,5 +42,5 @@ workload_hpa_cpu = 60
 github_owner          = "murat"
 github_repo           = "qr-photo"
 github_branch         = "main"
-cloudbuild_location   = "europe-west1"
+cloudbuild_location   = "us-central1"
 cloudbuild_service_account = null

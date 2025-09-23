@@ -1,7 +1,7 @@
 # Platform ci_cd modulunde GitHub tetikleyicili Cloud Build kaynagi olusturulur.
 
 resource "google_cloudbuild_trigger" "github" {
-  name     = "-trigger"
+  name     = "${var.name_prefix}-trigger"
   project  = var.project_id
   location = var.location
 

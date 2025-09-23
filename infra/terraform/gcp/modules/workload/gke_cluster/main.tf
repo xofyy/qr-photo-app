@@ -18,7 +18,7 @@ resource "google_project_service" "required" {
 
 # Autopilot modu ile GKE cluster olusturur.
 resource "google_container_cluster" "main" {
-  name     = "autopilot"
+  name     = "${var.name_prefix}-cluster"
   project  = var.project_id
   location = var.region
 

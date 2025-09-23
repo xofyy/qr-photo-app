@@ -109,9 +109,15 @@ data "google_client_config" "default" {}
 
 provider "kubernetes" {
   alias                  = "gke"
-  host                   = module.workload_gke_cluster.endpoint
+  host                   = "https://${module.workload_gke_cluster.endpoint}"
   token                  = data.google_client_config.default.access_token
   cluster_ca_certificate = base64decode(module.workload_gke_cluster.cluster_ca_certificate)
+
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "gcloud"
+    args        = ["container", "clusters", "get-credentials", "${local.name_prefix}-cluster", "--region", var.gcp_region, "--project", var.gcp_project_id]
+  }
 }
 
 # Workload: Kubernetes namespace, deployment ve servis.
@@ -142,7 +148,7 @@ module "platform_ci_cd" {
   github_owner   = var.github_owner
   github_repo    = var.github_repo
   github_branch  = var.github_branch
-  build_filename = "cloudbuild.yaml"
+  build_filename = "infra/terraform/gcp/cloudbuild.yaml"
   included_files = ["**"]
   ignored_files  = []
   substitutions = {

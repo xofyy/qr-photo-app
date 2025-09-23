@@ -1,28 +1,19 @@
 # Cloud Build pipeline
-# Bu betik GitHub push tetiginde Docker imajini build eder, Artifact Registry'e push eder
+# Bu betik GitHub push tetiginde Docker imajini build eder, Artifact Registry'ye push eder
 # ve GKE uzerinde deploymentin imajini gunceller. Tum yorumlar ASCII formatindadir.
 substitutions:
-  # _REGION: Artifact Registry ve imaj build islemlerinin yapilacagi bolge.
-  _REGION: europe-west1
-  # _ARTIFACT_REPO: Artifact Registry depo kimligi (Terraform default: qr-photo-backend).
+  _REGION: us-central1
   _ARTIFACT_REPO: qr-photo-backend
-  # _IMAGE_NAME: Docker imaj adi (uygulama komponent adi).
   _IMAGE_NAME: qr-photo-backend
-  # _CLUSTER: GKE cluster adi (Terraform ciktisi: <project>-<env>-autopilot).
   _CLUSTER: qr-photo-dev-autopilot
-  # _LOCATION: GKE cluster bolgesi.
-  _LOCATION: europe-west1
-  # _NAMESPACE: Kubernetes namespace adi (Terraform ciktisi: <project>-<env>-namespace).
+  _LOCATION: us-central1
   _NAMESPACE: qr-photo-dev-namespace
-  # _DEPLOYMENT: Guncellenecek deployment adi (Terraform ciktisi: <project>-<env>-deployment).
   _DEPLOYMENT: qr-photo-dev-deployment
-  # _CONTAINER: Deployment icindeki container adi (Terraform ciktisi: <project>-<env>-app).
   _CONTAINER: qr-photo-dev-app
 
 # Build islemleri icin maksimum calisma suresi.
 timeout: 1200s
 
-# Docker imajinin tam path'i. Cloud Build bunu otomatik olusturmak icin kullanir.
 options:
   substitution_option: ALLOW_LOOSE
 
@@ -32,7 +23,7 @@ steps:
     args:
       - build
       - "-t"
-      - "-docker.pkg.dev///:"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:$SHORT_SHA"
       - "-f"
       - backend/Dockerfile
       - .
@@ -41,7 +32,7 @@ steps:
     id: Push image
     args:
       - push
-      - "-docker.pkg.dev///:"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:$SHORT_SHA"
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: Tag latest
@@ -51,8 +42,8 @@ steps:
       - docker
       - tags
       - add
-      - "-docker.pkg.dev///:"
-      - "-docker.pkg.dev///:latest"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:$SHORT_SHA"
+      - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:latest"
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: Configure kubectl
@@ -61,31 +52,31 @@ steps:
       - container
       - clusters
       - get-credentials
-      - 
+      - ${_CLUSTER}
       - --region
-      - 
+      - ${_LOCATION}
       - --project
-      - 
+      - $PROJECT_ID
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: Update deployment image
     entrypoint: kubectl
     args:
-      - --namespace=
+      - --namespace=${_NAMESPACE}
       - set
       - image
-      - deployment/
-      - =-docker.pkg.dev///:
+      - deployment/${_DEPLOYMENT}
+      - ${_CONTAINER}=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:$SHORT_SHA
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: Wait rollout
     entrypoint: kubectl
     args:
-      - --namespace=
+      - --namespace=${_NAMESPACE}
       - rollout
       - status
-      - deployment/
+      - deployment/${_DEPLOYMENT}
       - --timeout=300s
 
 images:
-  - "-docker.pkg.dev///:"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:$SHORT_SHA"
