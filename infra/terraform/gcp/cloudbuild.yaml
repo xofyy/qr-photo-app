@@ -6,10 +6,10 @@ substitutions:
   _REGION: us-central1
   _ARTIFACT_REPO: qr-photo-backend
   _IMAGE_NAME: qr-photo-backend
-  _CLUSTER: qr-photo-dev-autopilot
+  _CLUSTER: qr-photo-dev-cluster
   _LOCATION: us-central1
-  _NAMESPACE: qr-photo-dev-namespace
-  _DEPLOYMENT: qr-photo-dev-deployment
+  _NAMESPACE: app-namespace
+  _DEPLOYMENT: app-deployment
   _CONTAINER: qr-photo-dev-app
 
 # Build islemleri icin maksimum calisma suresi.
