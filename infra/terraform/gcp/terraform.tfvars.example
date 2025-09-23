@@ -1,22 +1,46 @@
-﻿# terraform.tfvars.example (GCP)
-# Aşağıdaki değerleri kendi ortamınıza göre düzenleyin ve dosyayı terraform.tfvars
-# olarak kopyalayın. Yorumlar her parametrenin ne işe yaradığını anlatır.
+# GCP Terraform tfvars ornegi
+# Tum degerler ascii formatinda tutuldu.
 
-project_id = "my-gcp-project"   # Zorunlu: gcloud config get-value project çıktısı ile eşleşmeli.
-region     = "europe-west1"     # Opsiyonel: Cloud Run bölgesi (örn. "us-central1").
+gcp_project_id            = "my-gcp-project"
+gcp_region                = "europe-west1"
+project_name              = "qr-photo"
+environment               = "dev"
 
-# GitHub tetikleyicisi için kimlik bilgileri; Cloud Build bu repo ve branch'i izler.
-github_owner  = "my-github-org"  # Zorunlu: GitHub organizasyonu/kullanıcı adı.
-github_repo   = "qr-photo-app"   # Zorunlu: Bağlanılacak repository adı.
-github_branch = "^main$"        # Opsiyonel: Regex formatında branch filtresi (örn. "^release/.*$").
-
-# Plain env değişkenleri state dosyasına düz metin olarak yazılır; kritik olmayan değerleri girin.
-run_service_env_vars = {
-  "DJANGO_SETTINGS_MODULE" = "backend.settings"
+default_labels = {
+  owner = "portfolio"
 }
 
-# Secret Manager'a eklenecek sır örneği; production için gerçek değerle değiştirin.
-# Map boş bırakılırsa ({}), secret oluşturulmaz.
-run_service_secret_values = {
-  "qr-photo-secret-key" = "replace-me"
+vpc_subnet_cidr         = "10.20.0.0/24"
+vpc_secondary_pods      = "10.21.0.0/20"
+vpc_secondary_services  = "10.22.0.0/24"
+
+gke_release_channel        = "REGULAR"
+gke_master_authorized_range = "192.168.0.0/24"
+
+artifact_location     = "europe"
+artifact_repository_id = "qr-photo-backend"
+
+initial_secrets = {
+  "database_url" = "postgres://user:pass@host:5432/db"
 }
+
+workload_image          = "europe-docker.pkg.dev/my-gcp-project/qr-photo-backend/app:latest"
+workload_container_port = 8080
+workload_service_port   = 80
+
+workload_env = [
+  {
+    name  = "APP_ENV"
+    value = "dev"
+  }
+]
+
+workload_hpa_min = 2
+workload_hpa_max = 5
+workload_hpa_cpu = 60
+
+github_owner          = "murat"
+github_repo           = "qr-photo"
+github_branch         = "main"
+cloudbuild_location   = "europe-west1"
+cloudbuild_service_account = null
