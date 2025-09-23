@@ -1,6 +1,7 @@
 # Cloud Build pipeline
 # Bu betik GitHub push tetiginde Docker imajini build eder, Artifact Registry'ye push eder
 # ve GKE uzerinde deploymentin imajini gunceller. Tum yorumlar ASCII formatindadir.
+
 substitutions:
   _REGION: us-central1
   _ARTIFACT_REPO: qr-photo-backend
@@ -16,6 +17,7 @@ timeout: 1200s
 
 options:
   substitution_option: ALLOW_LOOSE
+  logging: CLOUD_LOGGING_ONLY
 
 steps:
   - name: gcr.io/cloud-builders/docker
@@ -27,13 +29,13 @@ steps:
       - "-f"
       - backend/Dockerfile
       - .
-
+  
   - name: gcr.io/cloud-builders/docker
     id: Push image
     args:
       - push
       - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:$SHORT_SHA"
-
+  
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: Tag latest
     entrypoint: gcloud
@@ -44,7 +46,7 @@ steps:
       - add
       - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:$SHORT_SHA"
       - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:latest"
-
+  
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: Configure kubectl
     entrypoint: gcloud
@@ -57,7 +59,7 @@ steps:
       - ${_LOCATION}
       - --project
       - $PROJECT_ID
-
+  
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: Update deployment image
     entrypoint: kubectl
@@ -67,7 +69,7 @@ steps:
       - image
       - deployment/${_DEPLOYMENT}
       - ${_CONTAINER}=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REPO}/${_IMAGE_NAME}:$SHORT_SHA
-
+  
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     id: Wait rollout
     entrypoint: kubectl
