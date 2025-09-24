@@ -2,10 +2,8 @@ import io
 import zipfile
 import requests
 from typing import List, Dict
-import asyncio
 from concurrent.futures import ThreadPoolExecutor
-import tempfile
-import os
+from datetime import datetime
 import os
 import logging
 
@@ -86,7 +84,7 @@ async def create_photos_zip(photos: List[Dict], session_id: str) -> io.BytesIO:
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             # Add session info file
             session_info = f"""QR Photo Session: {session_id}
-Generated on: {asyncio.get_event_loop().time()}
+Generated on: {datetime.utcnow().isoformat()}Z
 Total photos: {len(photos)}
 
 This ZIP file contains all photos uploaded to your QR Photo Session.
@@ -115,7 +113,7 @@ def create_empty_session_zip(session_id: str) -> io.BytesIO:
     
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         session_info = f"""QR Photo Session: {session_id}
-Generated on: {asyncio.get_event_loop().time()}
+Generated on: {datetime.utcnow().isoformat()}Z
 Total photos: 0
 
 This session currently has no photos uploaded.
