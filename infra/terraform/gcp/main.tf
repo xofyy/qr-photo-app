@@ -48,6 +48,10 @@ locals {
   }, var.default_labels)
 
   internal_source_ranges = length(var.firewall_internal_source_ranges) > 0 ? var.firewall_internal_source_ranges : [var.vpc_subnet_cidr]
+
+  gke_master_authorized_networks = var.gke_master_authorized_networks != null ? var.gke_master_authorized_networks : (
+    var.gke_master_authorized_range != null ? [var.gke_master_authorized_range] : null
+  )
 }
 
 # Foundation: VPC ve subnet yapisi.
@@ -113,7 +117,8 @@ module "workload_gke_cluster" {
   pods_secondary_range       = module.foundation_network.pods_secondary_range
   services_secondary_range   = module.foundation_network.services_secondary_range
   release_channel            = var.gke_release_channel
-  master_authorized_networks = var.gke_master_authorized_networks
+  master_authorized_networks = local.gke_master_authorized_networks
+  master_authorized_range    = var.gke_master_authorized_range
 }
 
 data "google_client_config" "default" {}

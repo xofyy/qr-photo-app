@@ -36,7 +36,7 @@ degistirmek icin `infra/terraform/gcp/variables.tf` dosyasindaki asagidaki param
 - `enable_vpc_flow_logs`, `vpc_flow_logs_sampling`, `vpc_flow_logs_aggregation_interval`, `vpc_flow_logs_metadata`
 - `enable_nat_logging`, `nat_logging_filter`
 - `enable_firewall_logging`, `firewall_logging_metadata`, `firewall_internal_source_ranges`
-- `gke_master_authorized_networks`
+- `gke_master_authorized_networks` (veya geriye donuk uyumluluk icin `gke_master_authorized_range`)
 
 ### AWS
 

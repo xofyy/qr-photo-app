@@ -14,8 +14,11 @@ vpc_subnet_cidr         = "10.20.0.0/24"
 vpc_secondary_pods      = "10.21.0.0/20"
 vpc_secondary_services  = "10.22.0.0/24"
 
+# GKE master API erisimi icin birden fazla CIDR tanimlayabilirsiniz.
 gke_release_channel             = "REGULAR"
 gke_master_authorized_networks  = ["192.168.0.0/24"]
+# Tek bir CIDR kullanmak isterseniz asagidaki eski degiskeni tercih edebilirsiniz.
+# gke_master_authorized_range      = "192.168.0.0/24"
 firewall_internal_source_ranges = ["192.168.0.0/24"]
 
 enable_vpc_flow_logs                = true

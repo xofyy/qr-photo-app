@@ -64,11 +64,20 @@ variable "gke_release_channel" {
   default     = "REGULAR"
 }
 
+# GERİYE DONUK UYUMLULUK: Tek bir CIDR icin eski degisken.
+variable "gke_master_authorized_range" {
+  description = "[DEPRECATED] GKE master erisimi icin tek CIDR"
+  type        = string
+  default     = null
+  nullable    = true
+}
+
 # Master API erisimine izin verilen CIDR listesi.
 variable "gke_master_authorized_networks" {
   description = "GKE master erisimi icin yetkili CIDR listesi"
   type        = list(string)
-  default     = ["35.235.240.0/20"]
+  default     = null
+  nullable    = true
 }
 
 # VPC Flow Logs icin aktivasyon.

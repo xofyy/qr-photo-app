@@ -49,9 +49,18 @@ variable "release_channel" {
   default     = "REGULAR"
 }
 
+# GERİYE DONUK UYUMLULUK: Tek bir CIDR icin eski degisken.
+variable "master_authorized_range" {
+  description = "[DEPRECATED] Master API erisimi icin tek CIDR"
+  type        = string
+  default     = null
+  nullable    = true
+}
+
 # Master yetkili aglar icin CIDR listesi.
 variable "master_authorized_networks" {
   description = "Master API erisimi icin yetkili CIDR listesi"
   type        = list(string)
-  default     = ["35.235.240.0/20"]
+  default     = null
+  nullable    = true
 }
