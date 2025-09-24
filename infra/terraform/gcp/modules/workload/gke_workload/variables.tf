@@ -102,3 +102,10 @@ variable "hpa_cpu_target" {
   type        = number
   default     = 60
 }
+
+# Sensitive environment variables that will be mounted via Kubernetes secrets.
+variable "secret_environment_variables" {
+  description = "Sensitive environment variables injected via Kubernetes secret"
+  type        = map(string)
+  default     = {}
+}

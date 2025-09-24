@@ -133,6 +133,7 @@ module "workload_gke_workload" {
   container_port        = var.workload_container_port
   service_port          = var.workload_service_port
   environment_variables = var.workload_env
+  secret_environment_variables = var.initial_secrets
   hpa_min_replicas      = var.workload_hpa_min
   hpa_max_replicas      = var.workload_hpa_max
   hpa_cpu_target        = var.workload_hpa_cpu

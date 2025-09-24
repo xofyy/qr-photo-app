@@ -27,6 +27,18 @@ resource "kubernetes_namespace" "this" {
   }
 }
 
+# Kubernetes secret olusturarak environment degiskenlerini saklar.
+resource "kubernetes_secret" "env" {
+  metadata {
+    name      = "${var.name_prefix}-env"
+    namespace = kubernetes_namespace.this.metadata[0].name
+    labels    = var.labels
+  }
+
+  type = "Opaque"
+  data = var.secret_environment_variables
+}
+
 # Deployment ile uygulama podlarini konfigure eder.
 resource "kubernetes_deployment" "this" {
   metadata {
@@ -65,11 +77,19 @@ resource "kubernetes_deployment" "this" {
             requests = var.resource_requests
           }
 
+          # Normal environment variables
           dynamic "env" {
             for_each = var.environment_variables
             content {
               name  = env.value.name
               value = env.value.value
+            }
+          }
+
+          # Secret'tan environment variables
+          env_from {
+            secret_ref {
+              name = kubernetes_secret.env.metadata[0].name
             }
           }
         }
