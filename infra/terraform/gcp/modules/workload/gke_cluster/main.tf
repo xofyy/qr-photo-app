@@ -39,10 +39,16 @@ resource "google_container_cluster" "main" {
     enabled = true
   }
 
-  master_authorized_networks_config {
-    cidr_blocks {
-      display_name = "admin"
-      cidr_block   = var.master_authorized_range
+  dynamic "master_authorized_networks_config" {
+    for_each = length(var.master_authorized_networks) > 0 ? [1] : []
+    content {
+      dynamic "cidr_blocks" {
+        for_each = { for idx, cidr in var.master_authorized_networks : idx => cidr }
+        content {
+          display_name = "admin-${cidr_blocks.key}"
+          cidr_block   = cidr_blocks.value
+        }
+      }
     }
   }
 

@@ -42,3 +42,45 @@ variable "secondary_range_services" {
   description = "Servis IP atamalari icin ikinci CIDR"
   type        = string
 }
+
+# VPC Flow Logs ozelligi.
+variable "enable_flow_logs" {
+  description = "Subnet icin flow loglarini etkinlestir"
+  type        = bool
+  default     = true
+}
+
+# Flow Logs toplama araligi.
+variable "flow_logs_aggregation_interval" {
+  description = "Flow Logs toplama araligi"
+  type        = string
+  default     = "INTERVAL_10_MIN"
+}
+
+# Flow Logs ornekleme oranini belirler.
+variable "flow_logs_sampling" {
+  description = "Flow Logs ornekleme orani"
+  type        = number
+  default     = 0.5
+}
+
+# Flow Logs metadata modunu tanimlar.
+variable "flow_logs_metadata" {
+  description = "Flow Logs metadata modu"
+  type        = string
+  default     = "INCLUDE_ALL_METADATA"
+}
+
+# Cloud NAT loglama ozelligi.
+variable "enable_nat_logging" {
+  description = "Cloud NAT loglarini etkinlestir"
+  type        = bool
+  default     = true
+}
+
+# Cloud NAT log filtresi.
+variable "nat_logging_filter" {
+  description = "Cloud NAT log filtresi"
+  type        = string
+  default     = "ALL"
+}

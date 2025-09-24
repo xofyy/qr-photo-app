@@ -49,9 +49,9 @@ variable "release_channel" {
   default     = "REGULAR"
 }
 
-# Master yetkili aglar icin CIDR tanimi.
-variable "master_authorized_range" {
-  description = "Master API erisimi icin yetkili CIDR"
-  type        = string
-  default     = "0.0.0.0/0"
+# Master yetkili aglar icin CIDR listesi.
+variable "master_authorized_networks" {
+  description = "Master API erisimi icin yetkili CIDR listesi"
+  type        = list(string)
+  default     = ["35.235.240.0/20"]
 }

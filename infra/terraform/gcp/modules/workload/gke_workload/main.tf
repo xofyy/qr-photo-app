@@ -103,7 +103,7 @@ resource "kubernetes_service" "this" {
   metadata {
     name      = "${var.name_prefix}-service"
     namespace = kubernetes_namespace.this.metadata[0].name
-    labels    = merge(var.labels, {
+    labels = merge(var.labels, {
       app = var.name_prefix
     })
   }

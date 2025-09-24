@@ -29,6 +29,15 @@ Değerler terraform.tfvars dosyalarinda girilmelidir. Varsayilan olmayan degiske
 | `github_repo` | Tetikleyici tarafindan izlenen repo adi | `qr-photo-app` |
 | `run_service_secret_values`* | Secret Manager'a yazilacak sirlar (istenirse bos map) | `{ "qr-photo-secret-key" = "..." }` |
 
+Yeni surumle birlikte GCP altyapisinda standart olarak VPC Flow Logs, Cloud NAT loglari ve firewall loglari acik gelir. GKE cluster
+API erisimi artik 0.0.0.0/0 yerine varsayilan olarak IAP IP araligi (35.235.240.0/20) ile sinirlanmistir. Bu davranislari
+degistirmek icin `infra/terraform/gcp/variables.tf` dosyasindaki asagidaki parametreleri override edebilirsiniz:
+
+- `enable_vpc_flow_logs`, `vpc_flow_logs_sampling`, `vpc_flow_logs_aggregation_interval`, `vpc_flow_logs_metadata`
+- `enable_nat_logging`, `nat_logging_filter`
+- `enable_firewall_logging`, `firewall_logging_metadata`, `firewall_internal_source_ranges`
+- `gke_master_authorized_networks`
+
 ### AWS
 
 | Değişken | Açıklama | Örnek |

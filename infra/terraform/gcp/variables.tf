@@ -64,11 +64,74 @@ variable "gke_release_channel" {
   default     = "REGULAR"
 }
 
-# Master API erisimine izin verilen CIDR araligi.
-variable "gke_master_authorized_range" {
-  description = "GKE master erisim CIDR"
+# Master API erisimine izin verilen CIDR listesi.
+variable "gke_master_authorized_networks" {
+  description = "GKE master erisimi icin yetkili CIDR listesi"
+  type        = list(string)
+  default     = ["35.235.240.0/20"]
+}
+
+# VPC Flow Logs icin aktivasyon.
+variable "enable_vpc_flow_logs" {
+  description = "VPC Flow Logs ozelligini ac/kapa"
+  type        = bool
+  default     = true
+}
+
+# VPC Flow Logs icin toplama araligi.
+variable "vpc_flow_logs_aggregation_interval" {
+  description = "VPC Flow Logs toplama araligi"
   type        = string
-  default     = "0.0.0.0/0"
+  default     = "INTERVAL_10_MIN"
+}
+
+# VPC Flow Logs icin ornekleme orani.
+variable "vpc_flow_logs_sampling" {
+  description = "VPC Flow Logs ornekleme orani"
+  type        = number
+  default     = 0.5
+}
+
+# VPC Flow Logs icin metadata secimi.
+variable "vpc_flow_logs_metadata" {
+  description = "VPC Flow Logs metadata modu"
+  type        = string
+  default     = "INCLUDE_ALL_METADATA"
+}
+
+# Cloud NAT loglama ozelligi.
+variable "enable_nat_logging" {
+  description = "Cloud NAT loglarini etkinlestir"
+  type        = bool
+  default     = true
+}
+
+# Cloud NAT log filtresi.
+variable "nat_logging_filter" {
+  description = "Cloud NAT log filtresi"
+  type        = string
+  default     = "ALL"
+}
+
+# Firewall loglarini ac/kapa.
+variable "enable_firewall_logging" {
+  description = "Firewall loglarini etkinlestir"
+  type        = bool
+  default     = true
+}
+
+# Firewall loglari metadata modu.
+variable "firewall_logging_metadata" {
+  description = "Firewall log metadata modu"
+  type        = string
+  default     = "INCLUDE_ALL_METADATA"
+}
+
+# Internal firewall icin izin verilecek CIDR listesi.
+variable "firewall_internal_source_ranges" {
+  description = "Internal firewall kurali icin CIDR listesi"
+  type        = list(string)
+  default     = []
 }
 
 # Artifact Registry lokasyonu.

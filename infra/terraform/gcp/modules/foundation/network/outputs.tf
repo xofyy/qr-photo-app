@@ -29,3 +29,9 @@ output "nat_name" {
   description = "Cloud NAT adi"
   value       = google_compute_router_nat.main.name
 }
+
+# Subnetin ana CIDR blogu.
+output "subnet_cidr_range" {
+  description = "Subnet icin ana CIDR"
+  value       = var.subnet_cidr_range
+}

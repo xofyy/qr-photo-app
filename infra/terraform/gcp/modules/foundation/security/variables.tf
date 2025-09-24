@@ -24,3 +24,24 @@ variable "network_id" {
   description = "VPC kaynak kimligi"
   type        = string
 }
+
+# Internal firewall icin izin verilecek CIDR listesi.
+variable "internal_source_ranges" {
+  description = "Internal firewall kurali icin izinli CIDR listesi"
+  type        = list(string)
+  default     = []
+}
+
+# Firewall loglarini etkinlestir.
+variable "enable_firewall_logging" {
+  description = "Firewall loglarini etkinlestir"
+  type        = bool
+  default     = true
+}
+
+# Firewall log metadata modu.
+variable "firewall_logging_metadata" {
+  description = "Firewall log metadata modu"
+  type        = string
+  default     = "INCLUDE_ALL_METADATA"
+}

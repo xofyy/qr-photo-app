@@ -46,27 +46,38 @@ locals {
     project     = var.project_name,
     environment = var.environment
   }, var.default_labels)
+
+  internal_source_ranges = length(var.firewall_internal_source_ranges) > 0 ? var.firewall_internal_source_ranges : [var.vpc_subnet_cidr]
 }
 
 # Foundation: VPC ve subnet yapisi.
 module "foundation_network" {
-  source                   = "./modules/foundation/network"
-  name_prefix              = local.name_prefix
-  labels                   = local.default_labels
-  project_id               = var.gcp_project_id
-  region                   = var.gcp_region
-  subnet_cidr_range        = var.vpc_subnet_cidr
-  secondary_range_pods     = var.vpc_secondary_pods
-  secondary_range_services = var.vpc_secondary_services
+  source                         = "./modules/foundation/network"
+  name_prefix                    = local.name_prefix
+  labels                         = local.default_labels
+  project_id                     = var.gcp_project_id
+  region                         = var.gcp_region
+  subnet_cidr_range              = var.vpc_subnet_cidr
+  secondary_range_pods           = var.vpc_secondary_pods
+  secondary_range_services       = var.vpc_secondary_services
+  enable_flow_logs               = var.enable_vpc_flow_logs
+  flow_logs_sampling             = var.vpc_flow_logs_sampling
+  flow_logs_aggregation_interval = var.vpc_flow_logs_aggregation_interval
+  flow_logs_metadata             = var.vpc_flow_logs_metadata
+  enable_nat_logging             = var.enable_nat_logging
+  nat_logging_filter             = var.nat_logging_filter
 }
 
 # Foundation: Firewall kurallari.
 module "foundation_security" {
-  source      = "./modules/foundation/security"
-  name_prefix = local.name_prefix
-  labels      = local.default_labels
-  project_id  = var.gcp_project_id
-  network_id  = module.foundation_network.network_id
+  source                    = "./modules/foundation/security"
+  name_prefix               = local.name_prefix
+  labels                    = local.default_labels
+  project_id                = var.gcp_project_id
+  network_id                = module.foundation_network.network_id
+  internal_source_ranges    = local.internal_source_ranges
+  enable_firewall_logging   = var.enable_firewall_logging
+  firewall_logging_metadata = var.firewall_logging_metadata
 }
 
 # Platform: Artifact Registry ve Secret Manager.
@@ -93,16 +104,16 @@ module "platform_observability" {
 
 # Workload: Autopilot GKE cluster.
 module "workload_gke_cluster" {
-  source                   = "./modules/workload/gke_cluster"
-  name_prefix              = local.name_prefix
-  project_id               = var.gcp_project_id
-  region                   = var.gcp_region
-  network_id               = module.foundation_network.network_id
-  subnet_id                = module.foundation_network.subnet_id
-  pods_secondary_range     = module.foundation_network.pods_secondary_range
-  services_secondary_range = module.foundation_network.services_secondary_range
-  release_channel          = var.gke_release_channel
-  master_authorized_range  = var.gke_master_authorized_range
+  source                     = "./modules/workload/gke_cluster"
+  name_prefix                = local.name_prefix
+  project_id                 = var.gcp_project_id
+  region                     = var.gcp_region
+  network_id                 = module.foundation_network.network_id
+  subnet_id                  = module.foundation_network.subnet_id
+  pods_secondary_range       = module.foundation_network.pods_secondary_range
+  services_secondary_range   = module.foundation_network.services_secondary_range
+  release_channel            = var.gke_release_channel
+  master_authorized_networks = var.gke_master_authorized_networks
 }
 
 data "google_client_config" "default" {}
@@ -126,17 +137,17 @@ module "workload_gke_workload" {
   providers = {
     kubernetes = kubernetes.gke
   }
-  name_prefix           = local.name_prefix
-  namespace             = "app-namespace"
-  labels                = local.default_labels
-  image                 = var.workload_image
-  container_port        = var.workload_container_port
-  service_port          = var.workload_service_port
-  environment_variables = var.workload_env
+  name_prefix                  = local.name_prefix
+  namespace                    = "app-namespace"
+  labels                       = local.default_labels
+  image                        = var.workload_image
+  container_port               = var.workload_container_port
+  service_port                 = var.workload_service_port
+  environment_variables        = var.workload_env
   secret_environment_variables = var.initial_secrets
-  hpa_min_replicas      = var.workload_hpa_min
-  hpa_max_replicas      = var.workload_hpa_max
-  hpa_cpu_target        = var.workload_hpa_cpu
+  hpa_min_replicas             = var.workload_hpa_min
+  hpa_max_replicas             = var.workload_hpa_max
+  hpa_cpu_target               = var.workload_hpa_cpu
 }
 
 # Platform: Cloud Build tetikleyicisi.
