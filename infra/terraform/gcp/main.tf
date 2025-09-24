@@ -117,7 +117,7 @@ module "workload_gke_cluster" {
   pods_secondary_range       = module.foundation_network.pods_secondary_range
   services_secondary_range   = module.foundation_network.services_secondary_range
   release_channel            = var.gke_release_channel
-  master_authorized_networks = local.gke_master_authorized_networks
+  master_authorized_network_cidrs = local.gke_master_authorized_networks
   master_authorized_range    = var.gke_master_authorized_range
 }
 
