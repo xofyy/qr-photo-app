@@ -17,6 +17,17 @@ resource "google_project_service" "required" {
 }
 
 # Autopilot modu ile GKE cluster olusturur.
+locals {
+  default_admin_cidr = "35.235.240.0/20"
+
+  effective_master_authorized_cidrs = (
+    var.master_authorized_network_cidrs != null ? var.master_authorized_network_cidrs :
+    var.master_authorized_networks != null ? var.master_authorized_networks :
+    var.master_authorized_range != null ? [var.master_authorized_range] :
+    [local.default_admin_cidr]
+  )
+}
+
 resource "google_container_cluster" "main" {
   name     = "${var.name_prefix}-cluster"
   project  = var.project_id
@@ -39,10 +50,16 @@ resource "google_container_cluster" "main" {
     enabled = true
   }
 
-  master_authorized_networks_config {
-    cidr_blocks {
-      display_name = "admin"
-      cidr_block   = var.master_authorized_range
+  dynamic "master_authorized_networks_config" {
+    for_each = length(local.effective_master_authorized_cidrs) > 0 ? [1] : []
+    content {
+      dynamic "cidr_blocks" {
+        for_each = { for idx, cidr in local.effective_master_authorized_cidrs : idx => cidr }
+        content {
+          display_name = "admin-${cidr_blocks.key}"
+          cidr_block   = cidr_blocks.value
+        }
+      }
     }
   }
 

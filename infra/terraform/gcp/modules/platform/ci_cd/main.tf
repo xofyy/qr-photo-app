@@ -25,7 +25,7 @@ resource "google_cloudbuild_trigger" "github" {
 
   included_files = var.included_files
   ignored_files  = var.ignored_files
-  substitutions = var.substitutions
+  substitutions  = var.substitutions
 
   service_account = "projects/${var.project_id}/serviceAccounts/305617730642-compute@developer.gserviceaccount.com"
 

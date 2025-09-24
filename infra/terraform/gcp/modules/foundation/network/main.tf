@@ -39,6 +39,15 @@ resource "google_compute_subnetwork" "public" {
     range_name    = "${local.effective_prefix}-services"
     ip_cidr_range = var.secondary_range_services
   }
+
+  dynamic "log_config" {
+    for_each = var.enable_flow_logs ? [1] : []
+    content {
+      aggregation_interval = var.flow_logs_aggregation_interval
+      flow_sampling        = var.flow_logs_sampling
+      metadata             = var.flow_logs_metadata
+    }
+  }
 }
 
 # Cloud Router olusturarak NAT icin temel saglar.
@@ -63,6 +72,11 @@ resource "google_compute_router_nat" "main" {
   enable_endpoint_independent_mapping = true
 
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  log_config {
+    enable = var.enable_nat_logging
+    filter = var.nat_logging_filter
+  }
 }
 
 
