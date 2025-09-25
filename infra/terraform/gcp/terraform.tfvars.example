@@ -4,7 +4,7 @@
 gcp_project_id            = "my-gcp-project"
 gcp_region                = "us-central1"
 project_name              = "qr-photo"
-environment               = "dev"
+environment               = "dev" # kucuk harf/rakam/tire, 2-16 karakter
 
 default_labels = {
   owner = "portfolio"
@@ -38,8 +38,8 @@ initial_secrets = {
 }
 
 workload_image          = "europe-docker.pkg.dev/my-gcp-project/qr-photo-backend/app:latest"
-workload_container_port = 8080
-workload_service_port   = 80
+workload_container_port = 8080 # 1-65535
+workload_service_port   = 80   # 1-65535
 
 workload_env = [
   {
