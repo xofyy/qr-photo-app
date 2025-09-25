@@ -1,0 +1,59 @@
+# Production ortamı için örnek değerler
+
+gcp_project_id = "my-gcp-prod"
+gcp_region     = "europe-west1"
+project_name   = "qr-photo"
+environment    = "prod"
+
+default_labels = {
+  owner       = "platform"
+  environment = "prod"
+  cost_center = "production"
+}
+
+vpc_subnet_cidr        = "10.40.0.0/24"
+vpc_secondary_pods     = "10.41.0.0/20"
+vpc_secondary_services = "10.42.0.0/24"
+
+gke_release_channel             = "STABLE"
+gke_master_authorized_networks  = ["192.168.30.0/24"]
+firewall_internal_source_ranges = ["192.168.30.0/24"]
+
+enable_vpc_flow_logs               = true
+vpc_flow_logs_sampling             = 0.5
+vpc_flow_logs_aggregation_interval = "INTERVAL_5_MIN"
+vpc_flow_logs_metadata             = "INCLUDE_ALL_METADATA"
+
+enable_nat_logging = true
+nat_logging_filter = "ALL"
+
+enable_firewall_logging   = true
+firewall_logging_metadata = "INCLUDE_ALL_METADATA"
+
+artifact_location      = "europe-west1"
+artifact_repository_id = "qr-photo-backend"
+
+initial_secrets = {
+  "database_url" = "postgres://prod-user:prod-pass@prod-host:5432/proddb"
+}
+
+workload_image          = "europe-west1-docker.pkg.dev/my-gcp-prod/qr-photo-backend/app:latest"
+workload_container_port = 8080
+workload_service_port   = 80
+
+workload_env = [
+  {
+    name  = "APP_ENV"
+    value = "prod"
+  }
+]
+
+workload_hpa_min = 4
+workload_hpa_max = 10
+workload_hpa_cpu = 55
+
+github_owner               = "example-org"
+github_repo                = "qr-photo-app"
+github_branch              = "main"
+cloudbuild_location        = "europe-west1"
+cloudbuild_service_account = null

@@ -82,7 +82,7 @@ Bu yol haritasi, Terraform kod tabanini kurumsal sinif olgunluga tasimak icin ge
 
 ## 7. Sonraki Adimlar
 
-1. Proje tahtasini (milestone + issue + acceptance criteria) olustur.
-2. Faz 1 kapsamindaki TF-01 issue'sunu uygulayarak variable validation setlerini ekle.
-3. Faz 1 diger issue'lari icin altyapi gereksinimlerini (GCS bucket, ortam tfvars yapisi) hazirla.
+1. Faz 2 kapsaminda TF-04 ve TF-05 icin dokumantasyon + CI otomasyon taslagini hazirla.
+2. IAM sertlestirme (TF-06) icin mevcut servis hesaplarini envanterleyip gerekli rollerin listesini cikar.
+3. Faz 2 bitiminde alerting (TF-09) calismalarina hazirlik icin mevcut metric'leri ve SLO hedeflerini tanimla.
 

@@ -19,10 +19,7 @@ terraform {
       version = "~> 2.25"
     }
   }
-  # backend "gcs" {
-  #   bucket = "gcp-terraform-state"
-  #   prefix = "qr-photo/terraform"
-  # }
+  backend "gcs" {}
 }
 
 provider "google" {

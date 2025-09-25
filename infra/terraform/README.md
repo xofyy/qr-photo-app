@@ -10,11 +10,15 @@ Bu dizin QR Photo uygulamasi icin Google Cloud Platform (GCP) ve Amazon Web Serv
 ## Genel Kullanım Akisi
 
 1. Terraform 1.6 veya ustu bir surume sahip oldugunuzdan emin olun (`terraform version`).
-2. Her dizinde `terraform.tfvars.example` dosyasini `terraform.tfvars` olarak kopyalayip kendi ortam degerlerinizi yazin.
-3. Kimlik dogrulama icin:
+2. GCP tarafinda ortak state kullanacaksaniz once `gcp/bootstrap/state_backend` dizinindeki modulu calistirip Cloud Storage bucket'ini ve IAM yetkilerini olusturun.
+3. Her dizinde ortam dosyalarini hazirlayin:
+   - GCP icin `infra/terraform/gcp/environments` altindaki `*.tfvars` sablonlarini ihtiyaciniza gore duzenleyin (orn. `dev.tfvars`).
+   - AWS icin `terraform.tfvars.example` dosyasini `terraform.tfvars` olarak kopyalayip kendi ortam degerlerinizi yazin.
+4. Kimlik dogrulama icin:
    - GCP: `gcloud auth application-default login` komutu veya servis hesabini `GOOGLE_APPLICATION_CREDENTIALS` ile belirtin.
    - AWS: `aws configure` ile profil olusturun veya `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` ortam degiskenlerini tanimlayin.
-4. GCP icin `infra/terraform/gcp`, AWS icin `infra/terraform/aws` dizinine girerek sirasiyla `terraform init`, `terraform plan` ve `terraform apply` komutlarini calistirin.
+5. GCP altyapisi icin her ortamda `terraform init` komutuna ilgili backend parametrelerini verin: `terraform -chdir=infra/terraform/gcp init -backend-config="bucket=..." -backend-config="prefix=qr-photo/terraform/dev"`.
+6. Ardindan `terraform workspace select dev || terraform workspace new dev` komutuyla workspace'i alin ve `terraform plan -var-file=environments/dev.tfvars` / `terraform apply` adimlarini calistirin. AWS icin klasik `terraform init/plan/apply` adimlarini uygulayin.
 
 ## Zorunlu Değişkenler
 
@@ -28,6 +32,8 @@ Değerler terraform.tfvars dosyalarinda girilmelidir. Varsayilan olmayan degiske
 | `github_owner` | Cloud Build tetikleyicisinin baglanacagi GitHub org/kullanici | `my-org` |
 | `github_repo` | Tetikleyici tarafindan izlenen repo adi | `qr-photo-app` |
 | `run_service_secret_values`* | Secret Manager'a yazilacak sirlar (istenirse bos map) | `{ "qr-photo-secret-key" = "..." }` |
+
+> `infra/terraform/gcp/environments` dizininde dev/staging/prod icin hazir `tfvars` ve backend sablonlari bulunur. Her ortam icin ilgili dosyayi kopyalayip kendi degerlerinizi girmeniz yeterlidir.
 
 Yeni surumle birlikte GCP altyapisinda standart olarak VPC Flow Logs, Cloud NAT loglari ve firewall loglari acik gelir. GKE cluster
 API erisimi artik 0.0.0.0/0 yerine varsayilan olarak IAP IP araligi (35.235.240.0/20) ile sinirlanmistir. Bu davranislari
@@ -51,6 +57,7 @@ degistirmek icin `infra/terraform/gcp/variables.tf` dosyasindaki asagidaki param
 
 - `variables.tf` dosyalari tum parametreler icin secenekleri ve ornekleri anlatir; terraform.tfvars.example dosyalari bunlari nasil dolduracaginiza dair sablon sunar.
 - `cloudbuild.yaml` dosyasindaki yorumlar build/push/deploy adimlarinda ve substitution degiskenlerinde hangi degerlerin kullanilabilecegini aciklar.
+- Terraform altyapisini CI'da planlamak icin `cloudbuild.terraform.yaml` dosyasini kullanabilir, `_STATE_BUCKET`/`_STATE_PREFIX` substitution degerlerini remote state bucket'inizle esleyecek sekilde guncelleyebilirsiniz.
 - GCP terraform iyilestirme yol haritasi ve issue planlamasi icin `gcp/ROADMAP.md` ve `gcp/PROJECT_BOARD.md` dosyalarina goz atabilirsiniz.
 - AWS tarafinda olusturulan ECR deposuna CI/CD pipeline'iniz Docker imajini push ettikten sonra `aws ecs update-service --force-new-deployment` komutuyla yeni versiyonu yayina alabilirsiniz.
 - Production ortaminda Terraform state'ini paylasmak icin GCP'de Cloud Storage + state lock, AWS'de S3 + DynamoDB kullanmayi dusunun.

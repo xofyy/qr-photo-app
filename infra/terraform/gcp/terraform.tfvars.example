@@ -1,5 +1,6 @@
 # GCP Terraform tfvars ornegi
 # Tum degerler ascii formatinda tutuldu.
+# Ortam bazli sablonlar icin `environments/` dizinine goz atin; bu dosya ortak degerleri gosterir.
 
 gcp_project_id            = "my-gcp-project"
 gcp_region                = "us-central1"
