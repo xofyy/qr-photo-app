@@ -19,10 +19,7 @@ terraform {
       version = "~> 2.25"
     }
   }
-  # backend "gcs" {
-  #   bucket = "gcp-terraform-state"
-  #   prefix = "qr-photo/terraform"
-  # }
+  backend "gcs" {}
 }
 
 provider "google" {
@@ -101,24 +98,24 @@ module "platform_observability" {
   name_prefix           = local.name_prefix
   labels                = local.default_labels
   project_id            = var.gcp_project_id
-  namespace             = "-namespace"
+  namespace             = "app-namespace"
   notification_channels = []
   cpu_threshold         = 70
 }
 
 # Workload: Autopilot GKE cluster.
 module "workload_gke_cluster" {
-  source                     = "./modules/workload/gke_cluster"
-  name_prefix                = local.name_prefix
-  project_id                 = var.gcp_project_id
-  region                     = var.gcp_region
-  network_id                 = module.foundation_network.network_id
-  subnet_id                  = module.foundation_network.subnet_id
-  pods_secondary_range       = module.foundation_network.pods_secondary_range
-  services_secondary_range   = module.foundation_network.services_secondary_range
-  release_channel            = var.gke_release_channel
+  source                          = "./modules/workload/gke_cluster"
+  name_prefix                     = local.name_prefix
+  project_id                      = var.gcp_project_id
+  region                          = var.gcp_region
+  network_id                      = module.foundation_network.network_id
+  subnet_id                       = module.foundation_network.subnet_id
+  pods_secondary_range            = module.foundation_network.pods_secondary_range
+  services_secondary_range        = module.foundation_network.services_secondary_range
+  release_channel                 = var.gke_release_channel
   master_authorized_network_cidrs = local.gke_master_authorized_networks
-  master_authorized_range    = var.gke_master_authorized_range
+  master_authorized_range         = var.gke_master_authorized_range
 }
 
 data "google_client_config" "default" {}
