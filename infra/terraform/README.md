@@ -51,6 +51,7 @@ degistirmek icin `infra/terraform/gcp/variables.tf` dosyasindaki asagidaki param
 
 - `variables.tf` dosyalari tum parametreler icin secenekleri ve ornekleri anlatir; terraform.tfvars.example dosyalari bunlari nasil dolduracaginiza dair sablon sunar.
 - `cloudbuild.yaml` dosyasindaki yorumlar build/push/deploy adimlarinda ve substitution degiskenlerinde hangi degerlerin kullanilabilecegini aciklar.
+- GCP terraform iyilestirme yol haritasi ve issue planlamasi icin `gcp/ROADMAP.md` ve `gcp/PROJECT_BOARD.md` dosyalarina goz atabilirsiniz.
 - AWS tarafinda olusturulan ECR deposuna CI/CD pipeline'iniz Docker imajini push ettikten sonra `aws ecs update-service --force-new-deployment` komutuyla yeni versiyonu yayina alabilirsiniz.
 - Production ortaminda Terraform state'ini paylasmak icin GCP'de Cloud Storage + state lock, AWS'de S3 + DynamoDB kullanmayi dusunun.
 - Sırlar Terraform state dosyasına düz metin olarak yazıldığından, kritik bilgileri uzun vadede Secret Manager/Secrets Manager üzerinde elle veya ayrı otomasyonla güncellemek daha güvenlidir.
