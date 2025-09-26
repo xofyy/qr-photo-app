@@ -16,17 +16,17 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const {owner, repo} = context.repo;
-            const head = ${owner}:dev;
+            const { owner, repo } = context.repo;
+            const head = `${owner}:dev`;
             const base = 'staging';
-            const existing = await github.rest.pulls.list({ owner, repo, head, base, state: 'open' });
-            if (existing.data.length === 0) {
+            const { data: pulls } = await github.rest.pulls.list({ owner, repo, head, base, state: 'open' });
+            if (pulls.length === 0) {
               await github.rest.pulls.create({
                 owner,
                 repo,
                 head: 'dev',
                 base,
-                title: Promote dev to staging (),
+                title: `Promote dev to staging (${context.sha.substring(0, 7)})`,
                 body: 'Auto-generated promotion PR. Please review and approve to promote changes from dev to staging.'
               });
             }
