@@ -1,6 +1,6 @@
 # GCP Terraform Altyapisi Iyilestirme Yol Haritasi
 
-## 1. Mevcut Durum Ozeti
+## 1. Mevcut Durum Özeti
 
 Bu depo icindeki Terraform kodu, GCP uzerinde Autopilot GKE tabanli bir ortam kurmak icin moduler bir yapi sunar. Modul seti temel olarak uc katmana ayrilmis durumdadir:
 
