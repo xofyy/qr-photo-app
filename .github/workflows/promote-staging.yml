@@ -1,4 +1,4 @@
-name: Promote Staging to Main
+name: Promote Staging to prod
 
 on:
   push:
@@ -12,13 +12,13 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - name: Ensure PR from staging to main exists
+      - name: Ensure PR from staging to prod exists
         uses: actions/github-script@v7
         with:
           script: |
             const {owner, repo} = context.repo;
             const head = ${owner}:staging;
-            const base = 'main';
+            const base = 'prod';
             const existing = await github.rest.pulls.list({ owner, repo, head, base, state: 'open' });
             if (existing.data.length === 0) {
               await github.rest.pulls.create({
@@ -26,7 +26,7 @@ jobs:
                 repo,
                 head: 'staging',
                 base,
-                title: Promote staging to main (),
-                body: 'Auto-generated promotion PR. Approve to promote changes from staging to main.'
+                title: Promote staging to prod (),
+                body: 'Auto-generated promotion PR. Approve to promote changes from staging to prod.'
               });
             }
