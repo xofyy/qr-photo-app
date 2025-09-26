@@ -382,7 +382,7 @@ variable "cloudbuild_service_account" {
   default     = null
   validation {
     condition     = var.cloudbuild_service_account == null ? true : can(regex("^[a-z][a-z0-9-]{5,30}@[a-z0-9-]+[.]iam[.]gserviceaccount[.]com$", var.cloudbuild_service_account))
-    error_message = "cloudbuild_service_account g-serviceaccount formatinda gecerli bir e-posta olmali veya null birakilmalidir."
+    error_message = "cloudbuild_service_account g-serviceaccount formatinda gecerli bir e-posta olmali ve/veya null birakilmalidir."
   }
 }
 # Terraform remote state bucket adi.
@@ -466,7 +466,7 @@ variable "gke_cluster_location" {
   default     = null
 }
 
-# GKE node locations (ek zonelar). Boþ býrakýlýrsa cluster lokasyonu kullanýlýr.
+# GKE node locations (ek zonelar). Boï¿½ bï¿½rakï¿½lï¿½rsa cluster lokasyonu kullanï¿½lï¿½r.
 variable "gke_node_locations" {
   description = "GKE node locations listesi"
   type        = list(string)
