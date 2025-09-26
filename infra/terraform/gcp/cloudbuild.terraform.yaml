@@ -7,6 +7,7 @@ substitutions:
   _STATE_PREFIX: "qr-photo/terraform"
   _ENV: "dev"
   _TFVARS_URI: "gs://qr-photo-tf-state-bucket/tfvars/dev.tfvars"
+  _BASE_TFVARS_URI: "gs://qr-photo-tf-state-bucket/tfvars/base.tfvars"
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -27,6 +28,7 @@ steps:
       - -c
       - |
         set -eu
+        gsutil cp ${_BASE_TFVARS_URI} /workspace/base.tfvars
         gsutil cp ${_TFVARS_URI} /workspace/${_ENV}.tfvars
 
   - id: terraform-init-plan-${_ENV}
@@ -36,11 +38,19 @@ steps:
       - -c
       - |
         set -eu
-        terraform -chdir=infra/terraform/gcp init           -backend-config="bucket=${_STATE_BUCKET}"           -backend-config="prefix=${_STATE_PREFIX}/${_ENV}"           -input=false
+        terraform -chdir=infra/terraform/gcp init \
+          -backend-config="bucket=${_STATE_BUCKET}" \
+          -backend-config="prefix=${_STATE_PREFIX}/${_ENV}" \
+          -input=false
         terraform -chdir=infra/terraform/gcp workspace select ${_ENV} || terraform -chdir=infra/terraform/gcp workspace new ${_ENV}
         terraform -chdir=infra/terraform/gcp validate
-        terraform -chdir=infra/terraform/gcp plan           -input=false           -var-file=/workspace/${_ENV}.tfvars           -out="/workspace/tfplan-${_ENV}.out"
-        terraform -chdir=infra/terraform/gcp show -no-color           "/workspace/tfplan-${_ENV}.out" > "/workspace/tfplan-${_ENV}.txt"
+        terraform -chdir=infra/terraform/gcp plan \
+          -input=false \
+          -var-file=/workspace/base.tfvars \
+          -var-file=/workspace/${_ENV}.tfvars \
+          -out="/workspace/tfplan-${_ENV}.out"
+        terraform -chdir=infra/terraform/gcp show -no-color \
+          "/workspace/tfplan-${_ENV}.out" > "/workspace/tfplan-${_ENV}.txt"
 
 artifacts:
   objects:
