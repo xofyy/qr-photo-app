@@ -49,6 +49,16 @@ locals {
   gke_master_authorized_networks = var.gke_master_authorized_networks != null ? var.gke_master_authorized_networks : (
     var.gke_master_authorized_range != null ? [var.gke_master_authorized_range] : null
   )
+
+  artifact_repository_tokens       = regexall("[a-z0-9]+", lower(trimspace(var.artifact_repository_id)))
+  artifact_repository_component    = length(local.artifact_repository_tokens) > 0 ? join("-", local.artifact_repository_tokens) : "registry"
+  artifact_repository_needs_prefix = !startswith(local.artifact_repository_component, local.name_prefix)
+
+  naming = {
+    artifact_registry = substr(local.artifact_repository_needs_prefix ? format("%s-%s", local.name_prefix, local.artifact_repository_component) : local.artifact_repository_component, 0, 63)
+    ci_cd_app         = format("%s-app", local.name_prefix)
+    ci_cd_tf          = format("%s-tf", local.name_prefix)
+  }
 }
 
 # Foundation: VPC ve subnet yapisi.
@@ -109,6 +119,8 @@ module "workload_gke_cluster" {
   name_prefix                     = local.name_prefix
   project_id                      = var.gcp_project_id
   region                          = var.gcp_region
+  cluster_location                = coalesce(var.gke_cluster_location, var.gcp_region)
+  node_locations                  = var.gke_node_locations
   network_id                      = module.foundation_network.network_id
   subnet_id                       = module.foundation_network.subnet_id
   pods_secondary_range            = module.foundation_network.pods_secondary_range
@@ -116,6 +128,13 @@ module "workload_gke_cluster" {
   release_channel                 = var.gke_release_channel
   master_authorized_network_cidrs = local.gke_master_authorized_networks
   master_authorized_range         = var.gke_master_authorized_range
+  enable_autopilot                = var.gke_enable_autopilot
+  node_machine_type               = var.gke_node_machine_type
+  node_disk_size_gb               = var.gke_node_disk_size_gb
+  node_disk_type                  = var.gke_node_disk_type
+  node_preemptible                = var.gke_node_preemptible
+  node_min_count                  = var.gke_node_min_count
+  node_max_count                  = var.gke_node_max_count
 }
 
 data "google_client_config" "default" {}
@@ -154,20 +173,41 @@ module "workload_gke_workload" {
 
 # Platform: Cloud Build tetikleyicisi.
 module "platform_ci_cd" {
+  source          = "./modules/platform/ci_cd"
+  name_prefix     = local.naming.ci_cd_app
+  project_id      = var.gcp_project_id
+  location        = var.cloudbuild_location
+  environment     = var.environment
+  github_owner    = var.github_owner
+  github_repo     = var.github_repo
+  github_branch   = var.github_branch
+  build_filename  = "infra/terraform/gcp/cloudbuild.yaml"
+  included_files  = ["**"]
+  ignored_files   = []
+  substitutions   = var.ci_cd_substitutions
+  service_account = var.cloudbuild_service_account
+}
+
+module "platform_ci_cd_terraform" {
   source         = "./modules/platform/ci_cd"
-  name_prefix    = local.name_prefix
+  name_prefix    = local.naming.ci_cd_tf
   project_id     = var.gcp_project_id
   location       = var.cloudbuild_location
   environment    = var.environment
   github_owner   = var.github_owner
   github_repo    = var.github_repo
   github_branch  = var.github_branch
-  build_filename = "infra/terraform/gcp/cloudbuild.yaml"
-  included_files = ["**"]
+  build_filename = "infra/terraform/gcp/cloudbuild.terraform.yaml"
+  included_files = ["infra/terraform/gcp/**"]
   ignored_files  = []
   substitutions = {
-    _IMAGE = var.workload_image
+    _ENV          = var.environment
+    _TFVARS       = format("infra/terraform/gcp/environments/%s.tfvars", var.environment)
+    _STATE_BUCKET = var.tf_state_bucket
+    _STATE_PREFIX = var.tf_state_prefix
   }
   service_account = var.cloudbuild_service_account
 }
+
+
 

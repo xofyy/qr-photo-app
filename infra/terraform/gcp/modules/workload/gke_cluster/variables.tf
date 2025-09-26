@@ -72,3 +72,65 @@ variable "master_authorized_network_cidrs" {
   default     = null
   nullable    = true
 }
+
+# Autopilot modu yerine standart node toreni secmek icin kullanilir.
+variable "enable_autopilot" {
+  description = "Autopilot modu etkin mi"
+  type        = bool
+  default     = false
+}
+
+# Standart node havuzu icin makine tipi.
+variable "node_machine_type" {
+  description = "Standart node havuzu makine tipi"
+  type        = string
+  default     = "e2-small"
+}
+
+# Standart node havuzu disk boyutu.
+variable "node_disk_size_gb" {
+  description = "Node disk boyutu (GB)"
+  type        = number
+  default     = 20
+}
+
+# Standart node havuzu disk tipi.
+variable "node_disk_type" {
+  description = "Node disk tipi"
+  type        = string
+  default     = "pd-standard"
+}
+
+# Node'larin preemptible (spot) olmasi.
+variable "node_preemptible" {
+  description = "Node'lar preemptible olsun mu"
+  type        = bool
+  default     = false
+}
+
+# Otomatik olcekleme icin minimum node sayisi.
+variable "node_min_count" {
+  description = "Node havuzu minimum node sayisi"
+  type        = number
+  default     = 1
+}
+
+# Otomatik olcekleme icin maksimum node sayisi.
+variable "node_max_count" {
+  description = "Node havuzu maksimum node sayisi"
+  type        = number
+  default     = 2
+}
+
+# Cluster location (zone or region).
+variable "cluster_location" {
+  description = "GKE cluster location (zone or region)"
+  type        = string
+}
+
+# Optional node locations for regional clusters.
+variable "node_locations" {
+  description = "Additional node locations"
+  type        = list(string)
+  default     = []
+}

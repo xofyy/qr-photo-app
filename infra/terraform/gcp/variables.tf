@@ -385,3 +385,90 @@ variable "cloudbuild_service_account" {
     error_message = "cloudbuild_service_account g-serviceaccount formatinda gecerli bir e-posta olmali veya null birakilmalidir."
   }
 }
+# Terraform remote state bucket adi.
+variable "tf_state_bucket" {
+  description = "Terraform remote state bucket adi"
+  type        = string
+  validation {
+    condition     = length(trimspace(var.tf_state_bucket)) > 0
+    error_message = "tf_state_bucket bos birakilamaz."
+  }
+}
+
+# Terraform remote state prefix degeri.
+variable "tf_state_prefix" {
+  description = "Terraform remote state prefix degeri"
+  type        = string
+  validation {
+    condition     = length(trimspace(var.tf_state_prefix)) > 0
+    error_message = "tf_state_prefix bos birakilamaz."
+  }
+}
+
+# Cloud Build substitutions map (pipeline-specific). 
+variable "ci_cd_substitutions" {
+  description = "Cloud Build tetikleyicisine aktarilacak substitutions"
+  type        = map(string)
+  default     = {}
+}
+# GKE cluster icin Autopilot modu.
+variable "gke_enable_autopilot" {
+  description = "GKE Autopilot modu etkin mi"
+  type        = bool
+  default     = false
+}
+
+# GKE node makine tipi.
+variable "gke_node_machine_type" {
+  description = "Standart node havuzu makine tipi"
+  type        = string
+  default     = "e2-small"
+}
+
+# GKE node disk boyutu (GB).
+variable "gke_node_disk_size_gb" {
+  description = "Standart node disk boyutu"
+  type        = number
+  default     = 30
+}
+
+# GKE node disk tipi.
+variable "gke_node_disk_type" {
+  description = "Standart node disk tipi"
+  type        = string
+  default     = "pd-standard"
+}
+
+# GKE node preemptible ayari.
+variable "gke_node_preemptible" {
+  description = "Node'lar preemptible olsun mu"
+  type        = bool
+  default     = false
+}
+
+# GKE node havuzu minimum node sayisi.
+variable "gke_node_min_count" {
+  description = "Node havuzu minimum node sayisi"
+  type        = number
+  default     = 1
+}
+
+# GKE node havuzu maksimum node sayisi.
+variable "gke_node_max_count" {
+  description = "Node havuzu maksimum node sayisi"
+  type        = number
+  default     = 2
+}
+# GKE cluster location override.
+variable "gke_cluster_location" {
+  description = "GKE cluster location (zone or region). Bos birakilirsa gcp_region kullanilir"
+  type        = string
+  default     = null
+}
+
+# GKE node locations (ek zonelar). Boþ býrakýlýrsa cluster lokasyonu kullanýlýr.
+variable "gke_node_locations" {
+  description = "GKE node locations listesi"
+  type        = list(string)
+  default     = []
+}

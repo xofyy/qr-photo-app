@@ -31,23 +31,25 @@ locals {
 resource "google_container_cluster" "main" {
   name     = "${var.name_prefix}-cluster"
   project  = var.project_id
-  location = var.region
+  location = var.cluster_location
 
-  enable_autopilot    = true
+  enable_autopilot    = var.enable_autopilot
   deletion_protection = false
   network             = var.network_id
   subnetwork          = var.subnet_id
-  release_channel {
-    channel = var.release_channel
+  initial_node_count  = var.enable_autopilot ? null : 1
+  node_locations      = var.node_locations
+
+  dynamic "release_channel" {
+    for_each = var.release_channel != null ? [var.release_channel] : []
+    content {
+      channel = release_channel.value
+    }
   }
 
   ip_allocation_policy {
     cluster_secondary_range_name  = var.pods_secondary_range
     services_secondary_range_name = var.services_secondary_range
-  }
-
-  vertical_pod_autoscaling {
-    enabled = true
   }
 
   dynamic "master_authorized_networks_config" {
@@ -78,3 +80,34 @@ resource "google_container_cluster" "main" {
 
   depends_on = [google_project_service.required]
 }
+resource "google_container_node_pool" "primary" {
+  count    = var.enable_autopilot ? 0 : 1
+  project  = var.project_id
+  location = var.cluster_location
+  cluster  = google_container_cluster.main.name
+
+  autoscaling {
+    min_node_count = var.node_min_count
+    max_node_count = var.node_max_count
+  }
+
+  node_config {
+    machine_type = var.node_machine_type
+    disk_size_gb = var.node_disk_size_gb
+    disk_type    = var.node_disk_type
+    preemptible  = var.node_preemptible
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+  }
+
+  management {
+    auto_repair  = true
+    auto_upgrade = true
+  }
+}
+
+
+
+
+
