@@ -6,7 +6,7 @@ substitutions:
   _STATE_BUCKET: "qr-photo-tf-state-bucket"
   _STATE_PREFIX: "qr-photo/terraform"
   _ENV: "dev"
-  _TFVARS: "infra/terraform/gcp/environments/dev.tfvars"
+  _TFVARS: "environments/dev.tfvars"
 
 options:
   logging: CLOUD_LOGGING_ONLY
