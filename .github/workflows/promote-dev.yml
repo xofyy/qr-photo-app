@@ -1,0 +1,32 @@
+name: Promote Dev to Staging
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  open-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Ensure PR from dev to staging exists
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {owner, repo} = context.repo;
+            const head = ${owner}:dev;
+            const base = 'staging';
+            const existing = await github.rest.pulls.list({ owner, repo, head, base, state: 'open' });
+            if (existing.data.length === 0) {
+              await github.rest.pulls.create({
+                owner,
+                repo,
+                head: 'dev',
+                base,
+                title: Promote dev to staging (),
+                body: 'Auto-generated promotion PR. Please review and approve to promote changes from dev to staging.'
+              });
+            }

@@ -158,6 +158,7 @@ module "workload_gke_workload" {
   providers = {
     kubernetes = kubernetes.gke
   }
+  depends_on                   = [module.workload_gke_cluster]
   name_prefix                  = local.name_prefix
   namespace                    = "app-namespace"
   labels                       = local.default_labels
