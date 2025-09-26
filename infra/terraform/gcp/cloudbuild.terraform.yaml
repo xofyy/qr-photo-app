@@ -1,12 +1,13 @@
 # Terraform icin Cloud Build pipeline
-# Bu pipeline _ENV ve _TFVARS substitutions degerleri ile tek ortam icin fmt/validate/plan adimlarini calistirir.
+# Bu pipeline _ENV ve _TFVARS_URI substitutions degerleri ile tek ortam icin fmt/validate/plan adimlarini calistirir.
 
 substitutions:
   _TF_VERSION: "1.6.6"
   _STATE_BUCKET: "qr-photo-tf-state-bucket"
   _STATE_PREFIX: "qr-photo/terraform"
   _ENV: "dev"
-  _TFVARS: "infra/terraform/gcp/environments/dev.tfvars"
+  _TFVARS_URI: "gs://qr-photo-tf-state-bucket/tfvars/dev.tfvars"
+  _BASE_TFVARS_URI: "gs://qr-photo-tf-state-bucket/tfvars/base.tfvars"
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -20,13 +21,23 @@ steps:
       - -c
       - terraform -chdir=infra/terraform/gcp fmt -recursive -check
 
-  - id: terraform-init-plan-${_ENV}
-    name: "hashicorp/terraform:${_TF_VERSION}"
-    entrypoint: bash
+  - id: fetch-tfvars-${_ENV}
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: sh
     args:
       - -c
       - |
-        set -euo pipefail
+        set -eu
+        gsutil cp ${_BASE_TFVARS_URI} /workspace/base.tfvars
+        gsutil cp ${_TFVARS_URI} /workspace/${_ENV}.tfvars
+
+  - id: terraform-init-plan-${_ENV}
+    name: "hashicorp/terraform:${_TF_VERSION}"
+    entrypoint: sh
+    args:
+      - -c
+      - |
+        set -eu
         terraform -chdir=infra/terraform/gcp init \
           -backend-config="bucket=${_STATE_BUCKET}" \
           -backend-config="prefix=${_STATE_PREFIX}/${_ENV}" \
@@ -35,7 +46,8 @@ steps:
         terraform -chdir=infra/terraform/gcp validate
         terraform -chdir=infra/terraform/gcp plan \
           -input=false \
-          -var-file=${_TFVARS} \
+          -var-file=/workspace/base.tfvars \
+          -var-file=/workspace/${_ENV}.tfvars \
           -out="/workspace/tfplan-${_ENV}.out"
         terraform -chdir=infra/terraform/gcp show -no-color \
           "/workspace/tfplan-${_ENV}.out" > "/workspace/tfplan-${_ENV}.txt"

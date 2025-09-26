@@ -8,6 +8,7 @@ substitutions:
   _IMAGE_NAME: qr-photo-backend
   _CLUSTER: qr-photo-dev-cluster
   _LOCATION: us-central1
+  _LOCATION_FLAG: --region
   _NAMESPACE: app-namespace
   _DEPLOYMENT: app-deployment
   _CONTAINER: app
@@ -55,7 +56,7 @@ steps:
       - clusters
       - get-credentials
       - ${_CLUSTER}
-      - --region
+      - ${_LOCATION_FLAG}
       - ${_LOCATION}
       - --project
       - $PROJECT_ID
