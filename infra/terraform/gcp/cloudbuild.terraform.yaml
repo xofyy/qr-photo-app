@@ -22,11 +22,11 @@ steps:
 
   - id: terraform-init-plan-${_ENV}
     name: "hashicorp/terraform:${_TF_VERSION}"
-    entrypoint: bash
+    entrypoint: sh
     args:
       - -c
       - |
-        set -euo pipefail
+        set -eu
         terraform -chdir=infra/terraform/gcp init \
           -backend-config="bucket=${_STATE_BUCKET}" \
           -backend-config="prefix=${_STATE_PREFIX}/${_ENV}" \
