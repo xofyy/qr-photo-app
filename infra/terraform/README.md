@@ -35,7 +35,7 @@ Değerler terraform.tfvars dosyalarinda girilmelidir. Varsayilan olmayan degiske
 
 > `infra/terraform/gcp/environments` dizininde dev/staging/prod icin hazir `tfvars` ve backend sablonlari bulunur. Her ortam icin ilgili dosyayi kopyalayip kendi degerlerinizi girmeniz yeterlidir.
 
-Yeni surumle birlikte GCP altyapisinda standart olarak VPC Flow Logs, Cloud NAT loglari ve firewall loglari acik gelir. GKE cluster
+Yeni sürümle birlikte GCP altyapisinda standart olarak VPC Flow Logs, Cloud NAT loglari ve firewall loglari acik gelir. GKE cluster
 API erisimi artik 0.0.0.0/0 yerine varsayilan olarak IAP IP araligi (35.235.240.0/20) ile sinirlanmistir. Bu davranislari
 degistirmek icin `infra/terraform/gcp/variables.tf` dosyasindaki asagidaki parametreleri override edebilirsiniz:
 
